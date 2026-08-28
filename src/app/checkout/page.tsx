@@ -7,22 +7,33 @@ import { createCheckoutSession } from "./actions";
 import "../forms.css";
 
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+const CODES: { code: string; label: string }[] = [
+  { code: "essential", label: "Essential" },
+  { code: "pro", label: "Pro" },
+  { code: "office", label: "Office" },
+];
 
 function Checkout() {
   const router = useRouter();
   const params = useSearchParams();
-  const planId = params.get("plan") || "pro_monthly";
-  const plan = PLANS[planId];
+  const initial = params.get("plan") || "pro_monthly";
+
+  const [code, setCode] = useState(initial.split("_")[0] || "pro");
+  const [annual, setAnnual] = useState(initial.endsWith("annual"));
   const [p, setP] = useState({ crm: "", uf: "", especialidade: "" });
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+
+  const planId = `${code}_${annual ? "annual" : "monthly"}`;
+  const plan = PLANS[planId];
 
   useEffect(() => {
     const supabase = createSupabaseBrowser();
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) router.replace(`/cadastro?plan=${planId}`);
     });
-  }, [planId, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!plan) return <div className="auth-wrap"><div className="auth-card"><h1>Plano não encontrado</h1></div></div>;
 
@@ -38,6 +49,12 @@ function Checkout() {
     window.location.href = res.url;
   }
 
+  const seg = (active: boolean): React.CSSProperties => ({
+    flex: 1, padding: "9px 0", borderRadius: 9, border: "1px solid " + (active ? "#16305B" : "#E4E9F0"),
+    background: active ? "#16305B" : "#fff", color: active ? "#fff" : "#28374D",
+    fontFamily: "'Sora',sans-serif", fontWeight: 600, fontSize: 13.5, cursor: "pointer",
+  });
+
   return (
     <div className="auth-wrap">
       <div className="auth-card">
@@ -46,7 +63,36 @@ function Checkout() {
           <span className="w">AXIA</span>
         </div>
         <h1>Finalizar assinatura</h1>
-        <p className="subt">Só o essencial. O restante configuramos no onboarding.</p>
+        <p className="subt">Escolha seu plano. O restante configuramos no onboarding.</p>
+
+        {/* período */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+          <button style={seg(!annual)} onClick={() => setAnnual(false)}>Mensal</button>
+          <button style={seg(annual)} onClick={() => setAnnual(true)}>Anual · 2 meses grátis</button>
+        </div>
+
+        {/* planos */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
+          {CODES.map(({ code: c, label }) => {
+            const pl = PLANS[`${c}_${annual ? "annual" : "monthly"}`];
+            const on = c === code;
+            return (
+              <button key={c} onClick={() => setCode(c)} style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                padding: "13px 16px", borderRadius: 12, cursor: "pointer", textAlign: "left",
+                border: "2px solid " + (on ? "#1FA89E" : "#E4E9F0"),
+                background: on ? "#E4F4F2" : "#fff",
+              }}>
+                <span style={{ fontFamily: "'Sora',sans-serif", fontWeight: 600, color: "#10233F", fontSize: 15 }}>
+                  AXIA {label}{c === "pro" && <span style={{ fontSize: 11, color: "#127c74", marginLeft: 8 }}>Mais escolhido</span>}
+                </span>
+                <span style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, color: "#10233F", fontSize: 15 }}>
+                  {formatBRL(pl.amount)}<span style={{ fontSize: 12, color: "#6B7C93", fontWeight: 500 }}>/{annual ? "ano" : "mês"}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
         <div className="co-summary">
           <div className="pl">{plan.name}</div>
