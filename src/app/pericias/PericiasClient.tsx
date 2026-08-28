@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { Ico } from "../AppShell";
 
 interface Pericia { id: string; titulo: string; local: string | null; process_ref: string | null; scheduled_at: string }
@@ -66,7 +67,7 @@ export default function PericiasClient({ pericias }: { pericias: Pericia[] }) {
                   <div className="s">{f.dia} · {f.hora} · {p.local} · Proc. {p.process_ref}</div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <button className="btn-act">Ver processo</button>
+                  <Link className="btn-act" href={`/processos/${encodeURIComponent(p.process_ref ?? "")}`}>Ver processo</Link>
                   <button className="btn-act solid">Adicionar à agenda</button>
                 </div>
               </div>

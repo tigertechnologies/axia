@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { formatBRL } from "@/lib/plans";
 import { Ico } from "../AppShell";
 
@@ -59,7 +60,7 @@ export default function ProcessosClient({ processos }: { processos: Processo[] }
                   <span>· últ. atividade {quando(p.lastActivity)}</span>
                 </div>
               </div>
-              <div className="act"><button className="btn-act">Abrir</button></div>
+              <div className="act"><Link className="btn-act" href={`/processos/${encodeURIComponent(p.ref)}`}>Abrir</Link></div>
             </div>
           ))}
         </div>

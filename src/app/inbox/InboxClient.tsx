@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { validateCommunication } from "../dashboard/actions";
 import { Ico } from "../AppShell";
 
@@ -68,7 +69,7 @@ export default function InboxClient({ comms }: { comms: Comm[] }) {
                   <span className="time">{ago(c.received_at)}</span>
                   {c.category === "nomeacao"
                     ? <button className="btn-act solid" onClick={() => validar(c.id)}>{isDone ? "Validado ✓" : "Validar"}</button>
-                    : <button className="btn-act">Ver</button>}
+                    : (c.process_ref ? <Link className="btn-act" href={`/processos/${encodeURIComponent(c.process_ref)}`}>Ver</Link> : <button className="btn-act">Ver</button>)}
                 </div>
               </div>
             );

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "./dashboard/actions";
 import "./dashboard/dashboard.css";
 
@@ -15,8 +15,14 @@ export default function AppShell({
   nome: string; planLabel: string; counts: Counts; bell: number; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
   const [, startTransition] = useTransition();
   const path = usePathname();
+  const router = useRouter();
+
+  function submitSearch(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && q.trim()) { router.push(`/busca?q=${encodeURIComponent(q.trim())}`); setOpen(false); }
+  }
 
   const top: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", ico: "dash", ready: true },
@@ -32,7 +38,7 @@ export default function AppShell({
   ];
 
   function item(n: NavItem) {
-    const active = path === n.href;
+    const active = path === n.href || path.startsWith(n.href + "/");
     const badge = n.count && n.count > 0 ? <span className={"count" + (n.gray ? " gray" : "")}>{n.count}</span> : null;
     const inner = <><Ico p={n.ico} />{n.label}{badge}</>;
     if (!n.ready) return <div key={n.href} className="sb-item" style={{ opacity: 0.45, cursor: "default" }} title="Em breve">{inner}</div>;
@@ -65,7 +71,7 @@ export default function AppShell({
           <button className="hamb" onClick={() => setOpen(true)} aria-label="Menu"><svg width="24" height="24" fill="none" stroke="#16305B" strokeWidth={2}><path d="M3 6h18M3 12h18M3 18h18" strokeLinecap="round" /></svg></button>
           <div className="search">
             <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth={1.8}><circle cx="7.5" cy="7.5" r="5.5" /><path d="M15 15l-3.5-3.5" strokeLinecap="round" /></svg>
-            <input placeholder="Buscar processo, parte, comunicação…" />
+            <input placeholder="Buscar processo, parte, comunicação…" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={submitSearch} />
           </div>
           <div className="top-right">
             <span className="mbox"><span className="lv" />Gmail conectado</span>

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { Ico } from "../AppShell";
 
 interface Prazo { id: string; titulo: string; process_ref: string | null; due_date: string; status: string }
@@ -75,7 +76,7 @@ export default function PrazosClient({ prazos }: { prazos: Prazo[] }) {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span className={"st " + st[0]}>{st[1]}</span>
-                  <button className="btn-act">Ver processo</button>
+                  <Link className="btn-act" href={`/processos/${encodeURIComponent(p.process_ref ?? "")}`}>Ver processo</Link>
                 </div>
               </div>
             );
