@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { setPrazoStatus } from "../actions/state";
 import { Ico } from "../AppShell";
 
 interface Prazo { id: string; titulo: string; process_ref: string | null; due_date: string; status: string }
@@ -27,9 +28,13 @@ const ST: Record<string, [string, string]> = {
 export default function PrazosClient({ prazos }: { prazos: Prazo[] }) {
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
+  const [over, setOver] = useState<Record<string,string>>({});
+  const [, startTransition] = useTransition();
+  const eff = (p: Prazo) => over[p.id] ?? p.status;
+  function confirmar(id: string){ setOver(o=>({...o,[id]:"confirmado"})); startTransition(()=>{ setPrazoStatus(id,"confirmado"); }); }
 
   const shown = prazos.filter((p) => {
-    const okF = filter === "all" || p.status === filter;
+    const okF = filter === "all" || eff(p) === filter;
     const okQ = !q || (p.titulo + " " + (p.process_ref ?? "")).toLowerCase().includes(q.toLowerCase());
     return okF && okQ;
   });
@@ -62,7 +67,7 @@ export default function PrazosClient({ prazos }: { prazos: Prazo[] }) {
           {shown.length === 0 && <div style={{ padding: "34px 22px", color: "#6B7C93", fontSize: 14, textAlign: "center" }}>Nenhum prazo nesta visão.</div>}
           {shown.map((p) => {
             const b = dm(p.due_date + "T00:00:00");
-            const st = ST[p.status] ?? ST.a_validar;
+            const status = eff(p); const st = ST[status] ?? ST.a_validar;
             const n = diasRestantes(p.due_date);
             const urgente = n <= 1;
             return (
@@ -76,6 +81,7 @@ export default function PrazosClient({ prazos }: { prazos: Prazo[] }) {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span className={"st " + st[0]}>{st[1]}</span>
+                  {status !== "confirmado" && <button className="btn-act solid" onClick={() => confirmar(p.id)}>Confirmar</button>}
                   <Link className="btn-act" href={`/processos/${encodeURIComponent(p.process_ref ?? "")}`}>Ver processo</Link>
                 </div>
               </div>

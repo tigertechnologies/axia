@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { advanceHonorario } from "../actions/state";
 import { formatBRL } from "@/lib/plans";
 import { Ico } from "../AppShell";
 
@@ -20,13 +21,18 @@ const BADGE: Record<string, [string, string]> = {
 export default function HonorariosClient({ honorarios }: { honorarios: Honorario[] }) {
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
+  const [over, setOver] = useState<Record<string,string>>({});
+  const [, startTransition] = useTransition();
+  const eff = (h: Honorario) => over[h.id] ?? h.status;
+  const NEXT: Record<string,string> = { proposto:"aprovado", aprovado:"depositado", depositado:"recebido" };
+  function avancar(h: Honorario){ const n=NEXT[eff(h)]; if(!n) return; setOver(o=>({...o,[h.id]:n})); startTransition(()=>{ advanceHonorario(h.id, eff(h)); }); }
 
-  const soma = (st: string) => honorarios.filter((h) => h.status === st).reduce((s, h) => s + h.amount_cents, 0);
-  const receber = honorarios.filter((h) => h.status !== "recebido").reduce((s, h) => s + h.amount_cents, 0);
+  const soma = (st: string) => honorarios.filter((h) => eff(h) === st).reduce((s, h) => s + h.amount_cents, 0);
+  const receber = honorarios.filter((h) => eff(h) !== "recebido").reduce((s, h) => s + h.amount_cents, 0);
   const total = honorarios.reduce((s, h) => s + h.amount_cents, 0);
 
   const shown = honorarios.filter((h) => {
-    const okF = filter === "all" || h.status === filter;
+    const okF = filter === "all" || eff(h) === filter;
     const okQ = !q || (h.process_ref ?? "").toLowerCase().includes(q.toLowerCase());
     return okF && okQ;
   });
@@ -44,7 +50,7 @@ export default function HonorariosClient({ honorarios }: { honorarios: Honorario
       <div className="kpis" style={{ marginBottom: 22 }}>
         {STAGES.map((s) => {
           const v = soma(s.key);
-          const n = honorarios.filter((h) => h.status === s.key).length;
+          const n = honorarios.filter((h) => eff(h) === s.key).length;
           return (
             <div className="kpi" key={s.key}>
               <div className={"ki " + (s.key === "recebido" ? "ki-teal" : s.key === "depositado" ? "ki-blue" : "ki-gold")}><Ico p="wallet" s={20} /></div>
@@ -73,7 +79,7 @@ export default function HonorariosClient({ honorarios }: { honorarios: Honorario
         <div className="hon-list" style={{ padding: "8px 0" }}>
           {shown.length === 0 && <div style={{ padding: "34px 22px", color: "#6B7C93", fontSize: 14, textAlign: "center" }}>Nenhum honorário nesta visão.</div>}
           {shown.map((h) => {
-            const b = BADGE[h.status] ?? BADGE.proposto;
+            const status = eff(h); const b = BADGE[status] ?? BADGE.proposto;
             return (
               <div className="hrow" key={h.id} style={{ padding: "14px 22px", alignItems: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -83,7 +89,10 @@ export default function HonorariosClient({ honorarios }: { honorarios: Honorario
                     <span className={"st " + b[0]} style={{ marginTop: 3, display: "inline-block" }}>{b[1]}</span>
                   </div>
                 </div>
-                <span className="am" style={{ fontSize: 16 }}>{formatBRL(h.amount_cents)}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span className="am" style={{ fontSize: 16 }}>{formatBRL(h.amount_cents)}</span>
+                  {status !== "recebido" && <button className="btn-act solid" onClick={() => avancar(h)}>Avançar →</button>}
+                </div>
               </div>
             );
           })}

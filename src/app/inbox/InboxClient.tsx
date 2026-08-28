@@ -2,9 +2,10 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { validateCommunication } from "../dashboard/actions";
+import { setArchived } from "../actions/state";
 import { Ico } from "../AppShell";
 
-interface Comm { id: string; category: string; sender: string | null; subject: string; snippet: string | null; process_ref: string | null; received_at: string; validated: boolean }
+interface Comm { id: string; category: string; sender: string | null; subject: string; snippet: string | null; process_ref: string | null; received_at: string; validated: boolean; archived?: boolean }
 
 const CAT: Record<string, { label: string; tag: string; f: string }> = {
   nomeacao: { label: "Nova nomeação", tag: "t-nom", f: "nom" },
@@ -21,14 +22,17 @@ export default function InboxClient({ comms }: { comms: Comm[] }) {
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
   const [done, setDone] = useState<Set<string>>(new Set());
+  const [arch, setArch] = useState<Set<string>>(new Set());
   const [, startTransition] = useTransition();
+  function arquivar(id: string){ setArch(a=>new Set(a).add(id)); startTransition(()=>{ setArchived(id, true); }); }
 
   function validar(id: string) { setDone((d) => new Set(d).add(id)); startTransition(() => { validateCommunication(id); }); }
 
   const shown = comms.filter((c) => {
     const okCat = filter === "all" || CAT[c.category]?.f === filter;
     const okQ = !q || (c.subject + " " + (c.sender ?? "") + " " + (c.process_ref ?? "")).toLowerCase().includes(q.toLowerCase());
-    return okCat && okQ;
+    const notArch = !c.archived && !arch.has(c.id);
+    return okCat && okQ && notArch;
   });
   const naoValidadas = comms.filter((c) => c.category === "nomeacao" && !c.validated && !done.has(c.id)).length;
 
@@ -70,6 +74,7 @@ export default function InboxClient({ comms }: { comms: Comm[] }) {
                   {c.category === "nomeacao"
                     ? <button className="btn-act solid" onClick={() => validar(c.id)}>{isDone ? "Validado ✓" : "Validar"}</button>
                     : (c.process_ref ? <Link className="btn-act" href={`/processos/${encodeURIComponent(c.process_ref)}`}>Ver</Link> : <button className="btn-act">Ver</button>)}
+                  <button className="btn-act" onClick={() => arquivar(c.id)} title="Arquivar">Arquivar</button>
                 </div>
               </div>
             );
