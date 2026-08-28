@@ -1,9 +1,16 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServer } from "@/lib/supabase/server";
-import DashboardShell from "./DashboardShell";
+import AppShell from "../AppShell";
+import DashboardContent from "./DashboardContent";
 import "./dashboard.css";
 
 export const dynamic = "force-dynamic";
+
+function planLabelFrom(planId: string | null) {
+  if (!planId) return "AXIA";
+  const c = planId.split("_")[0];
+  return "Plano " + c[0].toUpperCase() + c.slice(1);
+}
 
 export default async function DashboardPage() {
   const supabase = createSupabaseServer();
@@ -22,15 +29,32 @@ export default async function DashboardPage() {
 
   if (profile && !profile.onboarding_completed) redirect("/onboarding");
 
+  const C = (comms ?? []) as any[];
+  const P = (prazos ?? []) as any[];
+  const counts = {
+    inbox: C.length,
+    nomeacoes: C.filter((c) => c.category === "nomeacao").length,
+    prazos: P.length,
+    pericias: (pericias ?? []).length,
+  };
+  const aguardando = C.filter((c) => c.category === "nomeacao" && !c.validated).length;
+  const urgentes = P.filter((p) => p.status === "urgente").length;
+
   return (
-    <DashboardShell
+    <AppShell
       nome={profile?.nome ?? "Doutor(a)"}
-      planId={org?.plan_id ?? null}
-      pastDue={org?.subscription_status === "past_due"}
-      comms={(comms ?? []) as any}
-      pericias={(pericias ?? []) as any}
-      prazos={(prazos ?? []) as any}
-      honorarios={(honorarios ?? []) as any}
-    />
+      planLabel={planLabelFrom(org?.plan_id ?? null)}
+      counts={counts}
+      bell={aguardando + urgentes}
+    >
+      <DashboardContent
+        nome={profile?.nome ?? "Doutor(a)"}
+        pastDue={org?.subscription_status === "past_due"}
+        comms={C as any}
+        pericias={(pericias ?? []) as any}
+        prazos={P as any}
+        honorarios={(honorarios ?? []) as any}
+      />
+    </AppShell>
   );
 }
