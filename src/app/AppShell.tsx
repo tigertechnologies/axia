@@ -23,7 +23,7 @@ export default function AppShell({
     { href: "/inbox", label: "Inbox", ico: "inbox", ready: true, count: counts.inbox },
   ];
   const pericias: NavItem[] = [
-    { href: "/nomeacoes", label: "Nomeações", ico: "shield", ready: false, count: counts.nomeacoes },
+    { href: "/nomeacoes", label: "Nomeações", ico: "shield", ready: true, count: counts.nomeacoes },
     { href: "/prazos", label: "Prazos", ico: "clock", ready: false, count: counts.prazos, gray: true },
     { href: "/pericias", label: "Perícias", ico: "cal", ready: false, count: counts.pericias, gray: true },
     { href: "/processos", label: "Processos", ico: "doc", ready: false },
