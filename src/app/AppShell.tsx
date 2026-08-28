@@ -27,8 +27,8 @@ export default function AppShell({
     { href: "/prazos", label: "Prazos", ico: "clock", ready: true, count: counts.prazos, gray: true },
     { href: "/pericias", label: "Perícias", ico: "cal", ready: true, count: counts.pericias, gray: true },
     { href: "/processos", label: "Processos", ico: "doc", ready: true },
-    { href: "/honorarios", label: "Honorários", ico: "wallet", ready: false },
-    { href: "/agenda", label: "Agenda", ico: "agenda", ready: false },
+    { href: "/honorarios", label: "Honorários", ico: "wallet", ready: true },
+    { href: "/agenda", label: "Agenda", ico: "agenda", ready: true },
   ];
 
   function item(n: NavItem) {
