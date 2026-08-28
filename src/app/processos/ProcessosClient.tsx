@@ -1,6 +1,9 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createProcesso } from "../actions/create";
+import Modal from "../Modal";
 import { formatBRL } from "@/lib/plans";
 import { Ico } from "../AppShell";
 
@@ -23,6 +26,10 @@ function quando(iso: string | null) {
 
 export default function ProcessosClient({ processos }: { processos: Processo[] }) {
   const [q, setQ] = useState("");
+  const router = useRouter();
+  const [novo, setNovo] = useState(false);
+  const [nf, setNf] = useState({ process_ref:"", vara:"", subject:"" });
+  async function salvar(){ if(!nf.process_ref) return "Informe o número do processo."; const r = await createProcesso(nf); if("error" in r) return r.error||"Erro ao salvar."; setNf({process_ref:"",vara:"",subject:""}); router.refresh(); return null; }
   const shown = processos.filter((p) => !q || (p.ref + " " + (p.vara ?? "")).toLowerCase().includes(q.toLowerCase()));
 
   return (
@@ -33,7 +40,7 @@ export default function ProcessosClient({ processos }: { processos: Processo[] }
           <p className="sum"><Ico p="doc" s={15} />{processos.length} processo(s) acompanhado(s)</p>
         </div>
         <div className="greet-actions">
-          <button className="btn btn-primary"><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Novo processo</button>
+          <button className="btn btn-primary" onClick={() => setNovo(true)}><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Novo processo</button>
         </div>
       </div>
 
@@ -65,6 +72,12 @@ export default function ProcessosClient({ processos }: { processos: Processo[] }
           ))}
         </div>
       </section>
+    
+      <Modal open={novo} onClose={() => setNovo(false)} title="Novo processo" subtitle="Cadastre um processo manualmente." submitLabel="Salvar processo" onSubmit={salvar}>
+        <div className="field"><label>Número do processo</label><input value={nf.process_ref} onChange={(e)=>setNf({...nf,process_ref:e.target.value})} placeholder="Ex.: 1002345-67.2025" /></div>
+        <div className="field"><label>Vara / origem</label><input value={nf.vara} onChange={(e)=>setNf({...nf,vara:e.target.value})} placeholder="Ex.: TJSP · 2ª Vara Cível" /></div>
+        <div className="field"><label>Descrição (opcional)</label><input value={nf.subject} onChange={(e)=>setNf({...nf,subject:e.target.value})} placeholder="Ex.: Nomeação para perícia médica" /></div>
+      </Modal>
     </>
   );
 }

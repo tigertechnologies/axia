@@ -1,6 +1,9 @@
 "use client";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { advanceHonorario } from "../actions/state";
+import { createHonorario } from "../actions/create";
+import Modal from "../Modal";
 import { formatBRL } from "@/lib/plans";
 import { Ico } from "../AppShell";
 
@@ -26,6 +29,10 @@ export default function HonorariosClient({ honorarios }: { honorarios: Honorario
   const eff = (h: Honorario) => over[h.id] ?? h.status;
   const NEXT: Record<string,string> = { proposto:"aprovado", aprovado:"depositado", depositado:"recebido" };
   function avancar(h: Honorario){ const n=NEXT[eff(h)]; if(!n) return; setOver(o=>({...o,[h.id]:n})); startTransition(()=>{ advanceHonorario(h.id, eff(h)); }); }
+  const router = useRouter();
+  const [novo, setNovo] = useState(false);
+  const [nf, setNf] = useState({ process_ref:"", amount_reais:"", status:"proposto" });
+  async function salvar(){ if(!nf.amount_reais) return "Informe o valor."; const r = await createHonorario(nf); if("error" in r) return r.error||"Erro ao salvar."; setNf({process_ref:"",amount_reais:"",status:"proposto"}); router.refresh(); return null; }
 
   const soma = (st: string) => honorarios.filter((h) => eff(h) === st).reduce((s, h) => s + h.amount_cents, 0);
   const receber = honorarios.filter((h) => eff(h) !== "recebido").reduce((s, h) => s + h.amount_cents, 0);
@@ -43,6 +50,9 @@ export default function HonorariosClient({ honorarios }: { honorarios: Honorario
         <div>
           <h1>Honorários</h1>
           <p className="sum"><Ico p="wallet" s={15} />{honorarios.length} lançamento(s) · <b>{formatBRL(receber)}</b> a receber</p>
+        </div>
+        <div className="greet-actions">
+          <button className="btn btn-primary" onClick={() => setNovo(true)}><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Novo lançamento</button>
         </div>
       </div>
 
@@ -98,6 +108,14 @@ export default function HonorariosClient({ honorarios }: { honorarios: Honorario
           })}
         </div>
       </section>
+    
+      <Modal open={novo} onClose={() => setNovo(false)} title="Novo honorário" subtitle="Lance um honorário manualmente." submitLabel="Salvar lançamento" onSubmit={salvar}>
+        <div className="field"><label>Processo</label><input value={nf.process_ref} onChange={(e)=>setNf({...nf,process_ref:e.target.value})} placeholder="Nº do processo" /></div>
+        <div className="grid2">
+          <div className="field"><label>Valor (R$)</label><input value={nf.amount_reais} onChange={(e)=>setNf({...nf,amount_reais:e.target.value})} placeholder="Ex.: 2.400,00" /></div>
+          <div className="field"><label>Etapa</label><select value={nf.status} onChange={(e)=>setNf({...nf,status:e.target.value})}><option value="proposto">Proposto</option><option value="aprovado">Aprovado</option><option value="depositado">Depositado</option><option value="recebido">Recebido</option></select></div>
+        </div>
+      </Modal>
     </>
   );
 }

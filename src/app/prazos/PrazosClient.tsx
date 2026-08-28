@@ -1,7 +1,10 @@
 "use client";
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { setPrazoStatus } from "../actions/state";
+import { createPrazo } from "../actions/create";
+import Modal from "../Modal";
 import { Ico } from "../AppShell";
 
 interface Prazo { id: string; titulo: string; process_ref: string | null; due_date: string; status: string }
@@ -32,6 +35,10 @@ export default function PrazosClient({ prazos }: { prazos: Prazo[] }) {
   const [, startTransition] = useTransition();
   const eff = (p: Prazo) => over[p.id] ?? p.status;
   function confirmar(id: string){ setOver(o=>({...o,[id]:"confirmado"})); startTransition(()=>{ setPrazoStatus(id,"confirmado"); }); }
+  const router = useRouter();
+  const [novo, setNovo] = useState(false);
+  const [nf, setNf] = useState({ titulo:"", process_ref:"", due_date:"", status:"a_validar" });
+  async function salvar(){ if(!nf.titulo||!nf.due_date) return "Preencha o tipo e a data."; const r = await createPrazo(nf); if("error" in r) return r.error||"Erro ao salvar."; setNf({titulo:"",process_ref:"",due_date:"",status:"a_validar"}); router.refresh(); return null; }
 
   const shown = prazos.filter((p) => {
     const okF = filter === "all" || eff(p) === filter;
@@ -48,7 +55,7 @@ export default function PrazosClient({ prazos }: { prazos: Prazo[] }) {
           <p className="sum"><Ico p="clock" s={15} />{prazos.length} prazo(s) monitorado(s){urgentes > 0 && <> · <b>{urgentes}</b> urgente(s)</>}</p>
         </div>
         <div className="greet-actions">
-          <button className="btn btn-primary"><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Novo prazo</button>
+          <button className="btn btn-primary" onClick={() => setNovo(true)}><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Novo prazo</button>
         </div>
       </div>
 
@@ -93,6 +100,15 @@ export default function PrazosClient({ prazos }: { prazos: Prazo[] }) {
       <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
         As datas são sugestões identificadas pela AXIA. Confirme sempre nos sistemas oficiais dos tribunais.
       </p>
+
+      <Modal open={novo} onClose={() => setNovo(false)} title="Novo prazo" subtitle="Cadastre um prazo manualmente." submitLabel="Salvar prazo" onSubmit={salvar}>
+        <div className="field"><label>Tipo do prazo</label><input value={nf.titulo} onChange={(e)=>setNf({...nf,titulo:e.target.value})} placeholder="Ex.: Entrega de laudo" /></div>
+        <div className="grid2">
+          <div className="field"><label>Processo</label><input value={nf.process_ref} onChange={(e)=>setNf({...nf,process_ref:e.target.value})} placeholder="Nº do processo" /></div>
+          <div className="field"><label>Vencimento</label><input type="date" value={nf.due_date} onChange={(e)=>setNf({...nf,due_date:e.target.value})} /></div>
+        </div>
+        <div className="field"><label>Status</label><select value={nf.status} onChange={(e)=>setNf({...nf,status:e.target.value})}><option value="a_validar">A validar</option><option value="confirmado">Confirmado</option><option value="urgente">Urgente</option></select></div>
+      </Modal>
     </>
   );
 }

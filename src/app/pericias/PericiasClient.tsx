@@ -1,7 +1,10 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Ico } from "../AppShell";
+import { createPericia } from "../actions/create";
+import Modal from "../Modal";
 
 interface Pericia { id: string; titulo: string; local: string | null; process_ref: string | null; scheduled_at: string }
 
@@ -23,6 +26,10 @@ export default function PericiasClient({ pericias }: { pericias: Pericia[] }) {
   const [filter, setFilter] = useState("prox");
   const [q, setQ] = useState("");
   const now = Date.now();
+  const router = useRouter();
+  const [novo, setNovo] = useState(false);
+  const [nf, setNf] = useState({ titulo:"", local:"", process_ref:"", scheduled_at:"" });
+  async function salvar(){ if(!nf.titulo||!nf.scheduled_at) return "Preencha o título e a data/hora."; const r = await createPericia({...nf, scheduled_at:new Date(nf.scheduled_at).toISOString()}); if("error" in r) return r.error||"Erro ao salvar."; setNf({titulo:"",local:"",process_ref:"",scheduled_at:""}); router.refresh(); return null; }
 
   const shown = pericias.filter((p) => {
     const future = new Date(p.scheduled_at).getTime() >= now;
@@ -40,7 +47,7 @@ export default function PericiasClient({ pericias }: { pericias: Pericia[] }) {
           <p className="sum"><Ico p="cal" s={15} />{pericias.length} perícia(s){proximas > 0 && <> · <b>{proximas}</b> agendada(s)</>}</p>
         </div>
         <div className="greet-actions">
-          <button className="btn btn-primary"><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Nova perícia</button>
+          <button className="btn btn-primary" onClick={() => setNovo(true)}><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Nova perícia</button>
         </div>
       </div>
 
@@ -75,6 +82,15 @@ export default function PericiasClient({ pericias }: { pericias: Pericia[] }) {
           })}
         </div>
       </section>
+    
+      <Modal open={novo} onClose={() => setNovo(false)} title="Nova perícia" subtitle="Agende uma perícia manualmente." submitLabel="Salvar perícia" onSubmit={salvar}>
+        <div className="field"><label>Título</label><input value={nf.titulo} onChange={(e)=>setNf({...nf,titulo:e.target.value})} placeholder="Ex.: Perícia médica" /></div>
+        <div className="grid2">
+          <div className="field"><label>Local / vara</label><input value={nf.local} onChange={(e)=>setNf({...nf,local:e.target.value})} placeholder="Ex.: Vara do Trabalho" /></div>
+          <div className="field"><label>Processo</label><input value={nf.process_ref} onChange={(e)=>setNf({...nf,process_ref:e.target.value})} placeholder="Nº do processo" /></div>
+        </div>
+        <div className="field"><label>Data e hora</label><input type="datetime-local" value={nf.scheduled_at} onChange={(e)=>setNf({...nf,scheduled_at:e.target.value})} /></div>
+      </Modal>
     </>
   );
 }
