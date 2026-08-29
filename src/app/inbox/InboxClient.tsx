@@ -3,6 +3,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { validateCommunication } from "../dashboard/actions";
 import { setArchived } from "../actions/state";
+import AnalyzeEmail from "./AnalyzeEmail";
 import { Ico } from "../AppShell";
 
 interface Comm { id: string; category: string; sender: string | null; subject: string; snippet: string | null; process_ref: string | null; received_at: string; validated: boolean; archived?: boolean }
@@ -43,6 +44,7 @@ export default function InboxClient({ comms }: { comms: Comm[] }) {
           <h1>Inbox inteligente</h1>
           <p className="sum"><Ico p="inbox" s={15} />{comms.length} comunicações analisadas{naoValidadas > 0 && <> · <b>{naoValidadas}</b> nomeação(ões) para validar</>}</p>
         </div>
+        <div className="greet-actions"><AnalyzeEmail /></div>
       </div>
 
       <section className="panel">
