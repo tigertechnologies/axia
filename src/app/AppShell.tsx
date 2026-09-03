@@ -57,6 +57,7 @@ export default function AppShell({
           <div className="sb-sec">Perícias</div>
           {pericias.map(item)}
           <div className="sb-sec">Conta</div>
+          <Link href="/configuracoes" className={"sb-item" + (path.startsWith("/configuracoes") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Configurações</Link>
           <div className="sb-item" onClick={() => startTransition(() => { signOut(); })} style={{ cursor: "pointer" }}><Ico p="gear" />Sair</div>
         </nav>
         <div className="sb-user">

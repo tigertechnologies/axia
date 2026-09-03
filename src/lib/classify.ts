@@ -13,9 +13,11 @@ export interface Classification {
   subject: string;
   snippet: string;
   process_ref: string | null;
-  due_date: string | null;    // YYYY-MM-DD
+  due_date: string | null;    // YYYY-MM-DD (só quando explícito e válido)
+  due_note: string | null;    // motivo/observação sobre o prazo
   amount_cents: number | null;
-  confidence: number;         // 0..1
+  needs_review: boolean;      // classificador por regras SEMPRE requer revisão humana
+  signal: number;             // heurístico interno (NÃO é % de acerto calibrada)
   engine: "regras" | "ia";
 }
 
@@ -45,15 +47,24 @@ function extractAmount(text: string): number | null {
   return Math.round(parseFloat(m[1].replace(/\./g, "").replace(",", ".")) * 100);
 }
 
-function extractDueDate(text: string): string | null {
-  const iso = (d: Date) => d.toISOString().slice(0, 10);
-  // "em N dias" / "N dias corridos/úteis"
-  const dias = text.match(/(\d{1,3})\s*dias/i);
-  if (dias) { const d = new Date(); d.setDate(d.getDate() + parseInt(dias[1])); return iso(d); }
-  // data dd/mm/aaaa
+function validDate(y: number, m: number, d: number): boolean {
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+}
+
+// SEGURO (A03/A04): só retorna data quando há VENCIMENTO EXPLÍCITO e VÁLIDO.
+// Não converte "N dias úteis" em corridos; não usa a data de análise como termo
+// inicial. Sem base explícita → null (prazo fica "pendente de confirmação").
+function extractDueDate(text: string): { date: string | null; note: string | null } {
   const data = text.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-  if (data) return `${data[3]}-${data[2]}-${data[1]}`;
-  return null;
+  if (data) {
+    const d = +data[1], m = +data[2], y = +data[3];
+    if (validDate(y, m, d)) return { date: `${data[3]}-${data[2]}-${data[1]}`, note: "vencimento explícito" };
+    return { date: null, note: "data informada é inválida — revisar" };  // ex.: 31/02
+  }
+  if (/dias\s+[úu]teis/i.test(text)) return { date: null, note: "prazo em dias úteis — depende de termo inicial e calendário; confirmar" };
+  if (/\d{1,3}\s*dias/i.test(text)) return { date: null, note: "prazo em dias — termo inicial não confirmado; confirmar" };
+  return { date: null, note: null };
 }
 
 const RULES: { cat: CommCategory; kws: RegExp; weight: number }[] = [
@@ -82,15 +93,22 @@ export function classifyByRules(text: string): Classification {
   const firstLine = (text.split("\n").find((l) => l.trim().length > 0) ?? text).trim();
   const subject = firstLine.slice(0, 120);
 
+  // A05: uma mesma mensagem pode conter vários eventos — extrai data e valor
+  // SEMPRE, independentemente da categoria principal (ex.: nomeação COM prazo).
+  const { date: due_date, note: due_note } = extractDueDate(text);
+  const amount_cents = extractAmount(text);
+
   return {
     category,
     sender: extractSender(text),
     subject: subject || `Comunicação (${LABEL[category]})`,
-    snippet: `A AXIA classificou como “${LABEL[category]}” pelo conteúdo.`,
+    snippet: `A AXIA (regras) sugeriu “${LABEL[category]}”. Requer sua confirmação.`,
     process_ref: extractProcess(text),
-    due_date: (category === "prazo" || category === "intimacao") ? extractDueDate(text) : null,
-    amount_cents: category === "honorarios" ? extractAmount(text) : null,
-    confidence,
+    due_date,
+    due_note,
+    amount_cents,
+    needs_review: true,     // A06: sem IA calibrada, tudo passa por revisão humana
+    signal: confidence,
     engine: "regras",
   };
 }

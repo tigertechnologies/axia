@@ -25,21 +25,23 @@ export async function analyzeEmail(text: string) {
 
   const extras: string[] = [];
 
-  // 2) se for prazo com data → cria prazo monitorado
-  if (c.category === "prazo" && c.due_date) {
+  // A05: cria eventos a partir do que foi extraído, INDEPENDENTE da categoria
+  // principal (uma nomeação pode trazer prazo e honorário na mesma mensagem).
+  if (c.due_date) {  // só há data quando é vencimento explícito e válido
     await supabase.from("prazos").insert({
       org_id: org.id, titulo: c.subject.slice(0, 60), process_ref: c.process_ref,
       due_date: c.due_date, status: "a_validar",
     });
-    extras.push("prazo monitorado criado");
+    extras.push("prazo criado (a validar)");
+  } else if (c.due_note) {
+    extras.push(c.due_note);  // ex.: "dias úteis — confirmar" (sem criar data errada)
   }
 
-  // 3) se for honorário com valor → cria lançamento
-  if (c.category === "honorarios" && c.amount_cents) {
+  if (c.amount_cents) {
     await supabase.from("honorarios").insert({
       org_id: org.id, process_ref: c.process_ref, amount_cents: c.amount_cents, status: "proposto",
     });
-    extras.push("honorário lançado");
+    extras.push("honorário lançado (proposto)");
   }
 
   revalidatePath("/inbox"); revalidatePath("/dashboard"); revalidatePath("/prazos"); revalidatePath("/honorarios"); revalidatePath("/processos");
@@ -48,7 +50,7 @@ export async function analyzeEmail(text: string) {
     ok: true as const,
     category: c.category,
     process_ref: c.process_ref,
-    confidence: Math.round(c.confidence * 100),
+    needs_review: c.needs_review,
     extras,
   };
 }

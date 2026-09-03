@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { stripe } from "@/lib/stripe";
 import { getPlan } from "@/lib/plans";
 
@@ -36,7 +36,8 @@ export async function createCheckoutSession(planId: string, profile: QuickProfil
       metadata: { org_id: org.id },
     });
     customerId = customer.id;
-    await supabase.from("organizations").update({ stripe_customer_id: customerId }).eq("id", org.id);
+    // A10: escrita de cobrança pelo servidor privilegiado (o usuário é bloqueado)
+    await createSupabaseAdmin().from("organizations").update({ stripe_customer_id: customerId }).eq("id", org.id);
   }
 
   const site = process.env.NEXT_PUBLIC_SITE_URL!;

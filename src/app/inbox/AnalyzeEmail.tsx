@@ -15,7 +15,7 @@ export default function AnalyzeEmail() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const [res, setRes] = useState<null | { category: string; process_ref: string | null; confidence: number; extras: string[] }>(null);
+  const [res, setRes] = useState<null | { category: string; process_ref: string | null; needs_review: boolean; extras: string[] }>(null);
 
   function reset() { setText(""); setErr(""); setRes(null); }
 
@@ -24,7 +24,7 @@ export default function AnalyzeEmail() {
     const r = await analyzeEmail(text);
     setLoading(false);
     if ("error" in r) { setErr(r.error === "not_authenticated" ? "Sessão expirada." : r.error || "Erro."); return; }
-    setRes({ category: r.category, process_ref: r.process_ref, confidence: r.confidence, extras: r.extras });
+    setRes({ category: r.category, process_ref: r.process_ref, needs_review: r.needs_review, extras: r.extras });
     router.refresh();
   }
 
@@ -59,7 +59,7 @@ export default function AnalyzeEmail() {
                   Comunicação classificada e adicionada à sua Inbox.
                 </div>
                 <div style={{ background: "#F7F8FA", border: "1px solid #E4E9F0", borderRadius: 12, padding: 16, marginTop: 14, fontSize: 14 }}>
-                  <div style={{ marginBottom: 8 }}><b>Tipo identificado:</b> {LABEL[res.category] ?? res.category} <span style={{ color: "#6B7C93" }}>({res.confidence}% de confiança)</span></div>
+                  <div style={{ marginBottom: 8 }}><b>Tipo sugerido:</b> {LABEL[res.category] ?? res.category} <span style={{ color: "#9a7a12" }}>· classificação por regras, requer sua revisão</span></div>
                   <div style={{ marginBottom: 8 }}><b>Processo:</b> {res.process_ref ?? "não identificado"}</div>
                   {res.extras.length > 0 && <div style={{ color: "#127c74" }}>✓ Também: {res.extras.join(" · ")}</div>}
                 </div>

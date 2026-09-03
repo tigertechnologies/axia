@@ -32,9 +32,14 @@ export async function POST(req: Request) {
 
   const admin = createSupabaseAdmin();
 
-  // Idempotência: se já processamos este event.id, encerra.
-  const { error: dup } = await admin.from("webhook_events").insert({ id: event.id, type: event.type });
-  if (dup) return NextResponse.json({ received: true, duplicate: true });
+  // A13: idempotência correta. Só código de violação de unicidade (23505) é
+  // duplicata legítima. Qualquer outro erro de banco NÃO pode virar "sucesso":
+  // devolve 500 para o Stripe reenviar o evento.
+  const { error: insErr } = await admin.from("webhook_events").insert({ id: event.id, type: event.type });
+  if (insErr) {
+    if ((insErr as any).code === "23505") return NextResponse.json({ received: true, duplicate: true });
+    return NextResponse.json({ error: "db_error_registering_event" }, { status: 500 });
+  }
 
   async function applySubscription(orgId: string, planId: string, sub: Stripe.Subscription) {
     const status = mapStatus(sub.status);
