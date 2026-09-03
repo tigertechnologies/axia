@@ -75,7 +75,6 @@ export default function AppShell({
             <input placeholder="Buscar processo, parte, comunicação…" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={submitSearch} />
           </div>
           <div className="top-right">
-            <span className="mbox"><span className="lv" />Gmail conectado</span>
             <button className="ico-btn" aria-label="Alertas"><svg width="19" height="19" fill="none" stroke="currentColor" strokeWidth={1.7}><path d="M9.5 2.5c-2.6 0-4.3 1.9-4.3 4.4 0 3.6-1.2 4.7-1.2 4.7h11s-1.2-1.1-1.2-4.7c0-2.5-1.7-4.4-4.3-4.4z" strokeLinejoin="round" /><path d="M8 15a1.6 1.6 0 003 0" strokeLinecap="round" /></svg>{bell > 0 && <span className="badge">{bell}</span>}</button>
           </div>
         </div>

@@ -28,7 +28,7 @@ export default function Onboarding() {
     },
     { t: "Onde você atua?", d: "Tribunais, estados, comarcas e modalidades. (Configurável depois.)", body: <div className="note">Você poderá refinar sua área de atuação a qualquer momento nas configurações.</div> },
     { t: "Conecte seu e-mail", d: "Gmail, Outlook ou encaminhamento inteligente.", body: <div className="note">A integração de e-mail entra em breve. Por enquanto, sua AXIA já nasce com uma demonstração para você explorar.</div> },
-    { t: "Configure seus alertas", d: "Aplicativo, e-mail e (em breve) WhatsApp.", body: <div className="note">Alertas por aplicativo e e-mail já ficam ativos por padrão.</div> },
+    { t: "Configure seus alertas", d: "E-mail, push e (em breve) WhatsApp — em configuração.", body: <div className="note">Os alertas por e-mail e push serão ativados quando a integração de e-mail e as notificações estiverem disponíveis na sua conta.</div> },
     { t: "Tudo pronto", d: "Sua central inteligente de perícias está configurada.", body: <div className="note">Clique em “Entrar na AXIA” para ver sua dashboard.</div> },
   ];
 

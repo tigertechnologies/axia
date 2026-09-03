@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { openBillingPortal } from "./actions";
+import { openBillingPortal, deleteAccount } from "./actions";
 import { signOut } from "../dashboard/actions";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -13,6 +13,18 @@ export default function ConfigClient({ email, nome, crm, uf, especialidade, plan
   { email: string; nome: string; crm: string; uf: string; especialidade: string; planLabel: string; status: string }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const [delOpen, setDelOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [delLoading, setDelLoading] = useState(false);
+  const [delErr, setDelErr] = useState("");
+
+  async function excluir() {
+    setDelErr(""); setDelLoading(true);
+    const r = await deleteAccount(confirmText);
+    setDelLoading(false);
+    if (r && "error" in r) setDelErr(r.error === "confirm_mismatch" ? "Digite EXCLUIR para confirmar." : "Não foi possível excluir. Tente novamente.");
+    // sucesso → redireciona no servidor
+  }
 
   async function portal() {
     setErr(""); setLoading(true);
@@ -56,7 +68,28 @@ export default function ConfigClient({ email, nome, crm, uf, especialidade, plan
       <div style={card}>
         <h3 style={{ fontFamily: "'Sora',sans-serif", color: "#10233F", marginBottom: 10 }}>Conta</h3>
         <form action={signOut}><button className="btn btn-ghost" type="submit">Sair da conta</button></form>
-        <p style={{ fontSize: 12.5, color: "#6B7C93", marginTop: 12 }}>Troca de senha e exclusão de conta serão adicionadas com o envio transacional de e-mail configurado.</p>
+        <p style={{ fontSize: 12.5, color: "#6B7C93", marginTop: 12 }}>Troca de senha: use “Esqueci minha senha” na tela de login.</p>
+      </div>
+
+      <div style={{ ...card, borderColor: "#F3D9CE", background: "#FFF9F7" }}>
+        <h3 style={{ fontFamily: "'Sora',sans-serif", color: "#8f3b25", marginBottom: 6 }}>Excluir conta</h3>
+        <p style={{ fontSize: 13.5, color: "#a05a44", marginBottom: 12 }}>
+          A exclusão é permanente e remove seus dados da AXIA. Sua assinatura ativa será cancelada no provedor de pagamento. Períodos já pagos seguem as condições do plano.
+        </p>
+        {!delOpen ? (
+          <button className="btn-back" style={{ borderColor: "#E0A99A", color: "#C0492E" }} onClick={() => setDelOpen(true)}>Excluir minha conta</button>
+        ) : (
+          <div>
+            {delErr && <div className="err">{delErr}</div>}
+            <p style={{ fontSize: 13.5, marginBottom: 8 }}>Para confirmar, digite <b>EXCLUIR</b>:</p>
+            <input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder="EXCLUIR"
+              style={{ padding: "10px 12px", border: "1px solid #E4E9F0", borderRadius: 10, fontFamily: "'Inter',sans-serif", marginRight: 10 }} />
+            <div style={{ marginTop: 12, display: "flex", gap: 10 }}>
+              <button className="btn-back" onClick={() => { setDelOpen(false); setConfirmText(""); setDelErr(""); }} disabled={delLoading}>Cancelar</button>
+              <button className="btn-full" style={{ width: "auto", padding: "12px 20px", background: "#C0492E" }} onClick={excluir} disabled={delLoading || confirmText !== "EXCLUIR"}>{delLoading ? "Excluindo…" : "Excluir permanentemente"}</button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
