@@ -40,6 +40,7 @@ function Form() {
           <div className="field"><label>Senha</label><input type="password" value={senha} onChange={(e)=>setSenha(e.target.value)} required/></div>
           <button className="btn-full" disabled={loading}>{loading ? "Entrando…" : "Entrar"}</button>
         </form>
+        <p className="auth-foot" style={{ marginTop: 14 }}><Link href="/esqueci-senha">Esqueci minha senha</Link></p>
         <p className="auth-foot">Ainda não tem conta? <Link href="/cadastro">Criar conta</Link></p>
       </div>
     </div>
