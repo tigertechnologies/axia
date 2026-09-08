@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { classifyEmail } from "@/lib/classify";
+import { createHash } from "crypto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,11 +30,16 @@ export async function POST(req: Request) {
   const admin = createSupabaseAdmin();
   const c = await classifyEmail(`${payload.Subject ?? ""}\n${text}`);
 
-  await admin.from("communications").insert({
+  const source_hash = createHash("sha256").update(((payload.Subject ?? "") + "\n" + text).trim().toLowerCase()).digest("hex");
+  const { error: insComm } = await admin.from("communications").insert({
     org_id: orgId, category: c.category, sender: c.sender || fromName,
     subject: (payload.Subject || c.subject).slice(0, 200), snippet: c.snippet,
-    process_ref: c.process_ref, received_at: new Date().toISOString(), validated: false,
+    process_ref: c.process_ref, received_at: new Date().toISOString(), validated: false, source_hash,
   });
+  if (insComm) {
+    if ((insComm as any).code === "23505") return NextResponse.json({ received: true, duplicate: true });
+    return NextResponse.json({ error: "db_error" }, { status: 500 });
+  }
 
   if (c.due_date) {  // só quando vencimento explícito e válido (A03/A04)
     await admin.from("prazos").insert({ org_id: orgId, titulo: (payload.Subject || c.subject).slice(0, 60), process_ref: c.process_ref, due_date: c.due_date, status: "a_validar" });

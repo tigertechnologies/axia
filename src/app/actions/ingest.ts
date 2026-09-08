@@ -3,6 +3,7 @@
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { classifyEmail } from "@/lib/classify";
 import { revalidatePath } from "next/cache";
+import { createHash } from "crypto";
 
 export async function analyzeEmail(text: string) {
   if (!text || text.trim().length < 5) return { error: "Cole o conteúdo do e-mail." };
@@ -14,14 +15,18 @@ export async function analyzeEmail(text: string) {
   if (!org) return { error: "no_org" };
 
   const c = await classifyEmail(text);
+  const source_hash = createHash("sha256").update(text.trim().toLowerCase()).digest("hex");
 
-  // 1) grava a comunicação classificada na inbox
+  // 1) grava a comunicação classificada na inbox (dedup por conteúdo)
   const { error: e1 } = await supabase.from("communications").insert({
     org_id: org.id, category: c.category, sender: c.sender, subject: c.subject,
     snippet: c.snippet, process_ref: c.process_ref, received_at: new Date().toISOString(),
-    validated: false,
+    validated: false, source_hash,
   });
-  if (e1) return { error: e1.message };
+  if (e1) {
+    if ((e1 as any).code === "23505") return { ok: true as const, duplicate: true, category: c.category, process_ref: c.process_ref, needs_review: c.needs_review, extras: ["já ingerido antes — não duplicado"] };
+    return { error: e1.message };
+  }
 
   const extras: string[] = [];
 

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 // ── Prazos ──────────────────────────────────────────────────
 export async function setPrazoStatus(id: string, status: "a_validar" | "confirmado" | "urgente") {
+  if (!["a_validar","confirmado","urgente"].includes(status)) return;
   const supabase = createSupabaseServer();
   await supabase.from("prazos").update({ status }).eq("id", id);
   revalidatePath("/prazos"); revalidatePath("/dashboard"); revalidatePath("/agenda");
@@ -24,6 +25,7 @@ export async function advanceHonorario(id: string, current: string) {
 }
 
 export async function setHonorarioStatus(id: string, status: string) {
+  if (!["proposto","aprovado","depositado","recebido"].includes(status)) return;
   const supabase = createSupabaseServer();
   const patch: any = { status };
   if (status === "recebido") patch.paid_at = new Date().toISOString();
