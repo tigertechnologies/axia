@@ -16,8 +16,8 @@ export const PLANS: Record<string, PlanDef> = {
   essential_annual:  { code: "essential", name: "AXIA Essential", interval: "year",  amount: 69900 },
   pro_monthly:       { code: "pro",       name: "AXIA Pro",       interval: "month", amount: 11990 },
   pro_annual:        { code: "pro",       name: "AXIA Pro",       interval: "year",  amount: 119900 },
-  office_monthly:    { code: "office",    name: "AXIA Office",    interval: "month", amount: 24990 },
-  office_annual:     { code: "office",    name: "AXIA Office",    interval: "year",  amount: 249900 },
+  office_monthly:    { code: "office",    name: "AXIA Master",    interval: "month", amount: 24990 },
+  office_annual:     { code: "office",    name: "AXIA Master",    interval: "year",  amount: 249900 },
 };
 
 export function getPlan(planId: string): PlanDef | null {

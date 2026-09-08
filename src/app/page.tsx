@@ -7,21 +7,24 @@ const PLANS = [
   {
     code: "essential",
     name: "Essential",
+    tagline: "Nunca perca uma nomeação ou prazo",
     m: "69,90",
     a: "699",
     altM: "Cobrado mensalmente",
     altA: "R$ 58,25/mês • cobrado anualmente",
     pop: false,
     features: [
-      "Identificação de nomeações e prazos",
-      "1 caixa de e-mail conectada",
-      "Alertas por e-mail e aplicativo",
-      "Inbox inteligente organizada",
+      "1 e-mail conectado",
+      "Inbox inteligente (classificação automática)",
+      "Nomeações e prazos monitorados",
+      "Alertas por e-mail",
+      "Até 100 análises por mês",
     ],
   },
   {
     code: "pro",
     name: "Pro",
+    tagline: "Sua central completa de perícias",
     m: "119,90",
     a: "1.199",
     altM: "Cobrado mensalmente",
@@ -29,14 +32,17 @@ const PLANS = [
     pop: true,
     features: [
       "Tudo do Essential",
-      "Mais caixas de e-mail conectadas",
-      "Controle de honorários e agenda",
-      "Prioridade na análise da IA",
+      "Perícias e Agenda",
+      "Controle de honorários (proposto → recebido)",
+      "Processos e busca avançada",
+      "Alertas push no app · em breve",
+      "Até 500 análises por mês",
     ],
   },
   {
     code: "office",
-    name: "Office",
+    name: "Master",
+    tagline: "Trate sua perícia como um negócio",
     m: "249,90",
     a: "2.499",
     altM: "Cobrado mensalmente",
@@ -44,9 +50,11 @@ const PLANS = [
     pop: false,
     features: [
       "Tudo do Pro",
-      "Vários usuários no mesmo escritório",
-      "Perfil e gestão de escritório",
+      "Relatórios e exportação · em breve",
+      "Histórico estendido · em breve",
+      "Alerta por WhatsApp · em breve",
       "Suporte prioritário",
+      "Análises ilimitadas",
     ],
   },
 ];
@@ -320,11 +328,16 @@ export default function Landing() {
           <div className="plan-grid">
             {PLANS.map((p) => (
               <div className={"plan reveal" + (p.pop ? " pop" : "")} key={p.code}>
-                {p.pop && <span className="badge">Mais escolhido</span>}
+                {p.pop && <span className="badge">Recomendado</span>}
                 <span className="pname">{p.name}</span>
+                <p style={{ fontSize: 13, color: "#6B7C93", margin: "2px 0 10px", minHeight: 34 }}>{p.tagline}</p>
                 <div className="price"><span className="cur">R$</span><span className="val">{annual ? p.a : p.m}</span><span className="per">{annual ? "/ano" : "/mês"}</span></div>
                 <p className="alt">{annual ? p.altA : p.altM}</p>
-                <ul>{p.features.map((f) => (<li key={f}><Check />{f}</li>))}</ul>
+                <ul>{p.features.map((f) => {
+                  const soon = f.includes("· em breve");
+                  const label = f.replace(" · em breve", "");
+                  return <li key={f}><Check />{label}{soon && <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 600, color: "#9a7a12", background: "#F7F0DA", padding: "1px 7px", borderRadius: 10 }}>em breve</span>}</li>;
+                })}</ul>
                 <Link className={"btn " + (p.pop ? "btn-primary" : "btn-ghost")} href={`/checkout?plan=${p.code}_${annual ? "annual" : "monthly"}`}>Assinar {p.name}</Link>
               </div>
             ))}

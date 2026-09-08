@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 function planLabelFrom(planId: string | null) {
   if (!planId) return "AXIA";
   const c = planId.split("_")[0];
-  return "Plano " + c[0].toUpperCase() + c.slice(1);
+  const nomes: Record<string,string> = { essential: "Essential", pro: "Pro", office: "Master" };
+  return "Plano " + (nomes[c] ?? (c[0].toUpperCase() + c.slice(1)));
 }
 
 export default async function ConfiguracoesPage() {

@@ -10,7 +10,7 @@ const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","P
 const CODES: { code: string; label: string }[] = [
   { code: "essential", label: "Essential" },
   { code: "pro", label: "Pro" },
-  { code: "office", label: "Office" },
+  { code: "office", label: "Master" },
 ];
 
 function Checkout() {
