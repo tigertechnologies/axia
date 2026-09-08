@@ -68,7 +68,7 @@ function extractDueDate(text: string): { date: string | null; note: string | nul
 }
 
 const RULES: { cat: CommCategory; kws: RegExp; weight: number }[] = [
-  { cat: "nomeacao", kws: /nomea[çc]|perito nomeado|indica[çc][aã]o do perito|encargo de perito/i, weight: 3 },
+  { cat: "nomeacao", kws: /nomea|perito nomead|nomead[oa]? perito|indica[çc][aã]o do perito|encargo de perito/i, weight: 3 },
   { cat: "pericia", kws: /per[íi]cia|agendament|data da per[íi]cia|designad|comparecer/i, weight: 2 },
   { cat: "prazo", kws: /prazo|dias corridos|dias [úu]teis|manifest|entrega de laudo|apresenta[çc][aã]o do laudo/i, weight: 2 },
   { cat: "honorarios", kws: /honor[áa]rio|arbitrad|dep[óo]sito|levantamento|R\$\s?\d/i, weight: 2 },
