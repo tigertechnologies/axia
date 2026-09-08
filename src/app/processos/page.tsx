@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import AppShell from "../AppShell";
+import UpgradeGate from "../UpgradeGate";
+import { planAllows } from "@/lib/plans";
 import ProcessosClient, { type Processo } from "./ProcessosClient";
 import "../dashboard/dashboard.css";
 
@@ -21,7 +23,7 @@ export default async function ProcessosPage() {
   const [{ data: profile }, { data: org }, { data: comms }, { data: prazos }, { data: pericias }, { data: honorarios }] =
     await Promise.all([
       supabase.from("profiles").select("nome, onboarding_completed").eq("id", user.id).maybeSingle(),
-      supabase.from("organizations").select("plan_id").eq("owner_id", user.id).maybeSingle(),
+      supabase.from("organizations").select("plan_id, subscription_status").eq("owner_id", user.id).maybeSingle(),
       supabase.from("communications").select("*"),
       supabase.from("prazos").select("*"),
       supabase.from("pericias").select("*"),
@@ -59,6 +61,13 @@ export default async function ProcessosPage() {
     pericias: PE.length,
   };
   const bell = C.filter((c) => c.category === "nomeacao" && !c.validated).length + P.filter((p) => p.status === "urgente").length;
+
+  const _allowed = planAllows(org?.plan_id ?? null, org?.subscription_status ?? null, "processos");
+  if (!_allowed) return (
+    <AppShell nome={profile?.nome ?? "Doutor(a)"} planLabel={planLabelFrom(org?.plan_id ?? null)} counts={counts} bell={bell}>
+      <UpgradeGate titulo="Processos" plano="Pro" />
+    </AppShell>
+  );
 
   return (
     <AppShell nome={profile?.nome ?? "Doutor(a)"} planLabel={planLabelFrom(org?.plan_id ?? null)} counts={counts} bell={bell}>

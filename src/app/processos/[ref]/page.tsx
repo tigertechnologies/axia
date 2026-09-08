@@ -1,6 +1,8 @@
 import { redirect, notFound } from "next/navigation";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import AppShell from "../../AppShell";
+import UpgradeGate from "../../UpgradeGate";
+import { planAllows } from "@/lib/plans";
 import ProcessoDetail from "./ProcessoDetail";
 import "../../dashboard/dashboard.css";
 
@@ -22,7 +24,7 @@ export default async function ProcessoPage({ params }: { params: { ref: string }
   const [{ data: profile }, { data: org }, { data: comms }, { data: prazos }, { data: pericias }, { data: honorarios }] =
     await Promise.all([
       supabase.from("profiles").select("nome, onboarding_completed").eq("id", user.id).maybeSingle(),
-      supabase.from("organizations").select("plan_id").eq("owner_id", user.id).maybeSingle(),
+      supabase.from("organizations").select("plan_id, subscription_status").eq("owner_id", user.id).maybeSingle(),
       supabase.from("communications").select("*").eq("process_ref", ref).order("received_at", { ascending: false }),
       supabase.from("prazos").select("*").eq("process_ref", ref).order("due_date", { ascending: true }),
       supabase.from("pericias").select("*").eq("process_ref", ref).order("scheduled_at", { ascending: true }),
@@ -55,6 +57,13 @@ export default async function ProcessoPage({ params }: { params: { ref: string }
   const bell = AC.filter((c) => c.category === "nomeacao" && !c.validated).length + AP.filter((p) => p.status === "urgente").length;
 
   const vara = C.find((c) => c.sender)?.sender ?? PE.find((p) => p.local)?.local ?? null;
+
+  const _allowed = planAllows(org?.plan_id ?? null, org?.subscription_status ?? null, "processos");
+  if (!_allowed) return (
+    <AppShell nome={profile?.nome ?? "Doutor(a)"} planLabel={planLabelFrom(org?.plan_id ?? null)} counts={counts} bell={bell}>
+      <UpgradeGate titulo="Processos" plano="Pro" />
+    </AppShell>
+  );
 
   return (
     <AppShell nome={profile?.nome ?? "Doutor(a)"} planLabel={planLabelFrom(org?.plan_id ?? null)} counts={counts} bell={bell}>

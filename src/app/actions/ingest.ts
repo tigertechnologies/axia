@@ -2,6 +2,7 @@
 
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { classifyEmail } from "@/lib/classify";
+import { analiseLimit } from "@/lib/plans";
 import { revalidatePath } from "next/cache";
 import { createHash } from "crypto";
 
@@ -11,8 +12,20 @@ export async function analyzeEmail(text: string) {
   const supabase = createSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "not_authenticated" };
-  const { data: org } = await supabase.from("organizations").select("id").eq("owner_id", user.id).maybeSingle();
+  const { data: org } = await supabase.from("organizations").select("id, plan_id").eq("owner_id", user.id).maybeSingle();
   if (!org) return { error: "no_org" };
+
+  // Limite de análises/mês por plano (não aplica às linhas de demonstração).
+  const limit = analiseLimit(org.plan_id ?? null);
+  if (limit !== null) {
+    const inicioMes = new Date(); inicioMes.setDate(1); inicioMes.setHours(0, 0, 0, 0);
+    const { count } = await supabase.from("communications")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", org.id).eq("is_demo", false).not("source_hash", "is", null).gte("received_at", inicioMes.toISOString());
+    if ((count ?? 0) >= limit) {
+      return { error: `Você atingiu o limite de ${limit} análises deste mês no seu plano. Faça upgrade para analisar mais.` };
+    }
+  }
 
   const c = await classifyEmail(text);
   const source_hash = createHash("sha256").update(text.trim().toLowerCase()).digest("hex");

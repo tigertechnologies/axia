@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { classifyEmail } from "@/lib/classify";
+import { analiseLimit } from "@/lib/plans";
 import { createHash } from "crypto";
 
 export const runtime = "nodejs";
@@ -28,6 +29,16 @@ export async function POST(req: Request) {
   if (!text || text.trim().length < 3) return NextResponse.json({ received: true, skipped: "empty" });
 
   const admin = createSupabaseAdmin();
+
+  // Limite de análises/mês por plano
+  const { data: orgRow } = await admin.from("organizations").select("plan_id").eq("id", orgId).maybeSingle();
+  const limit = analiseLimit(orgRow?.plan_id ?? null);
+  if (limit !== null) {
+    const inicioMes = new Date(); inicioMes.setDate(1); inicioMes.setHours(0,0,0,0);
+    const { count } = await admin.from("communications").select("id", { count: "exact", head: true }).eq("org_id", orgId).eq("is_demo", false).not("source_hash", "is", null).gte("received_at", inicioMes.toISOString());
+    if ((count ?? 0) >= limit) return NextResponse.json({ received: true, skipped: "limit_reached" });
+  }
+
   const c = await classifyEmail(`${payload.Subject ?? ""}\n${text}`);
 
   const source_hash = createHash("sha256").update(((payload.Subject ?? "") + "\n" + text).trim().toLowerCase()).digest("hex");

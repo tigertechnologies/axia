@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import AppShell from "../AppShell";
+import UpgradeGate from "../UpgradeGate";
+import { planAllows } from "@/lib/plans";
 import PericiasClient from "./PericiasClient";
 import "../dashboard/dashboard.css";
 
@@ -21,7 +23,7 @@ export default async function PericiasPage() {
   const [{ data: profile }, { data: org }, { data: comms }, { data: prazos }, { data: pericias }] =
     await Promise.all([
       supabase.from("profiles").select("nome, onboarding_completed").eq("id", user.id).maybeSingle(),
-      supabase.from("organizations").select("plan_id").eq("owner_id", user.id).maybeSingle(),
+      supabase.from("organizations").select("plan_id, subscription_status").eq("owner_id", user.id).maybeSingle(),
       supabase.from("communications").select("category, validated"),
       supabase.from("prazos").select("status"),
       supabase.from("pericias").select("*").order("scheduled_at", { ascending: true }),
@@ -39,6 +41,13 @@ export default async function PericiasPage() {
     pericias: PE.length,
   };
   const bell = C.filter((c) => c.category === "nomeacao" && !c.validated).length + P.filter((p) => p.status === "urgente").length;
+
+  const _allowed = planAllows(org?.plan_id ?? null, org?.subscription_status ?? null, "pericias");
+  if (!_allowed) return (
+    <AppShell nome={profile?.nome ?? "Doutor(a)"} planLabel={planLabelFrom(org?.plan_id ?? null)} counts={counts} bell={bell}>
+      <UpgradeGate titulo="Perícias" plano="Pro" />
+    </AppShell>
+  );
 
   return (
     <AppShell nome={profile?.nome ?? "Doutor(a)"} planLabel={planLabelFrom(org?.plan_id ?? null)} counts={counts} bell={bell}>
