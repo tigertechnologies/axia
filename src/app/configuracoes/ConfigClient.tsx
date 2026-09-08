@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { openBillingPortal, deleteAccount } from "./actions";
+import { loadDemoData, clearDemoData } from "../actions/demo";
 import { signOut } from "../dashboard/actions";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -17,6 +19,10 @@ export default function ConfigClient({ email, nome, crm, uf, especialidade, plan
   const [confirmText, setConfirmText] = useState("");
   const [delLoading, setDelLoading] = useState(false);
   const [delErr, setDelErr] = useState("");
+  const router = useRouter();
+  const [demoLoading, setDemoLoading] = useState("");
+  async function demoLoad() { setDemoLoading("load"); await loadDemoData(); setDemoLoading(""); router.refresh(); }
+  async function demoClear() { setDemoLoading("clear"); await clearDemoData(); setDemoLoading(""); router.refresh(); }
 
   async function excluir() {
     setDelErr(""); setDelLoading(true);
@@ -69,6 +75,17 @@ export default function ConfigClient({ email, nome, crm, uf, especialidade, plan
         <h3 style={{ fontFamily: "'Sora',sans-serif", color: "#10233F", marginBottom: 10 }}>Conta</h3>
         <form action={signOut}><button className="btn btn-ghost" type="submit">Sair da conta</button></form>
         <p style={{ fontSize: 12.5, color: "#6B7C93", marginTop: 12 }}>Troca de senha: use “Esqueci minha senha” na tela de login.</p>
+      </div>
+
+      <div style={card}>
+        <h3 style={{ fontFamily: "'Sora',sans-serif", color: "#10233F", marginBottom: 6 }}>Demonstração</h3>
+        <p style={{ fontSize: 13.5, color: "#6B7C93", marginBottom: 12 }}>
+          Carregue dados de exemplo (marcados com [DEMO]) para explorar a AXIA sem afetar seus dados reais. Você pode limpar a demonstração quando quiser — isso não remove nenhum dado real.
+        </p>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button className="btn btn-ghost" onClick={demoLoad} disabled={!!demoLoading}>{demoLoading === "load" ? "Carregando…" : "Carregar demonstração"}</button>
+          <button className="btn btn-ghost" onClick={demoClear} disabled={!!demoLoading}>{demoLoading === "clear" ? "Limpando…" : "Limpar demonstração"}</button>
+        </div>
       </div>
 
       <div style={{ ...card, borderColor: "#F3D9CE", background: "#FFF9F7" }}>

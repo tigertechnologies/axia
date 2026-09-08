@@ -72,6 +72,20 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
         </div>
       )}
 
+      {comms.length === 0 && prazos.length === 0 && pericias.length === 0 && honorarios.length === 0 && (
+        <div className="attn" style={{ background: "linear-gradient(100deg,#EAF3FF,#F2F8FF)", borderColor: "#CFE0F5", marginBottom: 22 }}>
+          <span className="at-ic" style={{ background: "#DCEBFF", color: "#2E5E9E" }}><Ico p="inbox" /></span>
+          <div className="at-txt">
+            <h4 style={{ color: "#2E5E9E" }}>Sua central está pronta e vazia</h4>
+            <p style={{ color: "#3b5b86" }}>Comece analisando um e-mail na Inbox — ou carregue uma demonstração em Configurações para explorar.</p>
+          </div>
+          <div className="at-items">
+            <a className="at-pill" href="/inbox" style={{ borderColor: "#CFE0F5", color: "#2E5E9E" }}>Ir para a Inbox</a>
+            <a className="at-pill" href="/configuracoes" style={{ borderColor: "#CFE0F5", color: "#2E5E9E" }}>Carregar demonstração</a>
+          </div>
+        </div>
+      )}
+
       <div className="split">
         <section className="panel">
           <div className="panel-h"><h3>Inbox inteligente</h3><a href="/inbox">Ver tudo</a></div>

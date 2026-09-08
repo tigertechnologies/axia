@@ -2,6 +2,7 @@
 
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { parseBRLToCents } from "@/lib/money";
 
 async function orgId() {
   const supabase = createSupabaseServer();
@@ -38,8 +39,8 @@ export async function createPericia(input: { titulo: string; local: string; proc
 export async function createHonorario(input: { process_ref: string; amount_reais: string; status?: string }) {
   const { supabase, org } = await orgId();
   if (!org) return { error: "no_org" as const };
-  const cents = Math.round(parseFloat(String(input.amount_reais).replace(/\./g, "").replace(",", ".")) * 100);
-  if (!cents || cents < 0) return { error: "valor inválido" };
+  const cents = parseBRLToCents(input.amount_reais);
+  if (cents === null || cents <= 0) return { error: "Informe um valor válido maior que zero." };
   const { error } = await supabase.from("honorarios").insert({
     org_id: org, process_ref: input.process_ref || null, amount_cents: cents, status: input.status || "proposto",
   });
