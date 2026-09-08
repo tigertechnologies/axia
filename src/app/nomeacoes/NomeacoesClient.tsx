@@ -2,6 +2,7 @@
 import { useState, useTransition } from "react";
 import { validateCommunication } from "../dashboard/actions";
 import { Ico } from "../AppShell";
+import Toast from "../Toast";
 
 interface Comm { id: string; category: string; sender: string | null; subject: string; snippet: string | null; process_ref: string | null; received_at: string; validated: boolean }
 
@@ -12,9 +13,11 @@ export default function NomeacoesClient({ nomeacoes }: { nomeacoes: Comm[] }) {
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
   const [done, setDone] = useState<Set<string>>(new Set());
+  const [toast, setToast] = useState("");
+  function flash(m: string){ setToast(m); setTimeout(()=>setToast(""),3500); }
   const [, startTransition] = useTransition();
 
-  function validar(id: string) { setDone((d) => new Set(d).add(id)); startTransition(() => { validateCommunication(id); }); }
+  async function validar(id: string) { setDone((d) => new Set(d).add(id)); const r = await validateCommunication(id); if(r && "error" in r){ setDone(d=>{ const n=new Set(d); n.delete(id); return n; }); flash("Não foi possível validar. Tente novamente."); } }
   const isValid = (c: Comm) => c.validated || done.has(c.id);
 
   const shown = nomeacoes.filter((c) => {
@@ -73,6 +76,7 @@ export default function NomeacoesClient({ nomeacoes }: { nomeacoes: Comm[] }) {
           })}
         </div>
       </section>
+          <Toast msg={toast} />
     </>
   );
 }

@@ -5,8 +5,10 @@ import { revalidatePath } from "next/cache";
 
 export async function validateCommunication(id: string) {
   const supabase = createSupabaseServer();
-  await supabase.from("communications").update({ validated: true }).eq("id", id);
-  revalidatePath("/dashboard");
+  const { error } = await supabase.from("communications").update({ validated: true }).eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard"); revalidatePath("/inbox"); revalidatePath("/nomeacoes");
+  return { ok: true as const };
 }
 
 export async function signOut() {

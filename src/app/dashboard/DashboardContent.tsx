@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatBRL } from "@/lib/plans";
 import { validateCommunication } from "./actions";
 import { Ico } from "../AppShell";
+import Toast from "../Toast";
 
 interface Comm { id: string; category: string; sender: string | null; subject: string; snippet: string | null; process_ref: string | null; received_at: string; validated: boolean }
 interface Pericia { id: string; titulo: string; local: string | null; process_ref: string | null; scheduled_at: string }
@@ -28,6 +29,8 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
 
   const [filter, setFilter] = useState("all");
   const [done, setDone] = useState<Set<string>>(new Set());
+  const [toast, setToast] = useState("");
+  function flash(m: string){ setToast(m); setTimeout(()=>setToast(""),3500); }
   const [, startTransition] = useTransition();
 
   const nomeacoes = comms.filter((c) => c.category === "nomeacao");
@@ -36,7 +39,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
   const receber = honorarios.filter((h) => h.status !== "recebido").reduce((s, h) => s + h.amount_cents, 0);
   const somaStatus = (st: string) => honorarios.filter((h) => h.status === st).reduce((s, h) => s + h.amount_cents, 0);
 
-  function validar(id: string) { setDone((d) => new Set(d).add(id)); startTransition(() => { validateCommunication(id); }); }
+  async function validar(id: string) { setDone((d) => new Set(d).add(id)); const r = await validateCommunication(id); if(r && "error" in r){ setDone(d=>{ const n=new Set(d); n.delete(id); return n; }); flash("Não foi possível validar. Tente novamente."); } }
   const shown = comms.filter((c) => filter === "all" || CAT[c.category]?.f === filter);
 
   return (
@@ -156,6 +159,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
           </section>
         </div>
       </div>
+          <Toast msg={toast} />
     </>
   );
 }

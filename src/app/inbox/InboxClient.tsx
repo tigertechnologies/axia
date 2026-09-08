@@ -4,6 +4,7 @@ import Link from "next/link";
 import { validateCommunication } from "../dashboard/actions";
 import { setArchived } from "../actions/state";
 import AnalyzeEmail from "./AnalyzeEmail";
+import Toast from "../Toast";
 import { Ico } from "../AppShell";
 
 interface Comm { id: string; category: string; sender: string | null; subject: string; snippet: string | null; process_ref: string | null; received_at: string; validated: boolean; archived?: boolean }
@@ -24,10 +25,11 @@ export default function InboxClient({ comms }: { comms: Comm[] }) {
   const [q, setQ] = useState("");
   const [done, setDone] = useState<Set<string>>(new Set());
   const [arch, setArch] = useState<Set<string>>(new Set());
-  const [, startTransition] = useTransition();
-  function arquivar(id: string){ setArch(a=>new Set(a).add(id)); startTransition(()=>{ setArchived(id, true); }); }
+  const [toast, setToast] = useState("");
+  function flash(m:string){ setToast(m); setTimeout(()=>setToast(""),3500); }
+  async function arquivar(id: string){ setArch(a=>new Set(a).add(id)); const r = await setArchived(id, true); if(r && "error" in r){ setArch(a=>{ const n=new Set(a); n.delete(id); return n; }); flash("Não foi possível arquivar. Tente novamente."); } }
 
-  function validar(id: string) { setDone((d) => new Set(d).add(id)); startTransition(() => { validateCommunication(id); }); }
+  async function validar(id: string) { setDone((d) => new Set(d).add(id)); const r = await validateCommunication(id); if(r && "error" in r){ setDone(d=>{ const n=new Set(d); n.delete(id); return n; }); flash("Não foi possível validar. Tente novamente."); } }
 
   const shown = comms.filter((c) => {
     const okCat = filter === "all" || CAT[c.category]?.f === filter;
@@ -83,6 +85,7 @@ export default function InboxClient({ comms }: { comms: Comm[] }) {
           })}
         </div>
       </section>
+          <Toast msg={toast} />
     </>
   );
 }

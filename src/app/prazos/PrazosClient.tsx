@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { setPrazoStatus } from "../actions/state";
 import { createPrazo } from "../actions/create";
 import Modal from "../Modal";
+import Toast from "../Toast";
 import { Ico } from "../AppShell";
 
 interface Prazo { id: string; titulo: string; process_ref: string | null; due_date: string; status: string }
@@ -32,9 +33,10 @@ export default function PrazosClient({ prazos }: { prazos: Prazo[] }) {
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
   const [over, setOver] = useState<Record<string,string>>({});
-  const [, startTransition] = useTransition();
+  const [toast, setToast] = useState("");
+  function flash(m:string){ setToast(m); setTimeout(()=>setToast(""),3500); }
   const eff = (p: Prazo) => over[p.id] ?? p.status;
-  function confirmar(id: string){ setOver(o=>({...o,[id]:"confirmado"})); startTransition(()=>{ setPrazoStatus(id,"confirmado"); }); }
+  async function confirmar(id: string){ setOver(o=>({...o,[id]:"confirmado"})); const r = await setPrazoStatus(id,"confirmado"); if(r && "error" in r){ setOver(o=>{ const n={...o}; delete n[id]; return n; }); flash("Não foi possível confirmar. Tente novamente."); } }
   const router = useRouter();
   const [novo, setNovo] = useState(false);
   const [nf, setNf] = useState({ titulo:"", process_ref:"", due_date:"", status:"a_validar" });
@@ -109,6 +111,7 @@ export default function PrazosClient({ prazos }: { prazos: Prazo[] }) {
         </div>
         <div className="field"><label>Status</label><select value={nf.status} onChange={(e)=>setNf({...nf,status:e.target.value})}><option value="a_validar">A validar</option><option value="confirmado">Confirmado</option><option value="urgente">Urgente</option></select></div>
       </Modal>
+          <Toast msg={toast} />
     </>
   );
 }

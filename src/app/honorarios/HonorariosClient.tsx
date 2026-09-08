@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { advanceHonorario } from "../actions/state";
 import { createHonorario } from "../actions/create";
 import Modal from "../Modal";
+import Toast from "../Toast";
 import { formatBRL } from "@/lib/plans";
 import { Ico } from "../AppShell";
 
@@ -25,10 +26,11 @@ export default function HonorariosClient({ honorarios }: { honorarios: Honorario
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
   const [over, setOver] = useState<Record<string,string>>({});
-  const [, startTransition] = useTransition();
+  const [toast, setToast] = useState("");
+  function flash(m:string){ setToast(m); setTimeout(()=>setToast(""),3500); }
   const eff = (h: Honorario) => over[h.id] ?? h.status;
   const NEXT: Record<string,string> = { proposto:"aprovado", aprovado:"depositado", depositado:"recebido" };
-  function avancar(h: Honorario){ const n=NEXT[eff(h)]; if(!n) return; setOver(o=>({...o,[h.id]:n})); startTransition(()=>{ advanceHonorario(h.id, eff(h)); }); }
+  async function avancar(h: Honorario){ const cur=eff(h); const n=NEXT[cur]; if(!n) return; setOver(o=>({...o,[h.id]:n})); const r = await advanceHonorario(h.id, cur); if(r && "error" in r){ setOver(o=>({...o,[h.id]:cur})); flash("Não foi possível avançar o honorário. Tente novamente."); } }
   const router = useRouter();
   const [novo, setNovo] = useState(false);
   const [nf, setNf] = useState({ process_ref:"", amount_reais:"", status:"proposto" });
@@ -116,6 +118,7 @@ export default function HonorariosClient({ honorarios }: { honorarios: Honorario
           <div className="field"><label>Etapa</label><select value={nf.status} onChange={(e)=>setNf({...nf,status:e.target.value})}><option value="proposto">Proposto</option><option value="aprovado">Aprovado</option><option value="depositado">Depositado</option><option value="recebido">Recebido</option></select></div>
         </div>
       </Modal>
+          <Toast msg={toast} />
     </>
   );
 }
