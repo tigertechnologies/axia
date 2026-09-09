@@ -12,6 +12,7 @@ import {
   type WebhookEvent, type WebhooksResumo, type IngestaoResumo, type IngestionError,
 } from "../actions/system";
 import { adminCancelarAssinatura, adminReativarAssinatura, type FinanceiroRow } from "../actions/finance";
+import { adminCriarCampanha, adminToggleCampanha, type Campanha } from "../actions/campaigns";
 import Toast from "../Toast";
 
 export interface SistemaData {
@@ -19,6 +20,7 @@ export interface SistemaData {
   ingErros: IngestionError[]; config: Record<string, boolean>;
 }
 export interface FinanceiroData { rows: FinanceiroRow[]; erro?: string; stripeTestMode: boolean }
+export interface CampanhasData { rows: Campanha[]; erro?: string }
 
 const STATUS_LABEL: Record<string, string> = {
   active: "Ativa", trialing: "Teste", past_due: "Pgto pendente", unpaid: "Não paga",
@@ -46,14 +48,14 @@ function descreveAcao(e: AuditEvent): string {
   return e.action;
 }
 
-type Aba = "visao" | "assinantes" | "financeiro" | "leads" | "sistema" | "auditoria";
+type Aba = "visao" | "assinantes" | "financeiro" | "campanhas" | "leads" | "sistema" | "auditoria";
 
 export default function AdminClient({
-  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro,
+  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas,
 }: {
   assinantes: Assinante[]; webhooksPendentes: number; erro?: string;
   metricas: Metricas | null; auditoria: AuditEvent[]; historico: Snapshot[]; leads: Lead[];
-  sistema: SistemaData; financeiro: FinanceiroData;
+  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData;
 }) {
   const [aba, setAba] = useState<Aba>("visao");
   const [q, setQ] = useState("");
@@ -88,6 +90,7 @@ export default function AdminClient({
         <Tab id="visao" atual={aba} set={setAba}>Visão geral</Tab>
         <Tab id="assinantes" atual={aba} set={setAba}>Assinantes</Tab>
         <Tab id="financeiro" atual={aba} set={setAba}>Financeiro</Tab>
+        <Tab id="campanhas" atual={aba} set={setAba}>Campanhas</Tab>
         <Tab id="leads" atual={aba} set={setAba}>Leads{leads.length ? ` · ${leads.length}` : ""}</Tab>
         <Tab id="sistema" atual={aba} set={setAba}>Sistema{sistema.whResumo.pendentes ? ` · ${sistema.whResumo.pendentes}` : ""}</Tab>
         <Tab id="auditoria" atual={aba} set={setAba}>Auditoria</Tab>
@@ -138,6 +141,8 @@ export default function AdminClient({
       {aba === "leads" && <LeadsPanel leads={leads} flash={flash} />}
 
       {aba === "financeiro" && <FinanceiroPanel data={financeiro} flash={flash} />}
+
+      {aba === "campanhas" && <CampanhasPanel data={campanhas} flash={flash} />}
 
       {aba === "sistema" && <SistemaPanel data={sistema} flash={flash} />}
 
@@ -318,6 +323,121 @@ const btn: React.CSSProperties = { padding: "8px 12px", border: "1px solid #1630
 const btnGhost: React.CSSProperties = { padding: "6px 12px", border: "1px solid #E4E9F0", background: "#fff", color: "#16305B", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: 600 };
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return <button onClick={onClick} style={{ padding: "5px 12px", borderRadius: 999, border: "1px solid " + (on ? "#1FA89E" : "#E4E9F0"), background: on ? "#E8F6F4" : "#fff", color: on ? "#0F7A70" : "#4A5B72", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: on ? 600 : 500 }}>{children}</button>;
+}
+
+// ── CAMPANHAS ───────────────────────────────────────────────
+function CampanhasPanel({ data, flash }: { data: CampanhasData; flash: (m: string) => void }) {
+  const { rows, erro } = data;
+  const [criando, setCriando] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [togBusy, setTogBusy] = useState("");
+  const [, startT] = useTransition();
+
+  const vazio = { nome: "", codigo: "", tipo: "percentual" as "percentual" | "fixo", valor: "", duracao: "once" as "once" | "repeating" | "forever", meses: "", inicio: "", fim: "", maxUsos: "" };
+  const [f, setF] = useState(vazio);
+  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
+
+  async function criar() {
+    const valorNum = f.tipo === "percentual" ? Number(f.valor) : Math.round(Number(f.valor) * 100);
+    if (!f.codigo.trim()) { flash("Informe o código (ex.: BLACK50)."); return; }
+    if (!valorNum || valorNum <= 0) { flash("Informe o valor do desconto."); return; }
+    setBusy(true);
+    const r = await adminCriarCampanha({
+      nome: f.nome, codigo: f.codigo, tipo: f.tipo, valor: valorNum,
+      duracao: f.duracao, meses: f.meses ? Number(f.meses) : undefined,
+      inicioTs: f.inicio ? Math.floor(new Date(f.inicio).getTime() / 1000) : null,
+      fimTs: f.fim ? Math.floor(new Date(f.fim + "T23:59:59").getTime() / 1000) : null,
+      maxUsos: f.maxUsos ? Number(f.maxUsos) : null,
+    });
+    setBusy(false);
+    if ("error" in r && r.error) { flash(r.error); return; }
+    flash(`Campanha ${("codigo" in r && r.codigo) || ""} criada. Recarregue para ver.`);
+    setF(vazio); setCriando(false);
+  }
+
+  async function toggle(c: Campanha) {
+    setTogBusy(c.promoId);
+    const r = await adminToggleCampanha(c.promoId, !c.ativo);
+    setTogBusy("");
+    flash("error" in r && r.error ? r.error : (c.ativo ? "Campanha desativada." : "Campanha ativada.") + " Recarregue.");
+  }
+
+  const fmtDia = (ts: number | null) => ts ? quando(new Date(ts * 1000).toISOString()) : "—";
+
+  return (
+    <section className="panel">
+      {erro && <div className="err">{erro}</div>}
+      <div className="panel-h" style={{ gap: 12, flexWrap: "wrap" }}>
+        <h3>Campanhas e cupons</h3>
+        <button onClick={() => setCriando((v) => !v)} style={btn}>{criando ? "Fechar" : "+ Nova campanha"}</button>
+      </div>
+
+      {criando && (
+        <div style={{ border: "1px solid #E6EBF2", borderRadius: 12, padding: 16, marginBottom: 16, background: "#FAFBFD" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 12 }}>
+            <Campo label="Nome da campanha"><input value={f.nome} onChange={set("nome")} placeholder="Black Friday 2026" style={inp} /></Campo>
+            <Campo label="Código promocional"><input value={f.codigo} onChange={set("codigo")} placeholder="BLACK50" style={{ ...inp, textTransform: "uppercase" }} /></Campo>
+            <Campo label="Tipo de desconto">
+              <select value={f.tipo} onChange={set("tipo")} style={inp}><option value="percentual">Percentual (%)</option><option value="fixo">Valor fixo (R$)</option></select>
+            </Campo>
+            <Campo label={f.tipo === "percentual" ? "Percentual (1–100)" : "Valor em R$"}>
+              <input type="number" value={f.valor} onChange={set("valor")} placeholder={f.tipo === "percentual" ? "50" : "30,00"} style={inp} />
+            </Campo>
+            <Campo label="Duração do desconto">
+              <select value={f.duracao} onChange={set("duracao")} style={inp}>
+                <option value="once">Só primeira cobrança</option>
+                <option value="repeating">Por X meses</option>
+                <option value="forever">Para sempre</option>
+              </select>
+            </Campo>
+            {f.duracao === "repeating" && <Campo label="Quantos meses"><input type="number" value={f.meses} onChange={set("meses")} placeholder="3" style={inp} /></Campo>}
+            <Campo label="Início do resgate (opcional)"><input type="date" value={f.inicio} onChange={set("inicio")} style={inp} /></Campo>
+            <Campo label="Fim do resgate (opcional)"><input type="date" value={f.fim} onChange={set("fim")} style={inp} /></Campo>
+            <Campo label="Limite de usos (opcional)"><input type="number" value={f.maxUsos} onChange={set("maxUsos")} placeholder="ilimitado" style={inp} /></Campo>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+            <button onClick={() => startT(criar)} disabled={busy} style={btn}>{busy ? "Criando…" : "Criar campanha"}</button>
+            <button onClick={() => { setF(vazio); setCriando(false); }} style={btnGhost}>Cancelar</button>
+          </div>
+          <p style={{ marginTop: 10, fontSize: 12, color: "#6B7C93" }}>A campanha é criada como cupom + código no Stripe. O campo de código já aparece no checkout.</p>
+        </div>
+      )}
+
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+          <thead><tr style={{ textAlign: "left", color: "#6B7C93", borderBottom: "1px solid #E6EBF2" }}>
+            <th style={{ padding: "12px 14px" }}>Código</th><th style={{ padding: "12px 14px" }}>Desconto</th>
+            <th style={{ padding: "12px 14px" }}>Duração</th><th style={{ padding: "12px 14px" }}>Usos</th>
+            <th style={{ padding: "12px 14px" }}>Expira</th><th style={{ padding: "12px 14px" }}>Estado</th><th style={{ padding: "12px 14px" }}></th>
+          </tr></thead>
+          <tbody>
+            {rows.length === 0 && <tr><td colSpan={7} style={{ padding: "28px 14px", textAlign: "center", color: "#6B7C93" }}>Nenhuma campanha ainda. Crie a primeira acima.</td></tr>}
+            {rows.map((c) => (
+              <tr key={c.promoId} style={{ borderBottom: "1px solid #F0F3F7" }}>
+                <td style={{ padding: "12px 14px", fontWeight: 700, color: "#10233F", fontFamily: "monospace" }}>{c.codigo}</td>
+                <td style={{ padding: "12px 14px" }}>{c.descontoLabel}</td>
+                <td style={{ padding: "12px 14px" }}>{c.duracaoLabel}</td>
+                <td style={{ padding: "12px 14px" }}>{c.usos}{c.maxUsos ? ` / ${c.maxUsos}` : ""}</td>
+                <td style={{ padding: "12px 14px", color: "#6B7C93" }}>{fmtDia(c.expiraEm)}</td>
+                <td style={{ padding: "12px 14px" }}><span className={"st " + (c.ativo ? "st-ok" : "st-urg")}>{c.ativo ? "Ativa" : "Inativa"}</span></td>
+                <td style={{ padding: "12px 14px", textAlign: "right" }}>
+                  <button onClick={() => startT(() => toggle(c))} disabled={togBusy === c.promoId} style={btnGhost}>{togBusy === c.promoId ? "…" : (c.ativo ? "Desativar" : "Ativar")}</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
+        Campanhas ficam registradas no Stripe (cupom + código). Percentual e valor fixo; duração à sua escolha; janela de resgate e limite de usos opcionais. Desativar não apaga o histórico.
+      </p>
+    </section>
+  );
+}
+
+const inp: React.CSSProperties = { width: "100%", padding: "8px 10px", border: "1px solid #E4E9F0", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13.5, boxSizing: "border-box" };
+function Campo({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div><label style={{ display: "block", fontSize: 12.5, color: "#4A5B72", marginBottom: 4 }}>{label}</label>{children}</div>;
 }
 
 // ── FINANCEIRO ──────────────────────────────────────────────

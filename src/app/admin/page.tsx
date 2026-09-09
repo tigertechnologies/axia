@@ -10,6 +10,7 @@ import {
   adminListWebhooks, adminWebhooksResumo, adminIngestaoResumo, adminListIngestionErrors,
 } from "../actions/system";
 import { adminListFinanceiro } from "../actions/finance";
+import { adminListCampanhas } from "../actions/campaigns";
 import { PLANS, planCode, isActiveStatus } from "@/lib/plans";
 import AppShell from "../AppShell";
 import AdminClient from "./AdminClient";
@@ -30,7 +31,7 @@ export default async function AdminPage() {
 
   const [
     { data: profile }, list, pendentes, metricas, auditoria, historico, leadsRes,
-    webhooks, whResumo, ingestao, ingErros, financeiro,
+    webhooks, whResumo, ingestao, ingErros, financeiro, campanhas,
   ] = await Promise.all([
     supabase.from("profiles").select("nome").eq("id", user.id).maybeSingle(),
     adminListAssinantes(),
@@ -44,6 +45,7 @@ export default async function AdminPage() {
     adminIngestaoResumo(),
     adminListIngestionErrors(50),
     adminListFinanceiro(),
+    adminListCampanhas(),
   ]);
 
   const assinantes = (list.data ?? []) as Assinante[];
@@ -63,7 +65,6 @@ export default async function AdminPage() {
     site_url: !!process.env.NEXT_PUBLIC_SITE_URL,
     service_role: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
   };
-  // Só um booleano — nunca a chave. Define para qual dashboard o link aponta.
   const stripeTestMode = (process.env.STRIPE_SECRET_KEY ?? "").startsWith("sk_test");
 
   return (
@@ -78,6 +79,7 @@ export default async function AdminPage() {
         leads={leadsRes.data ?? []}
         sistema={{ webhooks, whResumo, ingestao, ingErros, config }}
         financeiro={{ rows: financeiro.data ?? [], erro: financeiro.error, stripeTestMode }}
+        campanhas={{ rows: campanhas.data ?? [], erro: campanhas.error }}
       />
     </AppShell>
   );
