@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { isCurrentUserAdmin } from "../actions/admin";
 import AppShell from "../AppShell";
 import DashboardContent from "./DashboardContent";
 import "./dashboard.css";
@@ -17,6 +18,10 @@ export default async function DashboardPage() {
   const supabase = createSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // Administrador geral não é perito: vai direto para o painel admin,
+  // sem passar pelo onboarding nem pela dashboard de assinante.
+  if (await isCurrentUserAdmin()) redirect("/admin");
 
   const [{ data: profile }, { data: org }, { data: comms }, { data: pericias }, { data: prazos }, { data: honorarios }] =
     await Promise.all([

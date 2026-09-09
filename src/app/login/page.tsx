@@ -3,6 +3,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { isCurrentUserAdmin } from "../actions/admin";
 import "../forms.css";
 
 function Form() {
@@ -19,9 +20,14 @@ function Form() {
     setErr(""); setLoading(true);
     const supabase = createSupabaseBrowser();
     const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    if (error) { setLoading(false); setErr(error.message); return; }
+
+    // Administrador geral entra direto no painel admin; demais seguem o fluxo normal.
+    let destino = next;
+    try { if (await isCurrentUserAdmin()) destino = "/admin"; } catch {}
+
     setLoading(false);
-    if (error) { setErr(error.message); return; }
-    router.push(next);
+    router.push(destino);
     router.refresh();
   }
 
