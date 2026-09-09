@@ -11,12 +11,14 @@ import {
   adminReprocessWebhook, adminReprocessarPendentes,
   type WebhookEvent, type WebhooksResumo, type IngestaoResumo, type IngestionError,
 } from "../actions/system";
+import { adminCancelarAssinatura, adminReativarAssinatura, type FinanceiroRow } from "../actions/finance";
 import Toast from "../Toast";
 
 export interface SistemaData {
   webhooks: WebhookEvent[]; whResumo: WebhooksResumo; ingestao: IngestaoResumo;
   ingErros: IngestionError[]; config: Record<string, boolean>;
 }
+export interface FinanceiroData { rows: FinanceiroRow[]; erro?: string; stripeTestMode: boolean }
 
 const STATUS_LABEL: Record<string, string> = {
   active: "Ativa", trialing: "Teste", past_due: "Pgto pendente", unpaid: "Não paga",
@@ -44,14 +46,14 @@ function descreveAcao(e: AuditEvent): string {
   return e.action;
 }
 
-type Aba = "visao" | "assinantes" | "leads" | "sistema" | "auditoria";
+type Aba = "visao" | "assinantes" | "financeiro" | "leads" | "sistema" | "auditoria";
 
 export default function AdminClient({
-  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema,
+  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro,
 }: {
   assinantes: Assinante[]; webhooksPendentes: number; erro?: string;
   metricas: Metricas | null; auditoria: AuditEvent[]; historico: Snapshot[]; leads: Lead[];
-  sistema: SistemaData;
+  sistema: SistemaData; financeiro: FinanceiroData;
 }) {
   const [aba, setAba] = useState<Aba>("visao");
   const [q, setQ] = useState("");
@@ -85,6 +87,7 @@ export default function AdminClient({
       <div style={{ display: "flex", gap: 6, marginBottom: 20, borderBottom: "1px solid #E6EBF2", flexWrap: "wrap" }}>
         <Tab id="visao" atual={aba} set={setAba}>Visão geral</Tab>
         <Tab id="assinantes" atual={aba} set={setAba}>Assinantes</Tab>
+        <Tab id="financeiro" atual={aba} set={setAba}>Financeiro</Tab>
         <Tab id="leads" atual={aba} set={setAba}>Leads{leads.length ? ` · ${leads.length}` : ""}</Tab>
         <Tab id="sistema" atual={aba} set={setAba}>Sistema{sistema.whResumo.pendentes ? ` · ${sistema.whResumo.pendentes}` : ""}</Tab>
         <Tab id="auditoria" atual={aba} set={setAba}>Auditoria</Tab>
@@ -133,6 +136,8 @@ export default function AdminClient({
       )}
 
       {aba === "leads" && <LeadsPanel leads={leads} flash={flash} />}
+
+      {aba === "financeiro" && <FinanceiroPanel data={financeiro} flash={flash} />}
 
       {aba === "sistema" && <SistemaPanel data={sistema} flash={flash} />}
 
@@ -310,8 +315,102 @@ function LeadsPanel({ leads, flash }: { leads: Lead[]; flash: (m: string) => voi
 }
 
 const btn: React.CSSProperties = { padding: "8px 12px", border: "1px solid #16305B", background: "#16305B", color: "#fff", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 600 };
+const btnGhost: React.CSSProperties = { padding: "6px 12px", border: "1px solid #E4E9F0", background: "#fff", color: "#16305B", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: 600 };
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return <button onClick={onClick} style={{ padding: "5px 12px", borderRadius: 999, border: "1px solid " + (on ? "#1FA89E" : "#E4E9F0"), background: on ? "#E8F6F4" : "#fff", color: on ? "#0F7A70" : "#4A5B72", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: on ? 600 : 500 }}>{children}</button>;
+}
+
+// ── FINANCEIRO ──────────────────────────────────────────────
+function FinanceiroPanel({ data, flash }: { data: FinanceiroData; flash: (m: string) => void }) {
+  const { rows, erro, stripeTestMode } = data;
+  const [busy, setBusy] = useState<string>("");
+  const [q, setQ] = useState("");
+  const [, startT] = useTransition();
+
+  const base = "https://dashboard.stripe.com" + (stripeTestMode ? "/test" : "");
+  const stripeLink = (r: FinanceiroRow) =>
+    r.stripe_subscription_id ? `${base}/subscriptions/${r.stripe_subscription_id}`
+    : r.stripe_customer_id ? `${base}/customers/${r.stripe_customer_id}` : null;
+
+  const mrrRow = (r: FinanceiroRow) => mensal(r.plan_id);
+  const mrrTotal = rows.filter((r) => ["active", "trialing", "past_due"].includes(r.subscription_status ?? "")).reduce((s, r) => s + mrrRow(r), 0);
+  const shown = rows.filter((r) => !q || (`${r.nome} ${r.email} ${r.plan_id ?? ""}`).toLowerCase().includes(q.toLowerCase()));
+
+  async function cancelar(r: FinanceiroRow) {
+    if (!confirm(`Cancelar a assinatura de ${r.email} ao fim do período atual? O acesso continua até ${r.current_period_end ? quando(r.current_period_end) : "o fim do ciclo"}.`)) return;
+    setBusy(r.org_id);
+    const res = await adminCancelarAssinatura(r.org_id);
+    setBusy("");
+    flash("error" in res && res.error ? res.error : "Cancelamento agendado. Recarregue para atualizar.");
+  }
+  async function reativar(r: FinanceiroRow) {
+    setBusy(r.org_id);
+    const res = await adminReativarAssinatura(r.org_id);
+    setBusy("");
+    flash("error" in res && res.error ? res.error : "Assinatura reativada. Recarregue para atualizar.");
+  }
+
+  return (
+    <section className="panel">
+      {erro && <div className="err">{erro}</div>}
+      <div className="kpis" style={{ marginBottom: 16 }}>
+        <div className="kpi"><div className="kn" style={{ fontSize: 24 }}>{formatBRL(mrrTotal)}</div><div className="kl">MRR estimado</div></div>
+        <div className="kpi"><div className="kn">{rows.filter((r) => r.stripe_subscription_id).length}</div><div className="kl">Reais no Stripe</div></div>
+        <div className="kpi"><div className="kn">{rows.filter((r) => r.cancel_at_period_end).length}</div><div className="kl">Cancelam no fim do ciclo</div></div>
+        <div className="kpi"><div className="kn" style={{ fontSize: 15, fontWeight: 600 }}>{stripeTestMode ? "Teste" : "Produção"}</div><div className="kl">Modo do Stripe</div></div>
+      </div>
+
+      <div className="panel-h" style={{ gap: 12, flexWrap: "wrap" }}>
+        <h3>Assinaturas</h3>
+        <div className="search" style={{ maxWidth: 300, margin: 0 }}>
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.8}><circle cx="7" cy="7" r="5" /><path d="M14 14l-3.5-3.5" strokeLinecap="round" /></svg>
+          <input placeholder="Buscar assinante…" value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+      </div>
+
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+          <thead><tr style={{ textAlign: "left", color: "#6B7C93", borderBottom: "1px solid #E6EBF2" }}>
+            <th style={{ padding: "12px 14px" }}>Assinante</th><th style={{ padding: "12px 14px" }}>Plano</th>
+            <th style={{ padding: "12px 14px" }}>Situação</th><th style={{ padding: "12px 14px" }}>Renovação</th>
+            <th style={{ padding: "12px 14px" }}>Stripe</th><th style={{ padding: "12px 14px" }}>Ações</th>
+          </tr></thead>
+          <tbody>
+            {shown.length === 0 && <tr><td colSpan={6} style={{ padding: "28px 14px", textAlign: "center", color: "#6B7C93" }}>Nenhum assinante.</td></tr>}
+            {shown.map((r) => {
+              const real = !!r.stripe_subscription_id;
+              const link = stripeLink(r);
+              return (
+                <tr key={r.org_id} style={{ borderBottom: "1px solid #F0F3F7" }}>
+                  <td style={{ padding: "12px 14px" }}><div style={{ fontWeight: 600, color: "#10233F" }}>{r.nome.trim() || "—"}</div><div style={{ color: "#6B7C93" }}>{r.email}</div></td>
+                  <td style={{ padding: "12px 14px" }}>{planoNome(r.plan_id)} · {formatBRL(mrrRow(r))}/mês</td>
+                  <td style={{ padding: "12px 14px" }}>
+                    <span className={"st " + (["active","trialing"].includes(r.subscription_status ?? "") ? "st-ok" : "st-urg")}>{STATUS_LABEL[r.subscription_status ?? ""] ?? r.subscription_status}</span>
+                    {r.cancel_at_period_end && <div style={{ color: "#C0492E", fontSize: 12, marginTop: 2 }}>cancela no fim</div>}
+                  </td>
+                  <td style={{ padding: "12px 14px", color: "#6B7C93", whiteSpace: "nowrap" }}>{r.current_period_end ? quando(r.current_period_end) : "—"}</td>
+                  <td style={{ padding: "12px 14px" }}>
+                    {real ? (link && <a href={link} target="_blank" rel="noreferrer" style={{ color: "#1FA89E", fontSize: 12.5, fontWeight: 600 }}>Abrir ↗</a>)
+                          : <span title="Conta sem assinatura no Stripe (criada manualmente)" style={{ fontSize: 12, color: "#9AA7B8" }}>manual</span>}
+                  </td>
+                  <td style={{ padding: "12px 14px" }}>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {r.cancel_at_period_end
+                        ? <button onClick={() => startT(() => reativar(r))} disabled={!real || busy === r.org_id} style={{ ...btnGhost, opacity: real ? 1 : 0.5 }}>{busy === r.org_id ? "…" : "Reativar"}</button>
+                        : <button onClick={() => startT(() => cancelar(r))} disabled={!real || busy === r.org_id} style={{ ...btnGhost, opacity: real ? 1 : 0.5 }}>{busy === r.org_id ? "…" : "Cancelar"}</button>}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
+        Cancelar agenda o encerramento para o fim do ciclo (reversível, não corta acesso na hora). Contas “manual” não têm assinatura no Stripe — reembolso e troca de plano chegam num próximo lote.
+      </p>
+    </section>
+  );
 }
 
 // ── SISTEMA ─────────────────────────────────────────────────
