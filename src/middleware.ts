@@ -19,6 +19,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // admin geral: acesso liberado sem exigir assinatura.
+  // Precisa vir ANTES da trava de assinatura, senão o admin (que não tem
+  // assinatura) cai no /checkout como qualquer conta sem plano.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profile?.is_admin === true) {
+    return response;
+  }
+
   // checa status da assinatura da organização
   const { data: org } = await supabase
     .from("organizations")
