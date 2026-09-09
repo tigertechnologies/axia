@@ -7,7 +7,16 @@ import {
 } from "../actions/admin";
 import { adminUpdateLead, adminImportLeads, type Lead } from "../actions/leads";
 import { LEAD_STATUS } from "../actions/leads-const";
+import {
+  adminReprocessWebhook, adminReprocessarPendentes,
+  type WebhookEvent, type WebhooksResumo, type IngestaoResumo, type IngestionError,
+} from "../actions/system";
 import Toast from "../Toast";
+
+export interface SistemaData {
+  webhooks: WebhookEvent[]; whResumo: WebhooksResumo; ingestao: IngestaoResumo;
+  ingErros: IngestionError[]; config: Record<string, boolean>;
+}
 
 const STATUS_LABEL: Record<string, string> = {
   active: "Ativa", trialing: "Teste", past_due: "Pgto pendente", unpaid: "Não paga",
@@ -35,13 +44,14 @@ function descreveAcao(e: AuditEvent): string {
   return e.action;
 }
 
-type Aba = "visao" | "assinantes" | "leads" | "auditoria";
+type Aba = "visao" | "assinantes" | "leads" | "sistema" | "auditoria";
 
 export default function AdminClient({
-  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads,
+  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema,
 }: {
   assinantes: Assinante[]; webhooksPendentes: number; erro?: string;
   metricas: Metricas | null; auditoria: AuditEvent[]; historico: Snapshot[]; leads: Lead[];
+  sistema: SistemaData;
 }) {
   const [aba, setAba] = useState<Aba>("visao");
   const [q, setQ] = useState("");
@@ -76,6 +86,7 @@ export default function AdminClient({
         <Tab id="visao" atual={aba} set={setAba}>Visão geral</Tab>
         <Tab id="assinantes" atual={aba} set={setAba}>Assinantes</Tab>
         <Tab id="leads" atual={aba} set={setAba}>Leads{leads.length ? ` · ${leads.length}` : ""}</Tab>
+        <Tab id="sistema" atual={aba} set={setAba}>Sistema{sistema.whResumo.pendentes ? ` · ${sistema.whResumo.pendentes}` : ""}</Tab>
         <Tab id="auditoria" atual={aba} set={setAba}>Auditoria</Tab>
       </div>
 
@@ -122,6 +133,8 @@ export default function AdminClient({
       )}
 
       {aba === "leads" && <LeadsPanel leads={leads} flash={flash} />}
+
+      {aba === "sistema" && <SistemaPanel data={sistema} flash={flash} />}
 
       {aba === "auditoria" && (
         <section className="panel">
@@ -299,6 +312,118 @@ function LeadsPanel({ leads, flash }: { leads: Lead[]; flash: (m: string) => voi
 const btn: React.CSSProperties = { padding: "8px 12px", border: "1px solid #16305B", background: "#16305B", color: "#fff", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 600 };
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return <button onClick={onClick} style={{ padding: "5px 12px", borderRadius: 999, border: "1px solid " + (on ? "#1FA89E" : "#E4E9F0"), background: on ? "#E8F6F4" : "#fff", color: on ? "#0F7A70" : "#4A5B72", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: on ? 600 : 500 }}>{children}</button>;
+}
+
+// ── SISTEMA ─────────────────────────────────────────────────
+const CONFIG_LABEL: Record<string, string> = {
+  stripe_key: "Chave do Stripe", stripe_webhook: "Assinatura do webhook Stripe",
+  inbound_secret: "Segredo de entrada (Postmark)", inbound_org: "Organização de entrada",
+  site_url: "URL do site", service_role: "Chave de serviço (Supabase)",
+};
+
+function SistemaPanel({ data, flash }: { data: SistemaData; flash: (m: string) => void }) {
+  const { webhooks, whResumo, ingestao, ingErros, config } = data;
+  const [reproc, setReproc] = useState<string>("");
+  const [, startT] = useTransition();
+
+  async function reprocessarUm(id: string) {
+    setReproc(id);
+    const r = await adminReprocessWebhook(id);
+    setReproc("");
+    flash("error" in r && r.error ? "Falha ao reprocessar." : "Reprocessado. Recarregue para atualizar.");
+  }
+  async function reprocessarTodos() {
+    setReproc("all");
+    const r = await adminReprocessarPendentes();
+    setReproc("");
+    if ("error" in r && r.error) flash("Falha ao reprocessar.");
+    else if ("reprocessados" in r) flash(`${r.reprocessados} reprocessados, ${r.falhas} falhas. Recarregue.`);
+  }
+
+  return (
+    <>
+      {/* Cartões de saúde */}
+      <div className="kpis" style={{ marginBottom: 16 }}>
+        <div className="kpi"><div className="kn">{whResumo.pendentes}</div><div className="kl">Webhooks pendentes</div><div className={"kt " + (whResumo.pendentes > 0 ? "warn" : "up")}>{whResumo.total} no total</div></div>
+        <div className="kpi"><div className="kn" style={{ fontSize: 15, fontWeight: 600 }}>{whResumo.ultimo ? quandoHora(whResumo.ultimo) : "—"}</div><div className="kl">Último webhook OK</div></div>
+        <div className="kpi"><div className="kn" style={{ fontSize: 15, fontWeight: 600 }}>{ingestao.ultimo_email ? quandoHora(ingestao.ultimo_email) : "—"}</div><div className="kl">Último e-mail ingerido</div><div className="kt up">{ingestao.total_mes} no mês</div></div>
+        <div className="kpi"><div className="kn">{ingErros.length}</div><div className="kl">Erros de ingestão</div><div className={"kt " + (ingErros.length > 0 ? "warn" : "up")}>{ingErros.length > 0 ? "verificar" : "ok"}</div></div>
+      </div>
+
+      {/* Configuração */}
+      <section className="panel" style={{ marginBottom: 18 }}>
+        <div className="panel-h"><h3>Configuração</h3></div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 10, padding: "4px 2px" }}>
+          {Object.keys(CONFIG_LABEL).map((k) => (
+            <div key={k} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5 }}>
+              <span style={{ width: 10, height: 10, borderRadius: 999, background: config[k] ? "#1FA89E" : "#C0492E", flex: "0 0 auto" }} />
+              <span style={{ color: "#10233F" }}>{CONFIG_LABEL[k]}</span>
+              <span style={{ marginLeft: "auto", color: config[k] ? "#0F7A70" : "#C0492E", fontSize: 12 }}>{config[k] ? "configurado" : "faltando"}</span>
+            </div>
+          ))}
+        </div>
+        <p style={{ marginTop: 12, fontSize: 12.5, color: "#6B7C93" }}>Mostra apenas se cada variável está definida no ambiente — nunca o valor em si.</p>
+      </section>
+
+      {/* Webhooks */}
+      <section className="panel" style={{ marginBottom: 18 }}>
+        <div className="panel-h" style={{ gap: 12, flexWrap: "wrap" }}>
+          <h3>Webhooks Stripe</h3>
+          {whResumo.pendentes > 0 && (
+            <button onClick={() => startT(reprocessarTodos)} disabled={reproc === "all"} style={btn}>
+              {reproc === "all" ? "Reprocessando…" : `Reprocessar pendentes (${whResumo.pendentes})`}
+            </button>
+          )}
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead><tr style={{ textAlign: "left", color: "#6B7C93", borderBottom: "1px solid #E6EBF2" }}>
+              <th style={{ padding: "10px 14px" }}>Evento</th><th style={{ padding: "10px 14px" }}>Tipo</th>
+              <th style={{ padding: "10px 14px" }}>Estado</th><th style={{ padding: "10px 14px" }}>Quando</th><th style={{ padding: "10px 14px" }}></th>
+            </tr></thead>
+            <tbody>
+              {webhooks.length === 0 && <tr><td colSpan={5} style={{ padding: "24px 14px", textAlign: "center", color: "#6B7C93" }}>Nenhum evento registrado.</td></tr>}
+              {webhooks.map((w) => (
+                <tr key={w.id} style={{ borderBottom: "1px solid #F0F3F7" }}>
+                  <td style={{ padding: "10px 14px", fontFamily: "monospace", fontSize: 11.5, color: "#6B7C93" }}>{w.id.slice(0, 18)}…</td>
+                  <td style={{ padding: "10px 14px" }}>{w.type}</td>
+                  <td style={{ padding: "10px 14px" }}><span className={"st " + (w.processed ? "st-ok" : "st-urg")}>{w.processed ? "Processado" : "Pendente"}</span></td>
+                  <td style={{ padding: "10px 14px", color: "#6B7C93", whiteSpace: "nowrap" }}>{w.processed_at ? quandoHora(w.processed_at) : "—"}</td>
+                  <td style={{ padding: "10px 14px", textAlign: "right" }}>
+                    {!w.processed && <button onClick={() => startT(() => reprocessarUm(w.id))} disabled={reproc === w.id} style={{ ...btn, padding: "6px 10px" }}>{reproc === w.id ? "…" : "Reprocessar"}</button>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p style={{ marginTop: 12, fontSize: 12.5, color: "#6B7C93" }}>Reprocessar re-busca o evento no Stripe e reaplica o estado canônico (idempotente).</p>
+      </section>
+
+      {/* Erros de ingestão */}
+      <section className="panel">
+        <div className="panel-h"><h3>Erros de ingestão</h3></div>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead><tr style={{ textAlign: "left", color: "#6B7C93", borderBottom: "1px solid #E6EBF2" }}>
+              <th style={{ padding: "10px 14px" }}>Quando</th><th style={{ padding: "10px 14px" }}>Etapa</th><th style={{ padding: "10px 14px" }}>Mensagem</th>
+            </tr></thead>
+            <tbody>
+              {ingErros.length === 0 && <tr><td colSpan={3} style={{ padding: "24px 14px", textAlign: "center", color: "#6B7C93" }}>Nenhum erro de ingestão registrado. 👍</td></tr>}
+              {ingErros.map((e) => (
+                <tr key={e.id} style={{ borderBottom: "1px solid #F0F3F7" }}>
+                  <td style={{ padding: "10px 14px", color: "#6B7C93", whiteSpace: "nowrap" }}>{quandoHora(e.created_at)}</td>
+                  <td style={{ padding: "10px 14px" }}>{e.stage}</td>
+                  <td style={{ padding: "10px 14px", color: "#6B7C93" }}>{e.message ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p style={{ marginTop: 12, fontSize: 12.5, color: "#6B7C93" }}>Só metadados técnicos das falhas — nunca o conteúdo dos e-mails, em conformidade com a LGPD.</p>
+      </section>
+    </>
+  );
 }
 
 function Visao({ total, ativosLen, receita, porPlano, webhooksPendentes, metricas, historico }: { total: number; ativosLen: number; receita: number; porPlano: Record<string, number>; webhooksPendentes: number; metricas: Metricas | null; historico: Snapshot[] }) {

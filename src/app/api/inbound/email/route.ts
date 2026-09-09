@@ -3,9 +3,15 @@ import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { classifyEmail } from "@/lib/classify";
 import { analiseLimit } from "@/lib/plans";
 import { createHash } from "crypto";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// Registra um erro de ingestão (metadado técnico; NUNCA o conteúdo do e-mail).
+async function logErro(admin: SupabaseClient, orgId: string | null, stage: string, message: string) {
+  try { await admin.from("ingestion_errors").insert({ org_id: orgId, stage, message: message.slice(0, 300) }); } catch { /* best-effort */ }
+}
 
 // Recebe e-mails encaminhados via Postmark (Inbound) e os ingere na AXIA.
 // Configuração (Vercel → Environment Variables):
@@ -49,6 +55,7 @@ export async function POST(req: Request) {
   });
   if (insComm) {
     if ((insComm as any).code === "23505") return NextResponse.json({ received: true, duplicate: true });
+    await logErro(admin, orgId, "insert_communication", (insComm as { message?: string }).message ?? "erro ao inserir comunicação");
     return NextResponse.json({ error: "db_error" }, { status: 500 });
   }
 

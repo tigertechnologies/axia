@@ -6,6 +6,9 @@ import {
   type Assinante,
 } from "../actions/admin";
 import { adminListLeads } from "../actions/leads";
+import {
+  adminListWebhooks, adminWebhooksResumo, adminIngestaoResumo, adminListIngestionErrors,
+} from "../actions/system";
 import { PLANS, planCode, isActiveStatus } from "@/lib/plans";
 import AppShell from "../AppShell";
 import AdminClient from "./AdminClient";
@@ -24,7 +27,10 @@ export default async function AdminPage() {
   if (!user) redirect("/login");
   if (!(await isCurrentUserAdmin())) redirect("/dashboard");
 
-  const [{ data: profile }, list, pendentes, metricas, auditoria, historico, leadsRes] = await Promise.all([
+  const [
+    { data: profile }, list, pendentes, metricas, auditoria, historico, leadsRes,
+    webhooks, whResumo, ingestao, ingErros,
+  ] = await Promise.all([
     supabase.from("profiles").select("nome").eq("id", user.id).maybeSingle(),
     adminListAssinantes(),
     adminWebhooksPendentes(),
@@ -32,6 +38,10 @@ export default async function AdminPage() {
     adminListAudit(100),
     adminListSnapshots(30),
     adminListLeads(),
+    adminListWebhooks(50),
+    adminWebhooksResumo(),
+    adminIngestaoResumo(),
+    adminListIngestionErrors(50),
   ]);
 
   const assinantes = (list.data ?? []) as Assinante[];
@@ -43,6 +53,16 @@ export default async function AdminPage() {
   await adminRegistrarSnapshot(assinantes.length, ativos.length, mrrCents, porPlano);
   const historicoAtualizado = await adminListSnapshots(30);
 
+  // Checagem de configuração (só presença; nunca expõe o valor da variável).
+  const config = {
+    stripe_key: !!process.env.STRIPE_SECRET_KEY,
+    stripe_webhook: !!process.env.STRIPE_WEBHOOK_SECRET,
+    inbound_secret: !!process.env.AXIA_INBOUND_SECRET,
+    inbound_org: !!process.env.AXIA_INBOUND_ORG_ID,
+    site_url: !!process.env.NEXT_PUBLIC_SITE_URL,
+    service_role: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+  };
+
   return (
     <AppShell nome={profile?.nome ?? "Admin"} planLabel="Administrador" counts={{ inbox: 0, nomeacoes: 0, prazos: 0, pericias: 0 }} bell={0}>
       <AdminClient
@@ -53,6 +73,7 @@ export default async function AdminPage() {
         auditoria={auditoria}
         historico={historicoAtualizado.length ? historicoAtualizado : historico}
         leads={leadsRes.data ?? []}
+        sistema={{ webhooks, whResumo, ingestao, ingErros, config }}
       />
     </AppShell>
   );
