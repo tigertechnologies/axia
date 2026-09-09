@@ -11,7 +11,11 @@ import {
   adminReprocessWebhook, adminReprocessarPendentes,
   type WebhookEvent, type WebhooksResumo, type IngestaoResumo, type IngestionError,
 } from "../actions/system";
-import { adminCancelarAssinatura, adminReativarAssinatura, type FinanceiroRow } from "../actions/finance";
+import {
+  adminCancelarAssinatura, adminReativarAssinatura,
+  adminPreverTrocaPlano, adminTrocarPlano, adminReembolsar, adminAplicarCupom,
+  type FinanceiroRow,
+} from "../actions/finance";
 import { adminCriarCampanha, adminToggleCampanha, type Campanha } from "../actions/campaigns";
 import Toast from "../Toast";
 
@@ -140,7 +144,7 @@ export default function AdminClient({
 
       {aba === "leads" && <LeadsPanel leads={leads} flash={flash} />}
 
-      {aba === "financeiro" && <FinanceiroPanel data={financeiro} flash={flash} />}
+      {aba === "financeiro" && <FinanceiroPanel data={financeiro} campanhas={campanhas.rows} flash={flash} />}
 
       {aba === "campanhas" && <CampanhasPanel data={campanhas} flash={flash} />}
 
@@ -441,10 +445,11 @@ function Campo({ label, children }: { label: string; children: React.ReactNode }
 }
 
 // ── FINANCEIRO ──────────────────────────────────────────────
-function FinanceiroPanel({ data, flash }: { data: FinanceiroData; flash: (m: string) => void }) {
+function FinanceiroPanel({ data, campanhas, flash }: { data: FinanceiroData; campanhas: Campanha[]; flash: (m: string) => void }) {
   const { rows, erro, stripeTestMode } = data;
   const [busy, setBusy] = useState<string>("");
   const [q, setQ] = useState("");
+  const [sel, setSel] = useState<FinanceiroRow | null>(null);
   const [, startT] = useTransition();
 
   const base = "https://dashboard.stripe.com" + (stripeTestMode ? "/test" : "");
@@ -518,6 +523,7 @@ function FinanceiroPanel({ data, flash }: { data: FinanceiroData; flash: (m: str
                       {r.cancel_at_period_end
                         ? <button onClick={() => startT(() => reativar(r))} disabled={!real || busy === r.org_id} style={{ ...btnGhost, opacity: real ? 1 : 0.5 }}>{busy === r.org_id ? "…" : "Reativar"}</button>
                         : <button onClick={() => startT(() => cancelar(r))} disabled={!real || busy === r.org_id} style={{ ...btnGhost, opacity: real ? 1 : 0.5 }}>{busy === r.org_id ? "…" : "Cancelar"}</button>}
+                      {real && <button onClick={() => setSel(sel?.org_id === r.org_id ? null : r)} style={btnGhost}>{sel?.org_id === r.org_id ? "Fechar" : "Gerenciar"}</button>}
                     </div>
                   </td>
                 </tr>
@@ -526,10 +532,104 @@ function FinanceiroPanel({ data, flash }: { data: FinanceiroData; flash: (m: str
           </tbody>
         </table>
       </div>
+
+      {sel && <GerenciarAssinante row={sel} campanhas={campanhas} flash={flash} onClose={() => setSel(null)} />}
+
       <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
-        Cancelar agenda o encerramento para o fim do ciclo (reversível, não corta acesso na hora). Contas “manual” não têm assinatura no Stripe — reembolso e troca de plano chegam num próximo lote.
+        Cancelar agenda o encerramento para o fim do ciclo (reversível, não corta acesso na hora). Contas “manual” não têm assinatura no Stripe. Use “Gerenciar” para trocar plano, reembolsar ou aplicar cupom.
       </p>
     </section>
+  );
+}
+
+// Painel de ações 1-a-1 sobre um assinante (troca de plano, reembolso, cupom).
+function GerenciarAssinante({ row, campanhas, flash, onClose }: { row: FinanceiroRow; campanhas: Campanha[]; flash: (m: string) => void; onClose: () => void }) {
+  const [novoPlano, setNovoPlano] = useState("");
+  const [previa, setPrevia] = useState<string>("");
+  const [valorReemb, setValorReemb] = useState("");
+  const [cupom, setCupom] = useState("");
+  const [busy, setBusy] = useState<string>("");
+  const [, startT] = useTransition();
+
+  const planosAlvo = Object.keys(PLANS).filter((p) => p !== row.plan_id);
+  const cuponsAtivos = campanhas.filter((c) => c.ativo && c.couponId);
+
+  async function prever() {
+    if (!novoPlano) return;
+    setBusy("prev"); setPrevia("");
+    const r = await adminPreverTrocaPlano(row.org_id, novoPlano);
+    setBusy("");
+    if (r.erro) { setPrevia(""); flash(r.erro); return; }
+    const v = r.prorationCents ?? 0;
+    setPrevia(v >= 0 ? `Cobrança agora: ${formatBRL(v)}` : `Crédito gerado: ${formatBRL(Math.abs(v))}`);
+  }
+  async function trocar() {
+    if (!novoPlano) { flash("Escolha o novo plano."); return; }
+    if (!confirm(`Trocar ${row.email} para ${PLANS[novoPlano].name}? ${previa || "A diferença será prorateada agora."}`)) return;
+    setBusy("troca");
+    const r = await adminTrocarPlano(row.org_id, novoPlano);
+    setBusy("");
+    flash("error" in r && r.error ? r.error : "Plano trocado. Recarregue para atualizar.");
+  }
+  async function reembolsar() {
+    const parcial = valorReemb.trim() ? Math.round(Number(valorReemb.replace(",", ".")) * 100) : null;
+    if (parcial !== null && (!parcial || parcial <= 0)) { flash("Valor de reembolso inválido."); return; }
+    if (!confirm(parcial === null ? `Reembolsar TOTAL a última cobrança de ${row.email}?` : `Reembolsar ${formatBRL(parcial)} a ${row.email}?`)) return;
+    setBusy("reemb");
+    const r = await adminReembolsar(row.org_id, parcial);
+    setBusy("");
+    flash("error" in r && r.error ? r.error : "Reembolso solicitado ao Stripe.");
+  }
+  async function aplicarCupom() {
+    if (!cupom) { flash("Escolha um cupom."); return; }
+    if (!confirm(`Aplicar o cupom ${campanhas.find((c) => c.couponId === cupom)?.codigo ?? ""} a ${row.email}?`)) return;
+    setBusy("cupom");
+    const r = await adminAplicarCupom(row.org_id, cupom);
+    setBusy("");
+    flash("error" in r && r.error ? r.error : "Cupom aplicado.");
+  }
+
+  return (
+    <div style={{ border: "1px solid #E6EBF2", borderRadius: 12, padding: 16, marginTop: 14, background: "#FAFBFD" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <strong style={{ color: "#10233F" }}>Gerenciar: {row.nome.trim() || row.email}</strong>
+        <button onClick={onClose} style={btnGhost}>Fechar</button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16 }}>
+        {/* Trocar plano */}
+        <div>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: "#4A5B72", marginBottom: 6 }}>Trocar plano</div>
+          <select value={novoPlano} onChange={(e) => { setNovoPlano(e.target.value); setPrevia(""); }} style={inp}>
+            <option value="">Escolher plano…</option>
+            {planosAlvo.map((p) => <option key={p} value={p}>{PLANS[p].name} · {formatBRL(PLANS[p].amount)}/{PLANS[p].interval === "year" ? "ano" : "mês"}</option>)}
+          </select>
+          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+            <button onClick={() => startT(prever)} disabled={!novoPlano || busy === "prev"} style={btnGhost}>{busy === "prev" ? "…" : "Prever valor"}</button>
+            <button onClick={() => startT(trocar)} disabled={!novoPlano || busy === "troca"} style={btn}>{busy === "troca" ? "…" : "Trocar"}</button>
+          </div>
+          {previa && <div style={{ marginTop: 8, fontSize: 12.5, color: "#0F7A70" }}>{previa}</div>}
+        </div>
+
+        {/* Reembolso */}
+        <div>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: "#4A5B72", marginBottom: 6 }}>Reembolso</div>
+          <input value={valorReemb} onChange={(e) => setValorReemb(e.target.value)} placeholder="Valor em R$ (vazio = total)" style={inp} />
+          <button onClick={() => startT(reembolsar)} disabled={busy === "reemb"} style={{ ...btn, marginTop: 8 }}>{busy === "reemb" ? "…" : "Reembolsar"}</button>
+        </div>
+
+        {/* Aplicar cupom */}
+        <div>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: "#4A5B72", marginBottom: 6 }}>Aplicar cupom (cortesia)</div>
+          <select value={cupom} onChange={(e) => setCupom(e.target.value)} style={inp}>
+            <option value="">Escolher cupom…</option>
+            {cuponsAtivos.map((c) => <option key={c.promoId} value={c.couponId}>{c.codigo} · {c.descontoLabel}</option>)}
+          </select>
+          <button onClick={() => startT(aplicarCupom)} disabled={!cupom || busy === "cupom"} style={{ ...btn, marginTop: 8 }}>{busy === "cupom" ? "…" : "Aplicar cupom"}</button>
+          {cuponsAtivos.length === 0 && <div style={{ marginTop: 6, fontSize: 11.5, color: "#9AA7B8" }}>Crie cupons na aba Campanhas.</div>}
+        </div>
+      </div>
+      <p style={{ marginTop: 12, fontSize: 12, color: "#6B7C93" }}>Troca de plano usa proração imediata. Reembolso age sobre a última cobrança paga. Toda ação fica na Auditoria.</p>
+    </div>
   );
 }
 
