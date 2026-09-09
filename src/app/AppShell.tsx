@@ -1,8 +1,9 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "./dashboard/actions";
+import { isCurrentUserAdmin } from "./actions/admin";
 import "./dashboard/dashboard.css";
 
 export interface Counts { inbox: number; nomeacoes: number; prazos: number; pericias: number }
@@ -16,9 +17,12 @@ export default function AppShell({
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
+  const [admin, setAdmin] = useState(false);
   const [, startTransition] = useTransition();
   const path = usePathname();
   const router = useRouter();
+
+  useEffect(() => { isCurrentUserAdmin().then(setAdmin).catch(() => {}); }, []);
 
   function submitSearch(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && q.trim()) { router.push(`/busca?q=${encodeURIComponent(q.trim())}`); setOpen(false); }
@@ -57,6 +61,7 @@ export default function AppShell({
           <div className="sb-sec">Perícias</div>
           {pericias.map(item)}
           <div className="sb-sec">Conta</div>
+          {admin && <Link href="/admin" className={"sb-item" + (path.startsWith("/admin") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Admin</Link>}
           <Link href="/configuracoes" className={"sb-item" + (path.startsWith("/configuracoes") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Configurações</Link>
           <div className="sb-item" onClick={() => startTransition(() => { signOut(); })} style={{ cursor: "pointer" }}><Ico p="gear" />Sair</div>
         </nav>
