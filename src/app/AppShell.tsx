@@ -57,13 +57,25 @@ export default function AppShell({
           <span className="word">AXIA</span>
         </div>
         <nav className="sb-nav">
-          {top.map(item)}
-          <div className="sb-sec">Perícias</div>
-          {pericias.map(item)}
-          <div className="sb-sec">Conta</div>
-          {admin && <Link href="/admin" className={"sb-item" + (path.startsWith("/admin") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Admin</Link>}
-          <Link href="/configuracoes" className={"sb-item" + (path.startsWith("/configuracoes") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Configurações</Link>
-          <div className="sb-item" onClick={() => startTransition(() => { signOut(); })} style={{ cursor: "pointer" }}><Ico p="gear" />Sair</div>
+          {admin ? (
+            <>
+              {/* Menu do administrador: sem as telas de perito. */}
+              <div className="sb-sec">Administração</div>
+              <Link href="/admin" className={"sb-item" + (path.startsWith("/admin") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="dash" />Painel</Link>
+              <div className="sb-sec">Conta</div>
+              <Link href="/configuracoes" className={"sb-item" + (path.startsWith("/configuracoes") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Configurações</Link>
+              <div className="sb-item" onClick={() => startTransition(() => { signOut(); })} style={{ cursor: "pointer" }}><Ico p="gear" />Sair</div>
+            </>
+          ) : (
+            <>
+              {top.map(item)}
+              <div className="sb-sec">Perícias</div>
+              {pericias.map(item)}
+              <div className="sb-sec">Conta</div>
+              <Link href="/configuracoes" className={"sb-item" + (path.startsWith("/configuracoes") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Configurações</Link>
+              <div className="sb-item" onClick={() => startTransition(() => { signOut(); })} style={{ cursor: "pointer" }}><Ico p="gear" />Sair</div>
+            </>
+          )}
         </nav>
         <div className="sb-user">
           <div className="avatar">{nome.slice(0, 2).toUpperCase()}</div>
