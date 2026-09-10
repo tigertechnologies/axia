@@ -52,8 +52,8 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
           <p className="sum"><svg width="15" height="15" fill="none" stroke="#1FA89E" strokeWidth={2}><path d="M2 7.5l3.5 3.5L13 3" strokeLinecap="round" strokeLinejoin="round" /></svg>A AXIA analisou <b>{comms.length} comunicações</b> — <b>{aguardando + urgentes.length}</b> exigem sua atenção.</p>
         </div>
         <div className="greet-actions">
-          <button className="btn btn-ghost">Ver análise completa</button>
-          <button className="btn btn-primary"><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Nova perícia</button>
+          <Link className="btn btn-ghost" href="/inbox">Ver análise completa</Link>
+          <Link className="btn btn-primary" href="/pericias"><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Nova perícia</Link>
         </div>
       </div>
 
@@ -69,7 +69,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
           <span className="at-ic"><Ico p="alert" /></span>
           <div className="at-txt"><h4>Precisa da sua atenção</h4><p>Itens críticos identificados pela AXIA que dependem de você.</p></div>
           <div className="at-items">
-            {urgentes.length > 0 && <span className="at-pill">Prazo vence amanhã <button className="btn-mini">Ver prazo</button></span>}
+            {urgentes.length > 0 && <span className="at-pill">Prazo vence amanhã <Link className="btn-mini" href="/prazos">Ver prazo</Link></span>}
             {aguardando > 0 && <span className="at-pill">{aguardando} nomeação(ões) para validar <button className="btn-mini" onClick={() => setFilter("nom")}>Validar</button></span>}
           </div>
         </div>
@@ -112,7 +112,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
                     <span className="time">{ago(c.received_at)}</span>
                     {c.category === "nomeacao"
                       ? <button className="btn-act solid" onClick={() => validar(c.id)}>{isDone ? "Validado ✓" : "Validar"}</button>
-                      : (c.process_ref ? <Link className="btn-act" href={`/processos/${encodeURIComponent(c.process_ref)}`}>Ver</Link> : <button className="btn-act">Ver</button>)}
+                      : (c.process_ref ? <Link className="btn-act" href={`/processos/${encodeURIComponent(c.process_ref)}`}>Ver</Link> : <Link className="btn-act" href="/inbox">Ver</Link>)}
                   </div>
                 </div>
               );
@@ -122,7 +122,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
 
         <div className="rail">
           <section className="panel">
-            <div className="panel-h"><h3>Próximas perícias</h3><a href="#">Agenda</a></div>
+            <div className="panel-h"><h3>Próximas perícias</h3><Link href="/agenda">Agenda</Link></div>
             <div className="mini">
               {pericias.length === 0 && <div style={{ padding: "18px 22px", color:"var(--muted)", fontSize: 13.5 }}>Sem perícias agendadas.</div>}
               {pericias.map((p) => { const b = dm(p.scheduled_at); return (
@@ -132,7 +132,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
           </section>
 
           <section className="panel">
-            <div className="panel-h"><h3>Prazos monitorados</h3><a href="#">Ver todos</a></div>
+            <div className="panel-h"><h3>Prazos monitorados</h3><Link href="/prazos">Ver todos</Link></div>
             <div className="mini">
               {prazos.map((p) => { const b = dm(p.due_date + "T00:00:00");
                 const st = p.status === "urgente" ? ["st-urg", "Urgente"] : p.status === "confirmado" ? ["st-ok", "Confirmado"] : ["st-val", "A validar"];
@@ -143,7 +143,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
           </section>
 
           <section className="panel">
-            <div className="panel-h"><h3>Honorários</h3><a href="#">Detalhar</a></div>
+            <div className="panel-h"><h3>Honorários</h3><Link href="/honorarios">Detalhar</Link></div>
             <div className="hon-total"><div><div className="lbl">A receber</div></div><div className="v">{formatBRL(receber)}</div></div>
             <div className="flow-mini">
               {[["Proposto", "proposto"], ["Aprovado", "aprovado"], ["Depositado", "depositado"], ["Recebido", "recebido"]].map(([l, k]) => {

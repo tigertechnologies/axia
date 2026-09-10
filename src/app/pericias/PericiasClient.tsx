@@ -75,7 +75,7 @@ export default function PericiasClient({ pericias }: { pericias: Pericia[] }) {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <Link className="btn-act" href={`/processos/${encodeURIComponent(p.process_ref ?? "")}`}>Ver processo</Link>
-                  <button className="btn-act solid">Adicionar à agenda</button>
+                  <Link className="btn-act solid" href="/agenda">Ver na agenda</Link>
                 </div>
               </div>
             );
