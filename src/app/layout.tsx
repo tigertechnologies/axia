@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import SiteBanner from "./SiteBanner";
 
 export const metadata: Metadata = {
   title: "AXIA — Inteligência que conecta o que importa",
@@ -23,7 +24,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <SiteBanner />
+        {children}
+      </body>
     </html>
   );
 }

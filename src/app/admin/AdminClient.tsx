@@ -17,6 +17,7 @@ import {
   type FinanceiroRow,
 } from "../actions/finance";
 import { adminCriarCampanha, adminToggleCampanha, type Campanha } from "../actions/campaigns";
+import { adminSaveBanner, type Banner } from "../actions/marketing";
 import Toast from "../Toast";
 
 export interface SistemaData {
@@ -52,14 +53,14 @@ function descreveAcao(e: AuditEvent): string {
   return e.action;
 }
 
-type Aba = "visao" | "assinantes" | "financeiro" | "campanhas" | "leads" | "sistema" | "auditoria";
+type Aba = "visao" | "assinantes" | "financeiro" | "campanhas" | "marketing" | "leads" | "sistema" | "auditoria";
 
 export default function AdminClient({
-  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas,
+  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas, banner,
 }: {
   assinantes: Assinante[]; webhooksPendentes: number; erro?: string;
   metricas: Metricas | null; auditoria: AuditEvent[]; historico: Snapshot[]; leads: Lead[];
-  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData;
+  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData; banner: Banner;
 }) {
   const [aba, setAba] = useState<Aba>("visao");
   const [q, setQ] = useState("");
@@ -95,6 +96,7 @@ export default function AdminClient({
         <Tab id="assinantes" atual={aba} set={setAba}>Assinantes</Tab>
         <Tab id="financeiro" atual={aba} set={setAba}>Financeiro</Tab>
         <Tab id="campanhas" atual={aba} set={setAba}>Campanhas</Tab>
+        <Tab id="marketing" atual={aba} set={setAba}>Marketing</Tab>
         <Tab id="leads" atual={aba} set={setAba}>Leads{leads.length ? ` · ${leads.length}` : ""}</Tab>
         <Tab id="sistema" atual={aba} set={setAba}>Sistema{sistema.whResumo.pendentes ? ` · ${sistema.whResumo.pendentes}` : ""}</Tab>
         <Tab id="auditoria" atual={aba} set={setAba}>Auditoria</Tab>
@@ -147,6 +149,8 @@ export default function AdminClient({
       {aba === "financeiro" && <FinanceiroPanel data={financeiro} campanhas={campanhas.rows} flash={flash} />}
 
       {aba === "campanhas" && <CampanhasPanel data={campanhas} flash={flash} />}
+
+      {aba === "marketing" && <MarketingPanel banner={banner} flash={flash} />}
 
       {aba === "sistema" && <SistemaPanel data={sistema} flash={flash} />}
 
@@ -327,6 +331,74 @@ const btn: React.CSSProperties = { padding: "8px 12px", border: "1px solid #1630
 const btnGhost: React.CSSProperties = { padding: "6px 12px", border: "1px solid #E4E9F0", background: "#fff", color: "#16305B", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: 600 };
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return <button onClick={onClick} style={{ padding: "5px 12px", borderRadius: 999, border: "1px solid " + (on ? "#1FA89E" : "#E4E9F0"), background: on ? "#E8F6F4" : "#fff", color: on ? "#0F7A70" : "#4A5B72", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: on ? 600 : 500 }}>{children}</button>;
+}
+
+// ── MARKETING ───────────────────────────────────────────────
+const BANNER_CORES: Record<string, string> = { info: "#1FA89E", promo: "#16305B", alerta: "#B8542E" };
+
+function MarketingPanel({ banner, flash }: { banner: Banner; flash: (m: string) => void }) {
+  const [b, setB] = useState<Banner>(banner);
+  const [busy, setBusy] = useState(false);
+  const [, startT] = useTransition();
+  const setK = (k: keyof Banner, v: any) => setB((prev) => ({ ...prev, [k]: v }));
+
+  async function salvar() {
+    setBusy(true);
+    const r = await adminSaveBanner(b);
+    setBusy(false);
+    flash("error" in r && r.error ? r.error : "Banner salvo. Já vale no site.");
+  }
+
+  const cor = BANNER_CORES[b.variante] ?? BANNER_CORES.info;
+
+  return (
+    <section className="panel">
+      <div className="panel-h"><h3>Banner de aviso</h3></div>
+
+      {/* Prévia ao vivo */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 12.5, color: "#6B7C93", marginBottom: 6 }}>Prévia</div>
+        {b.mensagem.trim() ? (
+          <div style={{ position: "relative", background: cor, color: "#fff", fontSize: 14, padding: "10px 40px", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, textAlign: "center" }}>
+            <span>{b.mensagem}</span>
+            {b.link_url && <span style={{ fontWeight: 700, textDecoration: "underline" }}>{b.link_label || "Saiba mais"}</span>}
+            <span style={{ position: "absolute", right: 12, opacity: 0.8 }}>×</span>
+          </div>
+        ) : <div style={{ color: "#9AA7B8", fontSize: 13.5 }}>Digite uma mensagem para ver a prévia.</div>}
+        {!b.ativo && <div style={{ fontSize: 12, color: "#B8542E", marginTop: 6 }}>Banner desativado — não aparece no site enquanto “Ativo” estiver desligado.</div>}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
+        <div style={{ gridColumn: "1 / -1" }}>
+          <Campo label="Mensagem">
+            <input value={b.mensagem} onChange={(e) => setK("mensagem", e.target.value)} placeholder="Black Friday: 50% off com o código BLACK50" style={inp} />
+          </Campo>
+        </div>
+        <Campo label="Estilo">
+          <select value={b.variante} onChange={(e) => setK("variante", e.target.value)} style={inp}>
+            <option value="info">Informativo (teal)</option>
+            <option value="promo">Promoção (navy)</option>
+            <option value="alerta">Alerta (âmbar)</option>
+          </select>
+        </Campo>
+        <Campo label="Link (opcional)"><input value={b.link_url ?? ""} onChange={(e) => setK("link_url", e.target.value)} placeholder="https://…" style={inp} /></Campo>
+        <Campo label="Texto do link (opcional)"><input value={b.link_label ?? ""} onChange={(e) => setK("link_label", e.target.value)} placeholder="Saiba mais" style={inp} /></Campo>
+        <Campo label="Ativo">
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#10233F", cursor: "pointer", paddingTop: 6 }}>
+            <input type="checkbox" checked={b.ativo} onChange={(e) => setK("ativo", e.target.checked)} style={{ width: 16, height: 16 }} />
+            Mostrar no site/app
+          </label>
+        </Campo>
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <button onClick={() => startT(salvar)} disabled={busy} style={btn}>{busy ? "Salvando…" : "Salvar banner"}</button>
+      </div>
+      <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
+        O banner aparece no topo de todas as páginas (landing e app) quando ativo. Use-o para Black Friday, avisos e promoções. Métricas de marketing e e-mail em massa chegam nos próximos lotes.
+      </p>
+    </section>
+  );
 }
 
 // ── CAMPANHAS ───────────────────────────────────────────────

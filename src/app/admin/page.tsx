@@ -11,6 +11,7 @@ import {
 } from "../actions/system";
 import { adminListFinanceiro } from "../actions/finance";
 import { adminListCampanhas } from "../actions/campaigns";
+import { adminGetBanner } from "../actions/marketing";
 import { PLANS, planCode, isActiveStatus } from "@/lib/plans";
 import AppShell from "../AppShell";
 import AdminClient from "./AdminClient";
@@ -31,7 +32,7 @@ export default async function AdminPage() {
 
   const [
     { data: profile }, list, pendentes, metricas, auditoria, historico, leadsRes,
-    webhooks, whResumo, ingestao, ingErros, financeiro, campanhas,
+    webhooks, whResumo, ingestao, ingErros, financeiro, campanhas, banner,
   ] = await Promise.all([
     supabase.from("profiles").select("nome").eq("id", user.id).maybeSingle(),
     adminListAssinantes(),
@@ -46,8 +47,8 @@ export default async function AdminPage() {
     adminListIngestionErrors(50),
     adminListFinanceiro(),
     adminListCampanhas(),
+    adminGetBanner(),
   ]);
-
   const assinantes = (list.data ?? []) as Assinante[];
   const ativos = assinantes.filter((a) => isActiveStatus(a.subscription_status));
   const mrrCents = ativos.reduce((s, a) => s + mrrDoPlano(a.plan_id), 0);
@@ -80,6 +81,7 @@ export default async function AdminPage() {
         sistema={{ webhooks, whResumo, ingestao, ingErros, config }}
         financeiro={{ rows: financeiro.data ?? [], erro: financeiro.error, stripeTestMode }}
         campanhas={{ rows: campanhas.data ?? [], erro: campanhas.error }}
+        banner={banner}
       />
     </AppShell>
   );
