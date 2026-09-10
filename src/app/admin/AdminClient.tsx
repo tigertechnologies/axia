@@ -19,6 +19,8 @@ import {
 import { adminCriarCampanha, adminToggleCampanha, type Campanha } from "../actions/campaigns";
 import { adminSaveBanner, type Banner, type MarketingMetricas } from "../actions/marketing";
 import { adminEnviarEmail, adminEmailContagem, type EmailCampaign } from "../actions/email";
+import { adminSaveConteudo } from "../actions/content";
+import { CAMPOS_CONTEUDO } from "../actions/content-fields";
 import Toast from "../Toast";
 
 export interface SistemaData {
@@ -54,14 +56,14 @@ function descreveAcao(e: AuditEvent): string {
   return e.action;
 }
 
-type Aba = "visao" | "assinantes" | "financeiro" | "campanhas" | "marketing" | "leads" | "sistema" | "auditoria";
+type Aba = "visao" | "assinantes" | "financeiro" | "campanhas" | "marketing" | "conteudo" | "leads" | "sistema" | "auditoria";
 
 export default function AdminClient({
-  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas, banner, mktMetricas, emailCampaigns,
+  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas, banner, mktMetricas, emailCampaigns, conteudo,
 }: {
   assinantes: Assinante[]; webhooksPendentes: number; erro?: string;
   metricas: Metricas | null; auditoria: AuditEvent[]; historico: Snapshot[]; leads: Lead[];
-  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData; banner: Banner; mktMetricas: MarketingMetricas; emailCampaigns: EmailCampaign[];
+  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData; banner: Banner; mktMetricas: MarketingMetricas; emailCampaigns: EmailCampaign[]; conteudo: Record<string, string>;
 }) {
   const [aba, setAba] = useState<Aba>("visao");
   const [q, setQ] = useState("");
@@ -98,6 +100,7 @@ export default function AdminClient({
         <Tab id="financeiro" atual={aba} set={setAba}>Financeiro</Tab>
         <Tab id="campanhas" atual={aba} set={setAba}>Campanhas</Tab>
         <Tab id="marketing" atual={aba} set={setAba}>Marketing</Tab>
+        <Tab id="conteudo" atual={aba} set={setAba}>Conteúdo</Tab>
         <Tab id="leads" atual={aba} set={setAba}>Leads{leads.length ? ` · ${leads.length}` : ""}</Tab>
         <Tab id="sistema" atual={aba} set={setAba}>Sistema{sistema.whResumo.pendentes ? ` · ${sistema.whResumo.pendentes}` : ""}</Tab>
         <Tab id="auditoria" atual={aba} set={setAba}>Auditoria</Tab>
@@ -152,6 +155,8 @@ export default function AdminClient({
       {aba === "campanhas" && <CampanhasPanel data={campanhas} flash={flash} />}
 
       {aba === "marketing" && <MarketingPanel banner={banner} metricas={mktMetricas} campanhas={campanhas.rows} emailCampaigns={emailCampaigns} flash={flash} />}
+
+      {aba === "conteudo" && <ConteudoPanel conteudo={conteudo} flash={flash} />}
 
       {aba === "sistema" && <SistemaPanel data={sistema} flash={flash} />}
 
@@ -332,6 +337,47 @@ const btn: React.CSSProperties = { padding: "8px 12px", border: "1px solid #1630
 const btnGhost: React.CSSProperties = { padding: "6px 12px", border: "1px solid #E4E9F0", background: "#fff", color: "#16305B", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: 600 };
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return <button onClick={onClick} style={{ padding: "5px 12px", borderRadius: 999, border: "1px solid " + (on ? "#1FA89E" : "#E4E9F0"), background: on ? "#E8F6F4" : "#fff", color: on ? "#0F7A70" : "#4A5B72", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: on ? 600 : 500 }}>{children}</button>;
+}
+
+// ── CONTEÚDO DO SITE ────────────────────────────────────────
+function ConteudoPanel({ conteudo, flash }: { conteudo: Record<string, string>; flash: (m: string) => void }) {
+  const inicial = Object.fromEntries(CAMPOS_CONTEUDO.map((c) => [c.chave, conteudo[c.chave] ?? c.padrao]));
+  const [vals, setVals] = useState<Record<string, string>>(inicial);
+  const [busy, setBusy] = useState(false);
+  const [, startT] = useTransition();
+
+  async function salvar() {
+    setBusy(true);
+    const r = await adminSaveConteudo(vals);
+    setBusy(false);
+    flash("error" in r && r.error ? r.error : "Textos salvos. Já valem no site.");
+  }
+  function restaurar(chave: string, padrao: string) { setVals((v) => ({ ...v, [chave]: padrao })); }
+
+  return (
+    <section className="panel">
+      <div className="panel-h"><h3>Conteúdo do site</h3></div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {CAMPOS_CONTEUDO.map((c) => (
+          <div key={c.chave}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <label style={{ fontSize: 12.5, color: "#4A5B72" }}>{c.rotulo}</label>
+              {vals[c.chave] !== c.padrao && <button onClick={() => restaurar(c.chave, c.padrao)} style={{ ...btnGhost, padding: "2px 8px", fontSize: 11.5 }}>Restaurar padrão</button>}
+            </div>
+            {c.multiline
+              ? <textarea value={vals[c.chave]} onChange={(e) => setVals((v) => ({ ...v, [c.chave]: e.target.value }))} rows={2} style={{ ...inp, resize: "vertical" }} />
+              : <input value={vals[c.chave]} onChange={(e) => setVals((v) => ({ ...v, [c.chave]: e.target.value }))} style={inp} />}
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <button onClick={() => startT(salvar)} disabled={busy} style={btn}>{busy ? "Salvando…" : "Salvar textos"}</button>
+      </div>
+      <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
+        Edita os textos principais da landing. O que você não alterar mantém o texto atual. Preço dos planos fica de fora por segurança — chega no próximo lote, valendo para novos assinantes.
+      </p>
+    </section>
+  );
 }
 
 // ── E-MAIL EM MASSA ─────────────────────────────────────────

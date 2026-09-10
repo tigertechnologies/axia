@@ -13,6 +13,7 @@ import { adminListFinanceiro } from "../actions/finance";
 import { adminListCampanhas } from "../actions/campaigns";
 import { adminGetBanner, adminMarketingMetricas } from "../actions/marketing";
 import { adminListEmailCampaigns } from "../actions/email";
+import { adminGetConteudo } from "../actions/content";
 import { PLANS, planCode, isActiveStatus } from "@/lib/plans";
 import AppShell from "../AppShell";
 import AdminClient from "./AdminClient";
@@ -33,7 +34,7 @@ export default async function AdminPage() {
 
   const [
     { data: profile }, list, pendentes, metricas, auditoria, historico, leadsRes,
-    webhooks, whResumo, ingestao, ingErros, financeiro, campanhas, banner, mktMetricas, emailCampaigns,
+    webhooks, whResumo, ingestao, ingErros, financeiro, campanhas, banner, mktMetricas, emailCampaigns, conteudo,
   ] = await Promise.all([
     supabase.from("profiles").select("nome").eq("id", user.id).maybeSingle(),
     adminListAssinantes(),
@@ -51,6 +52,7 @@ export default async function AdminPage() {
     adminGetBanner(),
     adminMarketingMetricas(),
     adminListEmailCampaigns(),
+    adminGetConteudo(),
   ]);
   const assinantes = (list.data ?? []) as Assinante[];
   const ativos = assinantes.filter((a) => isActiveStatus(a.subscription_status));
@@ -87,6 +89,7 @@ export default async function AdminPage() {
         banner={banner}
         mktMetricas={mktMetricas}
         emailCampaigns={emailCampaigns}
+        conteudo={conteudo}
       />
     </AppShell>
   );
