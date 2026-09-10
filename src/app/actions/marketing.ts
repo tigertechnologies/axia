@@ -33,11 +33,30 @@ export async function adminSaveBanner(b: Banner) {
     updated_at: new Date().toISOString(),
   }).eq("id", 1);
   if (error) return { error: error.message };
-
   try {
     await supabase.rpc("admin_log_action", { p_action: "banner_salvar", p_target_org: null, p_target_email: null, p_detail: { ativo: b.ativo, variante: b.variante } });
   } catch { /* best-effort */ }
-
-  revalidatePath("/", "layout"); // atualiza o banner em todas as páginas
+  revalidatePath("/", "layout");
   return { ok: true as const };
+}
+
+// ── Métricas de marketing ───────────────────────────────────
+export interface MktOrigem { source: string; total: number; convertidos: number }
+export interface MktFunil { status: string; total: number }
+export interface MktResumo { total: number; convertidos: number; novos_mes: number }
+export interface MarketingMetricas { origem: MktOrigem[]; funil: MktFunil[]; resumo: MktResumo }
+
+export async function adminMarketingMetricas(): Promise<MarketingMetricas> {
+  const supabase = createSupabaseServer();
+  const [o, f, r] = await Promise.all([
+    supabase.rpc("admin_mkt_por_origem"),
+    supabase.rpc("admin_mkt_funil"),
+    supabase.rpc("admin_mkt_resumo"),
+  ]);
+  const resumoRow = Array.isArray(r.data) && r.data[0] ? r.data[0] : { total: 0, convertidos: 0, novos_mes: 0 };
+  return {
+    origem: (o.data ?? []) as MktOrigem[],
+    funil: (f.data ?? []) as MktFunil[],
+    resumo: resumoRow as MktResumo,
+  };
 }

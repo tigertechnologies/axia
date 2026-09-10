@@ -17,7 +17,7 @@ import {
   type FinanceiroRow,
 } from "../actions/finance";
 import { adminCriarCampanha, adminToggleCampanha, type Campanha } from "../actions/campaigns";
-import { adminSaveBanner, type Banner } from "../actions/marketing";
+import { adminSaveBanner, type Banner, type MarketingMetricas } from "../actions/marketing";
 import Toast from "../Toast";
 
 export interface SistemaData {
@@ -56,11 +56,11 @@ function descreveAcao(e: AuditEvent): string {
 type Aba = "visao" | "assinantes" | "financeiro" | "campanhas" | "marketing" | "leads" | "sistema" | "auditoria";
 
 export default function AdminClient({
-  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas, banner,
+  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas, banner, mktMetricas,
 }: {
   assinantes: Assinante[]; webhooksPendentes: number; erro?: string;
   metricas: Metricas | null; auditoria: AuditEvent[]; historico: Snapshot[]; leads: Lead[];
-  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData; banner: Banner;
+  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData; banner: Banner; mktMetricas: MarketingMetricas;
 }) {
   const [aba, setAba] = useState<Aba>("visao");
   const [q, setQ] = useState("");
@@ -150,7 +150,7 @@ export default function AdminClient({
 
       {aba === "campanhas" && <CampanhasPanel data={campanhas} flash={flash} />}
 
-      {aba === "marketing" && <MarketingPanel banner={banner} flash={flash} />}
+      {aba === "marketing" && <MarketingPanel banner={banner} metricas={mktMetricas} campanhas={campanhas.rows} flash={flash} />}
 
       {aba === "sistema" && <SistemaPanel data={sistema} flash={flash} />}
 
@@ -336,7 +336,7 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
 // ── MARKETING ───────────────────────────────────────────────
 const BANNER_CORES: Record<string, string> = { info: "#1FA89E", promo: "#16305B", alerta: "#B8542E" };
 
-function MarketingPanel({ banner, flash }: { banner: Banner; flash: (m: string) => void }) {
+function MarketingPanel({ banner, metricas, campanhas, flash }: { banner: Banner; metricas: MarketingMetricas; campanhas: Campanha[]; flash: (m: string) => void }) {
   const [b, setB] = useState<Banner>(banner);
   const [busy, setBusy] = useState(false);
   const [, startT] = useTransition();
@@ -350,9 +350,66 @@ function MarketingPanel({ banner, flash }: { banner: Banner; flash: (m: string) 
   }
 
   const cor = BANNER_CORES[b.variante] ?? BANNER_CORES.info;
+  const { resumo, origem, funil } = metricas;
+  const convPct = resumo.total > 0 ? Math.round((resumo.convertidos / resumo.total) * 100) : 0;
+  const funilMap = Object.fromEntries(funil.map((f) => [f.status, f.total]));
+  const totalUsosCampanhas = campanhas.reduce((s, c) => s + (c.usos ?? 0), 0);
 
   return (
-    <section className="panel">
+    <>
+      {/* Métricas de marketing */}
+      <section className="panel" style={{ marginBottom: 18 }}>
+        <div className="panel-h"><h3>Métricas de marketing</h3></div>
+        <div className="kpis" style={{ marginBottom: 16 }}>
+          <div className="kpi"><div className="kn">{resumo.total}</div><div className="kl">Leads no total</div><div className="kt up">{resumo.novos_mes} no mês</div></div>
+          <div className="kpi"><div className="kn">{resumo.convertidos}</div><div className="kl">Convertidos</div><div className="kt up">{convPct}% de conversão</div></div>
+          <div className="kpi"><div className="kn">{campanhas.filter((c) => c.ativo).length}</div><div className="kl">Campanhas ativas</div></div>
+          <div className="kpi"><div className="kn">{totalUsosCampanhas}</div><div className="kl">Usos de cupom</div></div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 18 }}>
+          {/* Funil */}
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#4A5B72", marginBottom: 10 }}>Funil de leads</div>
+            {LEAD_STATUS.map((s) => {
+              const v = funilMap[s] ?? 0;
+              const pct = resumo.total > 0 ? Math.round((v / resumo.total) * 100) : 0;
+              return (
+                <div key={s} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                  <div style={{ width: 92, fontSize: 12.5, color: "#10233F" }}>{LEAD_LABEL[s]}</div>
+                  <div style={{ flex: 1, height: 10, background: "#F0F3F7", borderRadius: 6, overflow: "hidden" }}>
+                    <div style={{ width: `${pct}%`, height: "100%", background: s === "convertido" ? "#1FA89E" : s === "descartado" ? "#C0492E" : "#16305B", borderRadius: 6 }} />
+                  </div>
+                  <div style={{ width: 54, textAlign: "right", fontSize: 12.5, color: "#6B7C93" }}>{v}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Conversão por origem */}
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#4A5B72", marginBottom: 10 }}>Conversão por origem</div>
+            {origem.length === 0 && <div style={{ color: "#9AA7B8", fontSize: 13 }}>Sem leads ainda.</div>}
+            {origem.map((o) => {
+              const pct = o.total > 0 ? Math.round((o.convertidos / o.total) * 100) : 0;
+              return (
+                <div key={o.source} style={{ marginBottom: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, marginBottom: 3 }}>
+                    <span style={{ color: "#10233F" }}>{SOURCE_LABEL[o.source] ?? o.source}</span>
+                    <span style={{ color: "#6B7C93" }}>{o.convertidos}/{o.total} · {pct}%</span>
+                  </div>
+                  <div style={{ height: 10, background: "#F0F3F7", borderRadius: 6, overflow: "hidden" }}>
+                    <div style={{ width: `${pct}%`, height: "100%", background: "#1FA89E", borderRadius: 6 }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Editor de banner */}
+      <section className="panel">
       <div className="panel-h"><h3>Banner de aviso</h3></div>
 
       {/* Prévia ao vivo */}
@@ -395,9 +452,10 @@ function MarketingPanel({ banner, flash }: { banner: Banner; flash: (m: string) 
         <button onClick={() => startT(salvar)} disabled={busy} style={btn}>{busy ? "Salvando…" : "Salvar banner"}</button>
       </div>
       <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
-        O banner aparece no topo de todas as páginas (landing e app) quando ativo. Use-o para Black Friday, avisos e promoções. Métricas de marketing e e-mail em massa chegam nos próximos lotes.
+        O banner aparece no topo de todas as páginas (landing e app) quando ativo. Use-o para Black Friday, avisos e promoções. E-mail em massa chega no próximo lote.
       </p>
     </section>
+    </>
   );
 }
 
