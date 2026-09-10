@@ -156,6 +156,47 @@ export default function Landing({ content = {}, precos = {} }: { content?: Recor
         </div>
       </header>
 
+      {/* HERO DE CAMPANHA (parallax) — aparece quando ativado no admin */}
+      {content["hc_ativo"] === "1" && (content["hc_titulo"] || content["hc_imagem_url"]) && (
+        <section
+          style={{
+            position: "relative",
+            minHeight: "clamp(320px, 46vw, 520px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            backgroundImage: content["hc_imagem_url"] ? `url(${content["hc_imagem_url"]})` : "linear-gradient(135deg,#16305B,#1FA89E)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed",   // efeito parallax
+            overflow: "hidden",
+          }}
+        >
+          {/* Overlay para legibilidade */}
+          {content["hc_overlay"] !== "nenhum" && (
+            <div style={{ position: "absolute", inset: 0, background: content["hc_overlay"] === "claro" ? "rgba(255,255,255,0.55)" : "rgba(16,35,63,0.58)" }} />
+          )}
+          <div style={{ position: "relative", padding: "0 24px", maxWidth: 760 }}>
+            {content["hc_titulo"] && (
+              <h2 style={{ fontFamily: "'Sora',sans-serif", fontSize: "clamp(28px,5vw,52px)", fontWeight: 700, lineHeight: 1.1, color: content["hc_overlay"] === "claro" ? "#10233F" : "#fff", margin: 0 }}>
+                {content["hc_titulo"]}
+              </h2>
+            )}
+            {content["hc_subtitulo"] && (
+              <p style={{ marginTop: 16, fontSize: "clamp(15px,2vw,19px)", color: content["hc_overlay"] === "claro" ? "#334A66" : "rgba(255,255,255,0.9)" }}>
+                {content["hc_subtitulo"]}
+              </p>
+            )}
+            {content["hc_cta_label"] && content["hc_cta_url"] && (
+              <a href={content["hc_cta_url"]} className="btn btn-primary" style={{ marginTop: 24, display: "inline-flex" }}>
+                {content["hc_cta_label"]}
+              </a>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* HERO */}
       <section className="hero" id="top">
         <div className="hero-bg"><div className="blob b1" /><div className="blob b2" /></div>

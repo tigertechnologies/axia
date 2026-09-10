@@ -23,6 +23,7 @@ import { adminSaveConteudo } from "../actions/content";
 import { CAMPOS_CONTEUDO } from "../actions/content-fields";
 import { adminSavePrecos } from "../actions/prices";
 import { adminUploadLogo, adminRemoverLogo } from "../actions/upload";
+import { adminSaveHero, adminUploadHeroImagem, type HeroCampanha } from "../actions/hero";
 import Toast from "../Toast";
 
 export interface SistemaData {
@@ -61,11 +62,11 @@ function descreveAcao(e: AuditEvent): string {
 type Aba = "visao" | "assinantes" | "financeiro" | "campanhas" | "marketing" | "conteudo" | "leads" | "sistema" | "auditoria";
 
 export default function AdminClient({
-  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas, banner, mktMetricas, emailCampaigns, conteudo, precos,
+  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas, banner, mktMetricas, emailCampaigns, conteudo, precos, hero,
 }: {
   assinantes: Assinante[]; webhooksPendentes: number; erro?: string;
   metricas: Metricas | null; auditoria: AuditEvent[]; historico: Snapshot[]; leads: Lead[];
-  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData; banner: Banner; mktMetricas: MarketingMetricas; emailCampaigns: EmailCampaign[]; conteudo: Record<string, string>; precos: Record<string, number>;
+  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData; banner: Banner; mktMetricas: MarketingMetricas; emailCampaigns: EmailCampaign[]; conteudo: Record<string, string>; precos: Record<string, number>; hero: HeroCampanha;
 }) {
   const [aba, setAba] = useState<Aba>("visao");
   const [q, setQ] = useState("");
@@ -158,7 +159,7 @@ export default function AdminClient({
 
       {aba === "marketing" && <MarketingPanel banner={banner} metricas={mktMetricas} campanhas={campanhas.rows} emailCampaigns={emailCampaigns} flash={flash} />}
 
-      {aba === "conteudo" && <ConteudoPanel conteudo={conteudo} precos={precos} flash={flash} />}
+      {aba === "conteudo" && <ConteudoPanel conteudo={conteudo} precos={precos} hero={hero} flash={flash} />}
 
       {aba === "sistema" && <SistemaPanel data={sistema} flash={flash} />}
 
@@ -341,6 +342,89 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
   return <button onClick={onClick} style={{ padding: "5px 12px", borderRadius: 999, border: "1px solid " + (on ? "#1FA89E" : "#E4E9F0"), background: on ? "#E8F6F4" : "#fff", color: on ? "#0F7A70" : "#4A5B72", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: on ? 600 : 500 }}>{children}</button>;
 }
 
+// ── HERO DE CAMPANHA ────────────────────────────────────────
+function HeroPanel({ hero, flash }: { hero: HeroCampanha; flash: (m: string) => void }) {
+  const [h, setH] = useState<HeroCampanha>(hero);
+  const [busy, setBusy] = useState(false);
+  const [upBusy, setUpBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [, startT] = useTransition();
+  const setK = (k: keyof HeroCampanha, v: any) => setH((prev) => ({ ...prev, [k]: v }));
+
+  async function salvar() {
+    setBusy(true);
+    const r = await adminSaveHero(h);
+    setBusy(false);
+    flash("error" in r && r.error ? r.error : "Hero salvo. Já vale no site.");
+  }
+
+  async function enviarImagem(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return;
+    if (file.size > 4 * 1024 * 1024) { flash("Imagem muito grande (máx. 4 MB)."); return; }
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    setUpBusy(true);
+    const dataUrl: string = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result as string); r.onerror = () => res(""); r.readAsDataURL(file); });
+    if (!dataUrl) { setUpBusy(false); flash("Não foi possível ler a imagem."); return; }
+    const r = await adminUploadHeroImagem(dataUrl, ext);
+    setUpBusy(false);
+    if (fileRef.current) fileRef.current.value = "";
+    if ("error" in r && r.error) { flash(r.error); return; }
+    if ("url" in r && r.url) { setK("imagem_url", r.url); flash("Imagem enviada. Salve o hero para publicar."); }
+  }
+
+  const corTexto = h.overlay === "claro" ? "#10233F" : "#fff";
+  const overlayBg = h.overlay === "nenhum" ? "transparent" : h.overlay === "claro" ? "rgba(255,255,255,0.55)" : "rgba(16,35,63,0.58)";
+
+  return (
+    <section className="panel" style={{ marginBottom: 18 }}>
+      <div className="panel-h" style={{ gap: 12, flexWrap: "wrap" }}>
+        <h3>Hero de campanha (topo da landing)</h3>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: "#10233F", cursor: "pointer" }}>
+          <input type="checkbox" checked={h.ativo} onChange={(e) => setK("ativo", e.target.checked)} style={{ width: 16, height: 16 }} />
+          Ativo no site
+        </label>
+      </div>
+
+      {/* Prévia */}
+      <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", minHeight: 180, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", marginBottom: 16, backgroundImage: h.imagem_url ? `url(${h.imagem_url})` : "linear-gradient(135deg,#16305B,#1FA89E)", backgroundSize: "cover", backgroundPosition: "center" }}>
+        {h.overlay !== "nenhum" && <div style={{ position: "absolute", inset: 0, background: overlayBg }} />}
+        <div style={{ position: "relative", padding: 20 }}>
+          <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 26, color: corTexto }}>{h.titulo || "Título da campanha"}</div>
+          {h.subtitulo && <div style={{ marginTop: 8, color: corTexto, opacity: 0.9, fontSize: 14 }}>{h.subtitulo}</div>}
+          {h.cta_label && <div style={{ marginTop: 14, display: "inline-block", background: "#16305B", color: "#fff", padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600 }}>{h.cta_label}</div>}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
+        <div style={{ gridColumn: "1 / -1" }}><Campo label="Título"><input value={h.titulo} onChange={(e) => setK("titulo", e.target.value)} placeholder="Black Friday AXIA" style={inp} /></Campo></div>
+        <div style={{ gridColumn: "1 / -1" }}><Campo label="Subtítulo"><input value={h.subtitulo} onChange={(e) => setK("subtitulo", e.target.value)} placeholder="50% de desconto até 30/11" style={inp} /></Campo></div>
+        <Campo label="Texto do botão"><input value={h.cta_label} onChange={(e) => setK("cta_label", e.target.value)} placeholder="Aproveitar" style={inp} /></Campo>
+        <Campo label="Link do botão"><input value={h.cta_url} onChange={(e) => setK("cta_url", e.target.value)} placeholder="#planos ou https://…" style={inp} /></Campo>
+        <Campo label="Sombreamento (legibilidade)">
+          <select value={h.overlay} onChange={(e) => setK("overlay", e.target.value)} style={inp}>
+            <option value="escuro">Escuro (texto branco)</option>
+            <option value="claro">Claro (texto escuro)</option>
+            <option value="nenhum">Nenhum</option>
+          </select>
+        </Campo>
+        <Campo label="Imagem de fundo">
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input ref={fileRef} type="file" accept=".png,.jpg,.jpeg,.webp,image/*" onChange={enviarImagem} style={{ display: "none" }} />
+            <button onClick={() => fileRef.current?.click()} disabled={upBusy} style={btnGhost}>{upBusy ? "Enviando…" : (h.imagem_url ? "Trocar imagem" : "Enviar imagem")}</button>
+          </div>
+        </Campo>
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <button onClick={() => startT(salvar)} disabled={busy} style={btn}>{busy ? "Salvando…" : "Salvar hero"}</button>
+      </div>
+      <p style={{ marginTop: 12, fontSize: 12.5, color: "#6B7C93" }}>
+        O hero aparece no topo da landing (com efeito parallax) quando ativo. Imagem via bucket public-assets. Dica: use imagens largas (~1600px) e horizontais.
+      </p>
+    </section>
+  );
+}
+
 // ── LOGO ────────────────────────────────────────────────────
 function LogoUploader({ logoUrl, flash }: { logoUrl: string; flash: (m: string) => void }) {
   const [url, setUrl] = useState(logoUrl);
@@ -396,7 +480,7 @@ function LogoUploader({ logoUrl, flash }: { logoUrl: string; flash: (m: string) 
 }
 
 // ── CONTEÚDO DO SITE ────────────────────────────────────────
-function ConteudoPanel({ conteudo, precos, flash }: { conteudo: Record<string, string>; precos: Record<string, number>; flash: (m: string) => void }) {
+function ConteudoPanel({ conteudo, precos, hero, flash }: { conteudo: Record<string, string>; precos: Record<string, number>; hero: HeroCampanha; flash: (m: string) => void }) {
   const inicial = Object.fromEntries(CAMPOS_CONTEUDO.map((c) => [c.chave, conteudo[c.chave] ?? c.padrao]));
   const [vals, setVals] = useState<Record<string, string>>(inicial);
   const [busy, setBusy] = useState(false);
@@ -433,6 +517,8 @@ function ConteudoPanel({ conteudo, precos, flash }: { conteudo: Record<string, s
   return (
     <>
     <LogoUploader logoUrl={conteudo["logo_url"] || ""} flash={flash} />
+
+    <HeroPanel hero={hero} flash={flash} />
 
     <section className="panel" style={{ marginBottom: 18 }}>
       <div className="panel-h"><h3>Conteúdo do site</h3></div>
