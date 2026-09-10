@@ -18,6 +18,7 @@ import {
 } from "../actions/finance";
 import { adminCriarCampanha, adminToggleCampanha, type Campanha } from "../actions/campaigns";
 import { adminSaveBanner, type Banner, type MarketingMetricas } from "../actions/marketing";
+import { adminEnviarEmail, adminEmailContagem, type EmailCampaign } from "../actions/email";
 import Toast from "../Toast";
 
 export interface SistemaData {
@@ -56,11 +57,11 @@ function descreveAcao(e: AuditEvent): string {
 type Aba = "visao" | "assinantes" | "financeiro" | "campanhas" | "marketing" | "leads" | "sistema" | "auditoria";
 
 export default function AdminClient({
-  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas, banner, mktMetricas,
+  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas, banner, mktMetricas, emailCampaigns,
 }: {
   assinantes: Assinante[]; webhooksPendentes: number; erro?: string;
   metricas: Metricas | null; auditoria: AuditEvent[]; historico: Snapshot[]; leads: Lead[];
-  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData; banner: Banner; mktMetricas: MarketingMetricas;
+  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData; banner: Banner; mktMetricas: MarketingMetricas; emailCampaigns: EmailCampaign[];
 }) {
   const [aba, setAba] = useState<Aba>("visao");
   const [q, setQ] = useState("");
@@ -150,7 +151,7 @@ export default function AdminClient({
 
       {aba === "campanhas" && <CampanhasPanel data={campanhas} flash={flash} />}
 
-      {aba === "marketing" && <MarketingPanel banner={banner} metricas={mktMetricas} campanhas={campanhas.rows} flash={flash} />}
+      {aba === "marketing" && <MarketingPanel banner={banner} metricas={mktMetricas} campanhas={campanhas.rows} emailCampaigns={emailCampaigns} flash={flash} />}
 
       {aba === "sistema" && <SistemaPanel data={sistema} flash={flash} />}
 
@@ -333,10 +334,96 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
   return <button onClick={onClick} style={{ padding: "5px 12px", borderRadius: 999, border: "1px solid " + (on ? "#1FA89E" : "#E4E9F0"), background: on ? "#E8F6F4" : "#fff", color: on ? "#0F7A70" : "#4A5B72", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: on ? 600 : 500 }}>{children}</button>;
 }
 
+// ── E-MAIL EM MASSA ─────────────────────────────────────────
+const PUBLICO_LABEL: Record<string, string> = { leads: "Leads", assinantes: "Assinantes", ambos: "Leads + Assinantes" };
+
+function EmailBroadcast({ campanhas, flash }: { campanhas: EmailCampaign[]; flash: (m: string) => void }) {
+  const [assunto, setAssunto] = useState("");
+  const [corpo, setCorpo] = useState("");
+  const [publico, setPublico] = useState("leads");
+  const [contagem, setContagem] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [, startT] = useTransition();
+
+  async function contar(p: string) {
+    setPublico(p); setContagem(null);
+    const n = await adminEmailContagem(p);
+    setContagem(n);
+  }
+  async function enviar() {
+    if (!assunto.trim() || !corpo.trim()) { flash("Preencha assunto e mensagem."); return; }
+    const n = contagem ?? await adminEmailContagem(publico);
+    if (!confirm(`Enviar este e-mail para ${n} destinatário(s) do público "${PUBLICO_LABEL[publico]}"? Todos recebem link de descadastro.`)) return;
+    setBusy(true);
+    const r = await adminEnviarEmail(assunto, corpo, publico);
+    setBusy(false);
+    if ("error" in r && r.error) { flash(r.error); return; }
+    if ("enviados" in r) { flash(`Enviados: ${r.enviados}, falhas: ${r.falhas}. Recarregue para ver no histórico.`); setAssunto(""); setCorpo(""); }
+  }
+
+  const quandoHoraLocal = (iso: string | null) => iso ? quandoHora(iso) : "—";
+
+  return (
+    <section className="panel" style={{ marginBottom: 18 }}>
+      <div className="panel-h"><h3>E-mail em massa</h3></div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12, marginBottom: 12 }}>
+        <Campo label="Público">
+          <select value={publico} onChange={(e) => startT(() => contar(e.target.value))} style={inp}>
+            <option value="leads">Leads (ainda não assinam)</option>
+            <option value="assinantes">Assinantes</option>
+            <option value="ambos">Leads + Assinantes</option>
+          </select>
+        </Campo>
+        <Campo label="Destinatários">
+          <div style={{ paddingTop: 8, fontSize: 14, color: "#10233F" }}>{contagem === null ? "—" : `${contagem} pessoa(s)`}</div>
+        </Campo>
+      </div>
+      <Campo label="Assunto"><input value={assunto} onChange={(e) => setAssunto(e.target.value)} placeholder="Novidades da AXIA" style={inp} /></Campo>
+      <div style={{ marginTop: 12 }}>
+        <label style={{ display: "block", fontSize: 12.5, color: "#4A5B72", marginBottom: 4 }}>Mensagem</label>
+        <textarea value={corpo} onChange={(e) => setCorpo(e.target.value)} rows={6} placeholder="Escreva a mensagem…" style={{ ...inp, resize: "vertical" }} />
+      </div>
+      <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
+        <button onClick={() => startT(enviar)} disabled={busy} style={btn}>{busy ? "Enviando…" : "Enviar e-mail"}</button>
+        <span style={{ fontSize: 12, color: "#6B7C93" }}>Todo envio inclui link de descadastro (LGPD).</span>
+      </div>
+
+      {campanhas.length > 0 && (
+        <div style={{ marginTop: 18 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#4A5B72", marginBottom: 8 }}>Histórico de envios</div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead><tr style={{ textAlign: "left", color: "#6B7C93", borderBottom: "1px solid #E6EBF2" }}>
+                <th style={{ padding: "10px 14px" }}>Assunto</th><th style={{ padding: "10px 14px" }}>Público</th>
+                <th style={{ padding: "10px 14px" }}>Enviados</th><th style={{ padding: "10px 14px" }}>Falhas</th><th style={{ padding: "10px 14px" }}>Quando</th>
+              </tr></thead>
+              <tbody>
+                {campanhas.map((c) => (
+                  <tr key={c.id} style={{ borderBottom: "1px solid #F0F3F7" }}>
+                    <td style={{ padding: "10px 14px", color: "#10233F" }}>{c.assunto}</td>
+                    <td style={{ padding: "10px 14px" }}>{PUBLICO_LABEL[c.publico] ?? c.publico}</td>
+                    <td style={{ padding: "10px 14px" }}>{c.enviados}/{c.destinatarios}</td>
+                    <td style={{ padding: "10px 14px", color: c.falhas > 0 ? "#C0492E" : "#6B7C93" }}>{c.falhas}</td>
+                    <td style={{ padding: "10px 14px", color: "#6B7C93", whiteSpace: "nowrap" }}>{quandoHoraLocal(c.sent_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
+        O envio real depende do Postmark de envio configurado (token, remetente verificado e stream de broadcast). Sem isso, o botão retorna um aviso claro em vez de enviar.
+      </p>
+    </section>
+  );
+}
+
 // ── MARKETING ───────────────────────────────────────────────
 const BANNER_CORES: Record<string, string> = { info: "#1FA89E", promo: "#16305B", alerta: "#B8542E" };
 
-function MarketingPanel({ banner, metricas, campanhas, flash }: { banner: Banner; metricas: MarketingMetricas; campanhas: Campanha[]; flash: (m: string) => void }) {
+function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: { banner: Banner; metricas: MarketingMetricas; campanhas: Campanha[]; emailCampaigns: EmailCampaign[]; flash: (m: string) => void }) {
   const [b, setB] = useState<Banner>(banner);
   const [busy, setBusy] = useState(false);
   const [, startT] = useTransition();
@@ -407,6 +494,9 @@ function MarketingPanel({ banner, metricas, campanhas, flash }: { banner: Banner
           </div>
         </div>
       </section>
+
+      {/* E-mail em massa */}
+      <EmailBroadcast campanhas={emailCampaigns} flash={flash} />
 
       {/* Editor de banner */}
       <section className="panel">
