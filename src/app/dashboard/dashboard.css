@@ -175,3 +175,23 @@
     .item .subj{white-space:normal}
   }
   @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ── DARK MODE (app) — acionado pelo botão na topbar ── */
+:root[data-theme="dark"]{
+  --bg:#0E1826;        /* fundo do conteúdo */
+  --panel:#182A40;     /* cards, painéis */
+  --line:#25384F;      /* bordas */
+  --ink:#E6EDF6;       /* texto principal */
+  --muted:#9DB0C7;     /* texto secundário */
+  --navy-deep:#0A1420; /* sidebar ainda mais escura */
+  --teal-soft:#14312E;
+  --gold-soft:#2A2412;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.35),0 3px 12px rgba(0,0,0,.30);
+  --shadow-md:0 10px 30px rgba(0,0,0,.45);
+}
+:root[data-theme="dark"] body{background:var(--bg);color:var(--ink)}
+:root[data-theme="dark"] h1,:root[data-theme="dark"] h2,:root[data-theme="dark"] h3,:root[data-theme="dark"] h4{color:var(--ink)}
+
+/* Botão de tema na topbar */
+.theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s}
+.theme-toggle:hover{border-color:var(--blue)}
