@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import "./landing.css";
+import ThemeToggle from "./ThemeToggle";
 
 const PLANS = [
   {
@@ -152,6 +153,7 @@ export default function Landing({ content = {}, precos = {} }: { content?: Recor
           <div className="nav-cta">
             <Link className="btn btn-ghost" href="/login">Entrar</Link>
             <a className="btn btn-primary" href="#planos">Começar agora</a>
+            <ThemeToggle />
           </div>
         </div>
       </header>
