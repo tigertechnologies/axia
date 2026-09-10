@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./dark-fixes.css";
 import SiteBanner from "./SiteBanner";
 
 export const metadata: Metadata = {
