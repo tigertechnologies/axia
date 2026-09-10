@@ -22,6 +22,7 @@ import { adminEnviarEmail, adminEmailContagem, type EmailCampaign } from "../act
 import { adminSaveConteudo } from "../actions/content";
 import { CAMPOS_CONTEUDO } from "../actions/content-fields";
 import { adminSavePrecos } from "../actions/prices";
+import { adminUploadLogo, adminRemoverLogo } from "../actions/upload";
 import Toast from "../Toast";
 
 export interface SistemaData {
@@ -340,6 +341,60 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
   return <button onClick={onClick} style={{ padding: "5px 12px", borderRadius: 999, border: "1px solid " + (on ? "#1FA89E" : "#E4E9F0"), background: on ? "#E8F6F4" : "#fff", color: on ? "#0F7A70" : "#4A5B72", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: on ? 600 : 500 }}>{children}</button>;
 }
 
+// ── LOGO ────────────────────────────────────────────────────
+function LogoUploader({ logoUrl, flash }: { logoUrl: string; flash: (m: string) => void }) {
+  const [url, setUrl] = useState(logoUrl);
+  const [busy, setBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [, startT] = useTransition();
+
+  async function enviar(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { flash("Arquivo muito grande (máx. 2 MB)."); return; }
+    const ext = (file.name.split(".").pop() || "png").toLowerCase();
+    setBusy(true);
+    const dataUrl: string = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result as string);
+      r.onerror = () => rej(new Error("Falha ao ler o arquivo."));
+      r.readAsDataURL(file);
+    }).catch(() => "") as string;
+    if (!dataUrl) { setBusy(false); flash("Não foi possível ler o arquivo."); return; }
+    const r = await adminUploadLogo(dataUrl, ext);
+    setBusy(false);
+    if (fileRef.current) fileRef.current.value = "";
+    if ("error" in r && r.error) { flash(r.error); return; }
+    if ("url" in r && r.url) { setUrl(r.url); flash("Logo enviada. Já vale no site."); }
+  }
+
+  async function remover() {
+    setBusy(true);
+    const r = await adminRemoverLogo();
+    setBusy(false);
+    if ("error" in r && r.error) { flash(r.error); return; }
+    setUrl(""); flash("Logo removida. Voltou ao símbolo padrão.");
+  }
+
+  return (
+    <section className="panel" style={{ marginBottom: 18 }}>
+      <div className="panel-h"><h3>Logo do site</h3></div>
+      <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+        <div style={{ background: "#16305B", borderRadius: 12, padding: "16px 20px", display: "flex", alignItems: "center", minWidth: 120, minHeight: 60, justifyContent: "center" }}>
+          {url ? <img src={url} alt="logo" style={{ height: 34, width: "auto", display: "block" }} /> : <span style={{ color: "#A8C4E0", fontSize: 13 }}>Símbolo padrão (SVG)</span>}
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <input ref={fileRef} type="file" accept=".png,.jpg,.jpeg,.svg,.webp,image/*" onChange={enviar} style={{ display: "none" }} />
+          <button onClick={() => fileRef.current?.click()} disabled={busy} style={btn}>{busy ? "Enviando…" : "Enviar logo (PNG/SVG)"}</button>
+          {url && <button onClick={() => startT(remover)} disabled={busy} style={btnGhost}>Remover (voltar ao padrão)</button>}
+        </div>
+      </div>
+      <p style={{ marginTop: 12, fontSize: 12.5, color: "#6B7C93" }}>
+        Aceita PNG, JPG, SVG ou WEBP (máx. 2 MB). Dica: exporte em alta resolução (largura ~200–300px) para não borrar. Sem logo enviada, o site usa o símbolo padrão. Requer o bucket <b>public-assets</b> criado e público no Supabase Storage.
+      </p>
+    </section>
+  );
+}
+
 // ── CONTEÚDO DO SITE ────────────────────────────────────────
 function ConteudoPanel({ conteudo, precos, flash }: { conteudo: Record<string, string>; precos: Record<string, number>; flash: (m: string) => void }) {
   const inicial = Object.fromEntries(CAMPOS_CONTEUDO.map((c) => [c.chave, conteudo[c.chave] ?? c.padrao]));
@@ -377,6 +432,8 @@ function ConteudoPanel({ conteudo, precos, flash }: { conteudo: Record<string, s
 
   return (
     <>
+    <LogoUploader logoUrl={conteudo["logo_url"] || ""} flash={flash} />
+
     <section className="panel" style={{ marginBottom: 18 }}>
       <div className="panel-h"><h3>Conteúdo do site</h3></div>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>

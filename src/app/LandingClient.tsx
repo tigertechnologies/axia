@@ -74,17 +74,22 @@ const Check = () => (
   </svg>
 );
 
-const Mark = ({ size = 34, footer = false }: { size?: number; footer?: boolean }) => (
-  <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden="true">
-    <path d="M8 33 L20 8 L28 24" stroke={footer ? "#A8C4E0" : "url(#axiaGrad)"} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M20 22 L31 33" stroke="#1FA89E" strokeWidth={2.6} strokeLinecap="round" />
-    <circle cx="20" cy="22" r="4" fill={footer ? "#10233F" : "#fff"} stroke={footer ? "#A8C4E0" : "#16305B"} strokeWidth={2.4} />
-    {!footer && <circle cx="31" cy="33" r="2.4" fill="#1FA89E" />}
-  </svg>
-);
-
 export default function Landing({ content = {}, precos = {} }: { content?: Record<string, string>; precos?: Record<string, number> }) {
   const t = (k: string, d: string) => (content[k] ?? d);
+  const logoUrl = content["logo_url"] || "";
+
+  // Logo: usa a imagem enviada pelo admin, com fallback para o símbolo SVG padrão.
+  const Mark = ({ size = 34, footer = false }: { size?: number; footer?: boolean }) => {
+    if (logoUrl) return <img src={logoUrl} alt="AXIA" style={{ height: size, width: "auto", display: "block" }} />;
+    return (
+      <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <path d="M8 33 L20 8 L28 24" stroke={footer ? "#A8C4E0" : "url(#axiaGrad)"} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M20 22 L31 33" stroke="#1FA89E" strokeWidth={2.6} strokeLinecap="round" />
+        <circle cx="20" cy="22" r="4" fill={footer ? "#10233F" : "#fff"} stroke={footer ? "#A8C4E0" : "#16305B"} strokeWidth={2.4} />
+        {!footer && <circle cx="31" cy="33" r="2.4" fill="#1FA89E" />}
+      </svg>
+    );
+  };
   // Preço efetivo por código de plano, formatado a partir de centavos (fallback: texto embutido).
   const fmtReais = (c: number) => (c / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtInt = (c: number) => (c / 100).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
