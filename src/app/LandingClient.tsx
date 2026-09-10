@@ -83,8 +83,21 @@ const Mark = ({ size = 34, footer = false }: { size?: number; footer?: boolean }
   </svg>
 );
 
-export default function Landing({ content = {} }: { content?: Record<string, string> }) {
+export default function Landing({ content = {}, precos = {} }: { content?: Record<string, string>; precos?: Record<string, number> }) {
   const t = (k: string, d: string) => (content[k] ?? d);
+  // Preço efetivo por código de plano, formatado a partir de centavos (fallback: texto embutido).
+  const fmtReais = (c: number) => (c / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtInt = (c: number) => (c / 100).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+  function precoDoCodigo(code: string) {
+    const mCents = precos[`${code}_monthly`];
+    const aCents = precos[`${code}_annual`];
+    if (mCents == null || aCents == null) return null;
+    return {
+      m: fmtReais(mCents),
+      a: fmtInt(aCents),
+      altA: `R$ ${fmtReais(Math.round(aCents / 12))}/mês • cobrado anualmente`,
+    };
+  }
   const [annual, setAnnual] = useState(false);
   const [open, setOpen] = useState<number | null>(null);
 
@@ -332,8 +345,8 @@ export default function Landing({ content = {} }: { content?: Record<string, str
                 {p.pop && <span className="badge">Recomendado</span>}
                 <span className="pname">{p.name}</span>
                 <p style={{ fontSize: 13, color: "#6B7C93", margin: "2px 0 10px", minHeight: 34 }}>{p.tagline}</p>
-                <div className="price"><span className="cur">R$</span><span className="val">{annual ? p.a : p.m}</span><span className="per">{annual ? "/ano" : "/mês"}</span></div>
-                <p className="alt">{annual ? p.altA : p.altM}</p>
+                <div className="price"><span className="cur">R$</span><span className="val">{(() => { const pe = precoDoCodigo(p.code); return annual ? (pe?.a ?? p.a) : (pe?.m ?? p.m); })()}</span><span className="per">{annual ? "/ano" : "/mês"}</span></div>
+                <p className="alt">{(() => { const pe = precoDoCodigo(p.code); return annual ? (pe?.altA ?? p.altA) : p.altM; })()}</p>
                 <ul>{p.features.map((f) => {
                   const soon = f.includes("· em breve");
                   const label = f.replace(" · em breve", "");

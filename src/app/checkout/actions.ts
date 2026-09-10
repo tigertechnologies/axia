@@ -3,6 +3,7 @@
 import { createSupabaseServer, createSupabaseAdmin } from "@/lib/supabase/server";
 import { stripe } from "@/lib/stripe";
 import { getPlan } from "@/lib/plans";
+import { getEffectivePriceCents } from "../actions/prices";
 
 interface QuickProfile { crm?: string; uf?: string; especialidade?: string }
 
@@ -50,7 +51,7 @@ export async function createCheckoutSession(planId: string, profile: QuickProfil
         price_data: {
           currency: "brl",
           product_data: { name: plan.name },
-          unit_amount: plan.amount,           // PREÇO OFICIAL, resolvido no backend
+          unit_amount: await getEffectivePriceCents(planId),   // preço efetivo (override do admin ou padrão)
           recurring: { interval: plan.interval },
         },
       },

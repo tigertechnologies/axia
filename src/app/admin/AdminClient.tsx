@@ -21,6 +21,7 @@ import { adminSaveBanner, type Banner, type MarketingMetricas } from "../actions
 import { adminEnviarEmail, adminEmailContagem, type EmailCampaign } from "../actions/email";
 import { adminSaveConteudo } from "../actions/content";
 import { CAMPOS_CONTEUDO } from "../actions/content-fields";
+import { adminSavePrecos } from "../actions/prices";
 import Toast from "../Toast";
 
 export interface SistemaData {
@@ -59,11 +60,11 @@ function descreveAcao(e: AuditEvent): string {
 type Aba = "visao" | "assinantes" | "financeiro" | "campanhas" | "marketing" | "conteudo" | "leads" | "sistema" | "auditoria";
 
 export default function AdminClient({
-  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas, banner, mktMetricas, emailCampaigns, conteudo,
+  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas, banner, mktMetricas, emailCampaigns, conteudo, precos,
 }: {
   assinantes: Assinante[]; webhooksPendentes: number; erro?: string;
   metricas: Metricas | null; auditoria: AuditEvent[]; historico: Snapshot[]; leads: Lead[];
-  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData; banner: Banner; mktMetricas: MarketingMetricas; emailCampaigns: EmailCampaign[]; conteudo: Record<string, string>;
+  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData; banner: Banner; mktMetricas: MarketingMetricas; emailCampaigns: EmailCampaign[]; conteudo: Record<string, string>; precos: Record<string, number>;
 }) {
   const [aba, setAba] = useState<Aba>("visao");
   const [q, setQ] = useState("");
@@ -156,7 +157,7 @@ export default function AdminClient({
 
       {aba === "marketing" && <MarketingPanel banner={banner} metricas={mktMetricas} campanhas={campanhas.rows} emailCampaigns={emailCampaigns} flash={flash} />}
 
-      {aba === "conteudo" && <ConteudoPanel conteudo={conteudo} flash={flash} />}
+      {aba === "conteudo" && <ConteudoPanel conteudo={conteudo} precos={precos} flash={flash} />}
 
       {aba === "sistema" && <SistemaPanel data={sistema} flash={flash} />}
 
@@ -340,11 +341,16 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
 }
 
 // ── CONTEÚDO DO SITE ────────────────────────────────────────
-function ConteudoPanel({ conteudo, flash }: { conteudo: Record<string, string>; flash: (m: string) => void }) {
+function ConteudoPanel({ conteudo, precos, flash }: { conteudo: Record<string, string>; precos: Record<string, number>; flash: (m: string) => void }) {
   const inicial = Object.fromEntries(CAMPOS_CONTEUDO.map((c) => [c.chave, conteudo[c.chave] ?? c.padrao]));
   const [vals, setVals] = useState<Record<string, string>>(inicial);
   const [busy, setBusy] = useState(false);
   const [, startT] = useTransition();
+
+  // Preços em reais (string) por plan_id, a partir dos centavos efetivos.
+  const precoInicial = Object.fromEntries(Object.keys(PLANS).map((id) => [id, ((precos[id] ?? PLANS[id].amount) / 100).toFixed(2).replace(".", ",")]));
+  const [precoVals, setPrecoVals] = useState<Record<string, string>>(precoInicial);
+  const [busyP, setBusyP] = useState(false);
 
   async function salvar() {
     setBusy(true);
@@ -354,8 +360,24 @@ function ConteudoPanel({ conteudo, flash }: { conteudo: Record<string, string>; 
   }
   function restaurar(chave: string, padrao: string) { setVals((v) => ({ ...v, [chave]: padrao })); }
 
+  async function salvarPrecos() {
+    const cents: Record<string, number> = {};
+    for (const id of Object.keys(precoVals)) {
+      const n = Math.round(parseFloat(precoVals[id].replace(/\./g, "").replace(",", ".")) * 100);
+      if (!Number.isFinite(n) || n <= 0) { flash(`Preço inválido em ${id}.`); return; }
+      cents[id] = n;
+    }
+    setBusyP(true);
+    const r = await adminSavePrecos(cents);
+    setBusyP(false);
+    flash("error" in r && r.error ? r.error : "Preços salvos. Valem para novos assinantes.");
+  }
+
+  const PLAN_ORDER = ["essential_monthly", "essential_annual", "pro_monthly", "pro_annual", "office_monthly", "office_annual"];
+
   return (
-    <section className="panel">
+    <>
+    <section className="panel" style={{ marginBottom: 18 }}>
       <div className="panel-h"><h3>Conteúdo do site</h3></div>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {CAMPOS_CONTEUDO.map((c) => (
@@ -373,10 +395,31 @@ function ConteudoPanel({ conteudo, flash }: { conteudo: Record<string, string>; 
       <div style={{ marginTop: 16 }}>
         <button onClick={() => startT(salvar)} disabled={busy} style={btn}>{busy ? "Salvando…" : "Salvar textos"}</button>
       </div>
-      <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
-        Edita os textos principais da landing. O que você não alterar mantém o texto atual. Preço dos planos fica de fora por segurança — chega no próximo lote, valendo para novos assinantes.
+    </section>
+
+    <section className="panel">
+      <div className="panel-h"><h3>Preços dos planos</h3></div>
+      <div style={{ background: "#FBF3E7", border: "1px solid #F0E0C6", borderRadius: 10, padding: "10px 12px", fontSize: 12.5, color: "#8A5A18", marginBottom: 14 }}>
+        Alterar o preço vale para <b>novos assinantes</b> (novos checkouts) e para o valor exibido no site. Quem já assina continua no preço atual — não reprecifica ninguém automaticamente.
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
+        {PLAN_ORDER.filter((id) => id in PLANS).map((id) => (
+          <Campo key={id} label={`${PLANS[id].name} · ${PLANS[id].interval === "year" ? "anual" : "mensal"}`}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ color: "#6B7C93", fontSize: 13 }}>R$</span>
+              <input value={precoVals[id]} onChange={(e) => setPrecoVals((v) => ({ ...v, [id]: e.target.value }))} style={inp} />
+            </div>
+          </Campo>
+        ))}
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <button onClick={() => startT(salvarPrecos)} disabled={busyP} style={btn}>{busyP ? "Salvando…" : "Salvar preços"}</button>
+      </div>
+      <p style={{ marginTop: 12, fontSize: 12.5, color: "#6B7C93" }}>
+        O checkout passa a cobrar estes valores em novas assinaturas, e a landing exibe-os automaticamente. Os direitos/limites de cada plano continuam definidos no código.
       </p>
     </section>
+    </>
   );
 }
 
