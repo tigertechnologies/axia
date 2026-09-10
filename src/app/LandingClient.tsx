@@ -219,8 +219,8 @@ export default function Landing({ content = {}, precos = {} }: { content?: Recor
         <div className="wrap">
           <div className="prob-head reveal">
             <span className="eyebrow">O problema</span>
-            <h2 style={{ fontSize: "clamp(24px,3.4vw,38px)" }}>Quantas oportunidades estão escondidas na sua caixa de entrada?</h2>
-            <p className="lead" style={{ marginTop: 16 }}>Todo dia chegam e-mails pessoais, newsletters e propaganda — misturados com tribunais, cartórios, advogados e comunicações administrativas. No meio disso, o que realmente importa passa despercebido.</p>
+            <h2 style={{ fontSize: "clamp(24px,3.4vw,38px)" }}>{t("prob_title", "Quantas oportunidades estão escondidas na sua caixa de entrada?")}</h2>
+            <p className="lead" style={{ marginTop: 16 }}>{t("prob_lead", "Todo dia chegam e-mails pessoais, newsletters e propaganda — misturados com tribunais, cartórios, advogados e comunicações administrativas. No meio disso, o que realmente importa passa despercebido.")}</p>
           </div>
           <div className="prob-cols reveal">
             <div className="col-card noise">
@@ -244,7 +244,7 @@ export default function Landing({ content = {}, precos = {} }: { content?: Recor
         <div className="wrap">
           <div className="reveal" style={{ maxWidth: 640 }}>
             <span className="eyebrow">Como funciona</span>
-            <h2 style={{ fontSize: "clamp(24px,3.4vw,38px)" }}>Quatro passos entre a sua caixa e a sua clareza.</h2>
+            <h2 style={{ fontSize: "clamp(24px,3.4vw,38px)" }}>{t("como_title", "Quatro passos entre a sua caixa e a sua clareza.")}</h2>
           </div>
           <div className="steps">
             {[
@@ -293,7 +293,7 @@ export default function Landing({ content = {}, precos = {} }: { content?: Recor
         <div className="wrap">
           <div className="reveal" style={{ maxWidth: 620 }}>
             <span className="eyebrow">Benefícios</span>
-            <h2 style={{ fontSize: "clamp(24px,3.4vw,38px)" }}>Menos procura. Mais controle.</h2>
+            <h2 style={{ fontSize: "clamp(24px,3.4vw,38px)" }}>{t("benef_title", "Menos procura. Mais controle.")}</h2>
           </div>
           <div className="ben-grid">
             {[
@@ -318,7 +318,7 @@ export default function Landing({ content = {}, precos = {} }: { content?: Recor
         <div className="wrap reveal">
           <span className="demo-tag"><span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--teal)" }} />Demonstração</span>
           <span className="eyebrow" style={{ display: "block" }}>Prova de valor</span>
-          <h2>Imagine abrir a AXIA pela manhã e encontrar:</h2>
+          <h2>{t("stats_title", "Imagine abrir a AXIA pela manhã e encontrar:")}</h2>
           <div className="stat-grid">
             {[["187", "e-mails analisados"], ["12", "comunicações relevantes"], ["3", "novas nomeações"], ["4", "prazos monitorados"], ["2", "perícias próximas"], ["1", "pagamento identificado"]].map(([n, l]) => (
               <div className="stat" key={l}><div className="n">{n}</div><div className="l">{l}</div></div>
@@ -333,7 +333,7 @@ export default function Landing({ content = {}, precos = {} }: { content?: Recor
         <div className="wrap">
           <div className="plan-head reveal">
             <span className="eyebrow">Planos</span>
-            <h2 style={{ fontSize: "clamp(24px,3.4vw,38px)" }}>Escolha o plano da sua rotina.</h2>
+            <h2 style={{ fontSize: "clamp(24px,3.4vw,38px)" }}>{t("planos_title", "Escolha o plano da sua rotina.")}</h2>
             <div className="toggle" role="tablist" aria-label="Periodicidade">
               <button className={annual ? "" : "active"} role="tab" aria-selected={!annual} onClick={() => setAnnual(false)}>Mensal</button>
               <button className={annual ? "active" : ""} role="tab" aria-selected={annual} onClick={() => setAnnual(true)}>Anual <span className="save">−2 meses</span></button>
@@ -364,7 +364,7 @@ export default function Landing({ content = {}, precos = {} }: { content?: Recor
         <div className="wrap">
           <div className="reveal" style={{ textAlign: "center", maxWidth: 640, margin: "0 auto" }}>
             <span className="eyebrow">Perguntas frequentes</span>
-            <h2 style={{ fontSize: "clamp(24px,3.4vw,38px)" }}>Tudo que você precisa saber.</h2>
+            <h2 style={{ fontSize: "clamp(24px,3.4vw,38px)" }}>{t("faq_title", "Tudo que você precisa saber.")}</h2>
           </div>
           <div className="faq-wrap reveal">
             {FAQS.map(([q, a], i) => (
@@ -383,8 +383,8 @@ export default function Landing({ content = {}, precos = {} }: { content?: Recor
       {/* CTA FINAL */}
       <section className="final">
         <div className="wrap reveal">
-          <h2>Comece a deixar a AXIA trabalhar por você.</h2>
-          <p className="lead" style={{ margin: "0 auto 8px" }}>Conecte seu e-mail e veja o que estava passando despercebido.</p>
+          <h2>{t("cta_title", "Comece a deixar a AXIA trabalhar por você.")}</h2>
+          <p className="lead" style={{ margin: "0 auto 8px" }}>{t("cta_lead", "Conecte seu e-mail e veja o que estava passando despercebido.")}</p>
           <a className="btn btn-primary" href="#planos">Começar agora
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2.2}><path d="M3 8h9M8 3l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </a>
@@ -397,7 +397,7 @@ export default function Landing({ content = {}, precos = {} }: { content?: Recor
           <div className="foot-top">
             <div>
               <div className="brand"><Mark size={30} footer /><span className="word">AXIA</span></div>
-              <p className="foot-tag">Inteligência que conecta o que importa na sua rotina pericial.</p>
+              <p className="foot-tag">{t("foot_tag", "Inteligência que conecta o que importa na sua rotina pericial.")}</p>
             </div>
             <div className="foot-links">
               <div className="foot-col"><h6>Produto</h6><a href="#como">Como funciona</a><a href="#planos">Planos</a><a href="#seguranca">Segurança</a></div>
@@ -405,7 +405,7 @@ export default function Landing({ content = {}, precos = {} }: { content?: Recor
               <div className="foot-col"><h6>Legal</h6><a href="/privacidade">Privacidade</a><a href="/termos">Termos</a><a href="#seguranca">LGPD</a></div>
             </div>
           </div>
-          <div className="foot-bottom"><span>© 2026 AXIA. Todos os direitos reservados.</span><span>Feito para peritos médicos.</span></div>
+          <div className="foot-bottom"><span>{t("foot_copy", "© 2026 AXIA. Todos os direitos reservados.")}</span><span>Feito para peritos médicos.</span></div>
         </div>
       </footer>
     </>
