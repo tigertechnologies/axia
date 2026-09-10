@@ -96,7 +96,7 @@ export default async function BuscaPage({ searchParams }: { searchParams: { q?: 
       )}
 
       {q && commHits.length + processHits.length === 0 && (
-        <section className="panel"><div style={{ padding: "34px 22px", color: "#6B7C93", fontSize: 14, textAlign: "center" }}>Nada encontrado para “{q}”.</div></section>
+        <section className="panel"><div style={{ padding: "34px 22px", color:"var(--muted)", fontSize: 14, textAlign: "center" }}>Nada encontrado para “{q}”.</div></section>
       )}
     </AppShell>
   );

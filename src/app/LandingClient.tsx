@@ -392,7 +392,7 @@ export default function Landing({ content = {}, precos = {} }: { content?: Recor
               <div className={"plan reveal" + (p.pop ? " pop" : "")} key={p.code}>
                 {p.pop && <span className="badge">Recomendado</span>}
                 <span className="pname">{p.name}</span>
-                <p style={{ fontSize: 13, color: "#6B7C93", margin: "2px 0 10px", minHeight: 34 }}>{p.tagline}</p>
+                <p style={{ fontSize: 13, color:"var(--muted)", margin: "2px 0 10px", minHeight: 34 }}>{p.tagline}</p>
                 <div className="price"><span className="cur">R$</span><span className="val">{(() => { const pe = precoDoCodigo(p.code); return annual ? (pe?.a ?? p.a) : (pe?.m ?? p.m); })()}</span><span className="per">{annual ? "/ano" : "/mês"}</span></div>
                 <p className="alt">{(() => { const pe = precoDoCodigo(p.code); return annual ? (pe?.altA ?? p.altA) : p.altM; })()}</p>
                 <ul>{p.features.map((f) => {

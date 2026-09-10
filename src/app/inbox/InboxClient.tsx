@@ -61,7 +61,7 @@ export default function InboxClient({ comms }: { comms: Comm[] }) {
           {FILTERS.map(([f, l]) => <span key={f} className={"fchip" + (filter === f ? " active" : "")} onClick={() => setFilter(f)}>{l}</span>)}
         </div>
         <div className="inbox">
-          {shown.length === 0 && <div style={{ padding: "34px 22px", color: "#6B7C93", fontSize: 14, textAlign: "center" }}>Nenhuma comunicação encontrada.</div>}
+          {shown.length === 0 && <div style={{ padding: "34px 22px", color:"var(--muted)", fontSize: 14, textAlign: "center" }}>Nenhuma comunicação encontrada.</div>}
           {shown.map((c) => {
             const meta = CAT[c.category] ?? { label: c.category, tag: "t-esc", f: "esc" };
             const isDone = c.validated || done.has(c.id);

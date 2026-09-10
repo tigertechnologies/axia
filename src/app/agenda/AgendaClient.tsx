@@ -54,11 +54,11 @@ export default function AgendaClient({ eventos }: { eventos: Evento[] }) {
         {FILTERS.map(([f, l]) => <span key={f} className={"fchip" + (filter === f ? " active" : "")} onClick={() => setFilter(f)}>{l}</span>)}
       </div>
 
-      {grupos.length === 0 && <section className="panel"><div style={{ padding: "34px 22px", color: "#6B7C93", fontSize: 14, textAlign: "center" }}>Nenhum compromisso nesta visão.</div></section>}
+      {grupos.length === 0 && <section className="panel"><div style={{ padding: "34px 22px", color:"var(--muted)", fontSize: 14, textAlign: "center" }}>Nenhum compromisso nesta visão.</div></section>}
 
       {grupos.map((g) => (
         <div key={g.dayKey} style={{ marginBottom: 20 }}>
-          <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 600, color: "#16305B", fontSize: 14, textTransform: "capitalize", marginBottom: 10, paddingLeft: 4 }}>{g.label}</div>
+          <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 600, color:"var(--ink)", fontSize: 14, textTransform: "capitalize", marginBottom: 10, paddingLeft: 4 }}>{g.label}</div>
           <section className="panel">
             <div className="mini" style={{ padding: "6px 0" }}>
               {g.itens.map((e, i) => {
@@ -69,7 +69,7 @@ export default function AgendaClient({ eventos }: { eventos: Evento[] }) {
                   <div className="row" key={i} style={{ padding: "14px 22px" }}>
                     <span className={"cat-ic " + (isPericia ? "t-per" : "t-prz")} style={{ width: 40, height: 40 }}><Ico p={isPericia ? "cal" : "clock"} s={18} /></span>
                     <div className="info">
-                      <div className="t">{e.title}{isPericia && <span style={{ fontWeight: 400, color: "#6B7C93" }}> · {f.hora}</span>}</div>
+                      <div className="t">{e.title}{isPericia && <span style={{ fontWeight: 400, color:"var(--muted)" }}> · {f.hora}</span>}</div>
                       <div className="s">{isPericia ? "Perícia" : "Prazo"} · {e.sub}</div>
                     </div>
                     {st && <span className={"st " + st[0]}>{st[1]}</span>}

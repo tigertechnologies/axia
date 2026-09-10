@@ -51,7 +51,7 @@ export default function NomeacoesClient({ nomeacoes }: { nomeacoes: Comm[] }) {
           {FILTERS.map(([f, l]) => <span key={f} className={"fchip" + (filter === f ? " active" : "")} onClick={() => setFilter(f)}>{l}</span>)}
         </div>
         <div className="inbox">
-          {shown.length === 0 && <div style={{ padding: "34px 22px", color: "#6B7C93", fontSize: 14, textAlign: "center" }}>Nenhuma nomeação nesta visão.</div>}
+          {shown.length === 0 && <div style={{ padding: "34px 22px", color:"var(--muted)", fontSize: 14, textAlign: "center" }}>Nenhuma nomeação nesta visão.</div>}
           {shown.map((c) => {
             const v = isValid(c);
             return (

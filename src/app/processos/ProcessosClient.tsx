@@ -53,12 +53,12 @@ export default function ProcessosClient({ processos }: { processos: Processo[] }
           </div>
         </div>
         <div className="inbox">
-          {shown.length === 0 && <div style={{ padding: "34px 22px", color: "#6B7C93", fontSize: 14, textAlign: "center" }}>Nenhum processo encontrado.</div>}
+          {shown.length === 0 && <div style={{ padding: "34px 22px", color:"var(--muted)", fontSize: 14, textAlign: "center" }}>Nenhum processo encontrado.</div>}
           {shown.map((p) => (
             <div className="item" key={p.ref} style={{ alignItems: "center" }}>
               <span className="cat-ic t-per"><Ico p="doc" s={18} /></span>
               <div className="body">
-                <div className="r1"><span style={{ fontFamily: "'Sora',sans-serif", fontWeight: 600, color: "#10233F", fontSize: 15 }}>Proc. {p.ref}</span>{p.vara && <span className="from">· {p.vara}</span>}</div>
+                <div className="r1"><span style={{ fontFamily: "'Sora',sans-serif", fontWeight: 600, color:"var(--ink)", fontSize: 15 }}>Proc. {p.ref}</span>{p.vara && <span className="from">· {p.vara}</span>}</div>
                 <div className="meta" style={{ marginTop: 5, display: "flex", gap: 14, flexWrap: "wrap" }}>
                   <span>📨 {p.comunicacoes} comunicação(ões)</span>
                   <span>⏱ {p.prazos} prazo(s)</span>

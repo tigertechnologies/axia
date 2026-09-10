@@ -77,10 +77,10 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
 
       {comms.length === 0 && prazos.length === 0 && pericias.length === 0 && honorarios.length === 0 && (
         <div className="attn" style={{ background: "linear-gradient(100deg,#EAF3FF,#F2F8FF)", borderColor: "#CFE0F5", marginBottom: 22 }}>
-          <span className="at-ic" style={{ background: "#DCEBFF", color: "#2E5E9E" }}><Ico p="inbox" /></span>
+          <span className="at-ic" style={{ background:"var(--panel)", color: "#2E5E9E" }}><Ico p="inbox" /></span>
           <div className="at-txt">
             <h4 style={{ color: "#2E5E9E" }}>Sua central está pronta e vazia</h4>
-            <p style={{ color: "#3b5b86" }}>Comece analisando um e-mail na Inbox — ou carregue uma demonstração em Configurações para explorar.</p>
+            <p style={{ color:"var(--ink)" }}>Comece analisando um e-mail na Inbox — ou carregue uma demonstração em Configurações para explorar.</p>
           </div>
           <div className="at-items">
             <a className="at-pill" href="/inbox" style={{ borderColor: "#CFE0F5", color: "#2E5E9E" }}>Ir para a Inbox</a>
@@ -96,7 +96,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
             {FILTERS.map(([f, l]) => <span key={f} className={"fchip" + (filter === f ? " active" : "")} onClick={() => setFilter(f)}>{l}</span>)}
           </div>
           <div className="inbox">
-            {shown.length === 0 && <div style={{ padding: "28px 22px", color: "#6B7C93", fontSize: 14 }}>Nenhuma comunicação nesta categoria.</div>}
+            {shown.length === 0 && <div style={{ padding: "28px 22px", color:"var(--muted)", fontSize: 14 }}>Nenhuma comunicação nesta categoria.</div>}
             {shown.slice(0, 6).map((c) => {
               const meta = CAT[c.category] ?? { label: c.category, tag: "t-esc", f: "esc" };
               const isDone = c.validated || done.has(c.id);
@@ -124,7 +124,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
           <section className="panel">
             <div className="panel-h"><h3>Próximas perícias</h3><a href="#">Agenda</a></div>
             <div className="mini">
-              {pericias.length === 0 && <div style={{ padding: "18px 22px", color: "#6B7C93", fontSize: 13.5 }}>Sem perícias agendadas.</div>}
+              {pericias.length === 0 && <div style={{ padding: "18px 22px", color:"var(--muted)", fontSize: 13.5 }}>Sem perícias agendadas.</div>}
               {pericias.map((p) => { const b = dm(p.scheduled_at); return (
                 <div className="row" key={p.id}><div className="date-badge"><span className="d">{b.d}</span><span className="m">{b.m}</span></div><div className="info"><div className="t">{p.titulo}</div><div className="s">{p.local} · Proc. {p.process_ref}</div></div></div>
               ); })}

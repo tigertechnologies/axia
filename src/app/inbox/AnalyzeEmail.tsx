@@ -37,16 +37,16 @@ export default function AnalyzeEmail() {
 
       {open && (
         <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(16,35,63,.45)", zIndex: 100, display: "grid", placeItems: "center", padding: 16 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 560, background: "#fff", borderRadius: 18, boxShadow: "0 24px 60px rgba(16,35,63,.2)", padding: 26 }}>
-            <h2 style={{ fontFamily: "'Sora',sans-serif", fontSize: 20, color: "#10233F", fontWeight: 600 }}>Analisar e-mail</h2>
-            <p style={{ color: "#6B7C93", fontSize: 13.5, margin: "4px 0 18px" }}>Cole o conteúdo de um e-mail de tribunal, advogado ou intimação. A AXIA identifica o tipo, o processo e cria os itens automaticamente.</p>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 560, background:"var(--panel)", borderRadius: 18, boxShadow: "0 24px 60px rgba(16,35,63,.2)", padding: 26 }}>
+            <h2 style={{ fontFamily: "'Sora',sans-serif", fontSize: 20, color:"var(--ink)", fontWeight: 600 }}>Analisar e-mail</h2>
+            <p style={{ color:"var(--muted)", fontSize: 13.5, margin: "4px 0 18px" }}>Cole o conteúdo de um e-mail de tribunal, advogado ou intimação. A AXIA identifica o tipo, o processo e cria os itens automaticamente.</p>
 
             {err && <div className="err">{err}</div>}
 
             {!res ? (
               <>
                 <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={"Cole aqui o texto do e-mail…\n\nEx.: \"Fica V.Sa. nomeado perito no processo 1002345-67.2025 da 2ª Vara Cível. Prazo de 15 dias para entrega do laudo.\""}
-                  style={{ width: "100%", minHeight: 180, padding: "12px 14px", border: "1px solid #E4E9F0", borderRadius: 12, fontFamily: "'Inter',sans-serif", fontSize: 14, color: "#28374D", outline: "none", resize: "vertical" }} />
+                  style={{ width: "100%", minHeight: 180, padding: "12px 14px", border: "1px solid var(--line)", borderRadius: 12, fontFamily: "'Inter',sans-serif", fontSize: 14, color:"var(--ink)", outline: "none", resize: "vertical" }} />
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
                   <button className="btn-back" onClick={() => setOpen(false)} disabled={loading}>Cancelar</button>
                   <button className="btn-full" style={{ width: "auto", padding: "12px 22px" }} onClick={analisar} disabled={loading || !text.trim()}>{loading ? "Analisando…" : "Analisar com a AXIA"}</button>
@@ -58,7 +58,7 @@ export default function AnalyzeEmail() {
                   <svg width="18" height="18" fill="none" stroke="#127c74" strokeWidth={2}><path d="M2 9.5l4 4L16 3" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   Comunicação classificada e adicionada à sua Inbox.
                 </div>
-                <div style={{ background: "#F7F8FA", border: "1px solid #E4E9F0", borderRadius: 12, padding: 16, marginTop: 14, fontSize: 14 }}>
+                <div style={{ background:"var(--panel)", border: "1px solid var(--line)", borderRadius: 12, padding: 16, marginTop: 14, fontSize: 14 }}>
                   <div style={{ marginBottom: 8 }}><b>Tipo sugerido:</b> {LABEL[res.category] ?? res.category} <span style={{ color: "#9a7a12" }}>· classificação por regras, requer sua revisão</span></div>
                   <div style={{ marginBottom: 8 }}><b>Processo:</b> {res.process_ref ?? "não identificado"}</div>
                   {res.extras.length > 0 && <div style={{ color: "#127c74" }}>✓ Também: {res.extras.join(" · ")}</div>}

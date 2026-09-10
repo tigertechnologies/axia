@@ -63,7 +63,7 @@ export default function PericiasClient({ pericias }: { pericias: Pericia[] }) {
           {FILTERS.map(([f, l]) => <span key={f} className={"fchip" + (filter === f ? " active" : "")} onClick={() => setFilter(f)}>{l}</span>)}
         </div>
         <div className="mini" style={{ padding: "6px 0" }}>
-          {shown.length === 0 && <div style={{ padding: "34px 22px", color: "#6B7C93", fontSize: 14, textAlign: "center" }}>Nenhuma perícia nesta visão.</div>}
+          {shown.length === 0 && <div style={{ padding: "34px 22px", color:"var(--muted)", fontSize: 14, textAlign: "center" }}>Nenhuma perícia nesta visão.</div>}
           {shown.map((p) => {
             const f = fmt(p.scheduled_at);
             return (

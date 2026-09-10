@@ -78,7 +78,7 @@ export default function HonorariosClient({ honorarios }: { honorarios: Honorario
         <div className="panel-h" style={{ gap: 12, flexWrap: "wrap" }}>
           <h3>Lançamentos</h3>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <span style={{ fontSize: 13, color: "#6B7C93" }}>Total: <b style={{ color: "#10233F", fontFamily: "'Sora',sans-serif" }}>{formatBRL(total)}</b></span>
+            <span style={{ fontSize: 13, color:"var(--muted)" }}>Total: <b style={{ color:"var(--ink)", fontFamily: "'Sora',sans-serif" }}>{formatBRL(total)}</b></span>
             <div className="search" style={{ maxWidth: 260, margin: 0 }}>
               <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.8}><circle cx="7" cy="7" r="5" /><path d="M14 14l-3.5-3.5" strokeLinecap="round" /></svg>
               <input placeholder="Buscar por processo…" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -89,7 +89,7 @@ export default function HonorariosClient({ honorarios }: { honorarios: Honorario
           {FILTERS.map(([f, l]) => <span key={f} className={"fchip" + (filter === f ? " active" : "")} onClick={() => setFilter(f)}>{l}</span>)}
         </div>
         <div className="hon-list" style={{ padding: "8px 0" }}>
-          {shown.length === 0 && <div style={{ padding: "34px 22px", color: "#6B7C93", fontSize: 14, textAlign: "center" }}>Nenhum honorário nesta visão.</div>}
+          {shown.length === 0 && <div style={{ padding: "34px 22px", color:"var(--muted)", fontSize: 14, textAlign: "center" }}>Nenhum honorário nesta visão.</div>}
           {shown.map((h) => {
             const status = eff(h); const b = BADGE[status] ?? BADGE.proposto;
             return (
@@ -97,7 +97,7 @@ export default function HonorariosClient({ honorarios }: { honorarios: Honorario
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <span className="cat-ic t-hon" style={{ width: 36, height: 36 }}><Ico p="honorarios" s={16} /></span>
                   <div>
-                    <div style={{ fontWeight: 600, color: "#10233F" }}>Proc. {h.process_ref}</div>
+                    <div style={{ fontWeight: 600, color:"var(--ink)" }}>Proc. {h.process_ref}</div>
                     <span className={"st " + b[0]} style={{ marginTop: 3, display: "inline-block" }}>{b[1]}</span>
                   </div>
                 </div>

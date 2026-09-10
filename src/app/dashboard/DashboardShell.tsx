@@ -136,7 +136,7 @@ export default function DashboardShell({ nome, planId, pastDue, comms, pericias,
                 {FILTERS.map(([f, l]) => <span key={f} className={"fchip" + (filter === f ? " active" : "")} onClick={() => setFilter(f)}>{l}</span>)}
               </div>
               <div className="inbox">
-                {shown.length === 0 && <div style={{ padding: "28px 22px", color: "#6B7C93", fontSize: 14 }}>Nenhuma comunicação nesta categoria.</div>}
+                {shown.length === 0 && <div style={{ padding: "28px 22px", color:"var(--muted)", fontSize: 14 }}>Nenhuma comunicação nesta categoria.</div>}
                 {shown.map((c) => {
                   const meta = CAT[c.category] ?? { label: c.category, tag: "t-esc", f: "esc" };
                   const isDone = c.validated || done.has(c.id);
@@ -165,7 +165,7 @@ export default function DashboardShell({ nome, planId, pastDue, comms, pericias,
               <section className="panel">
                 <div className="panel-h"><h3>Próximas perícias</h3><a href="#">Agenda</a></div>
                 <div className="mini">
-                  {pericias.length === 0 && <div style={{ padding: "18px 22px", color: "#6B7C93", fontSize: 13.5 }}>Sem perícias agendadas.</div>}
+                  {pericias.length === 0 && <div style={{ padding: "18px 22px", color:"var(--muted)", fontSize: 13.5 }}>Sem perícias agendadas.</div>}
                   {pericias.map((p) => { const b = dm(p.scheduled_at); return (
                     <div className="row" key={p.id}><div className="date-badge"><span className="d">{b.d}</span><span className="m">{b.m}</span></div><div className="info"><div className="t">{p.titulo}</div><div className="s">{p.local} · Proc. {p.process_ref}</div></div></div>
                   ); })}

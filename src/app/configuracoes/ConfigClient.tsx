@@ -43,8 +43,8 @@ export default function ConfigClient({ email, nome, crm, uf, especialidade, plan
     window.location.href = r.url!;
   }
 
-  const card: React.CSSProperties = { background: "#fff", border: "1px solid #E6EBF2", borderRadius: 16, padding: 22, marginBottom: 18 };
-  const row: React.CSSProperties = { display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid #F0F3F7", fontSize: 14.5 };
+  const card: React.CSSProperties = { background:"var(--panel)", border: "1px solid var(--line)", borderRadius: 16, padding: 22, marginBottom: 18 };
+  const row: React.CSSProperties = { display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid var(--line)", fontSize: 14.5 };
 
   return (
     <>
@@ -53,33 +53,33 @@ export default function ConfigClient({ email, nome, crm, uf, especialidade, plan
       </div>
 
       <div style={card}>
-        <h3 style={{ fontFamily: "'Sora',sans-serif", color: "#10233F", marginBottom: 10 }}>Perfil</h3>
-        <div style={row}><span style={{ color: "#6B7C93" }}>Nome</span><b>{nome || "—"}</b></div>
-        <div style={row}><span style={{ color: "#6B7C93" }}>E-mail</span><b>{email}</b></div>
-        <div style={row}><span style={{ color: "#6B7C93" }}>CRM · UF</span><b>{crm || "—"} · {uf || "—"}</b></div>
-        <div style={{ ...row, borderBottom: 0 }}><span style={{ color: "#6B7C93" }}>Especialidade</span><b>{especialidade || "—"}</b></div>
+        <h3 style={{ fontFamily: "'Sora',sans-serif", color:"var(--ink)", marginBottom: 10 }}>Perfil</h3>
+        <div style={row}><span style={{ color:"var(--muted)" }}>Nome</span><b>{nome || "—"}</b></div>
+        <div style={row}><span style={{ color:"var(--muted)" }}>E-mail</span><b>{email}</b></div>
+        <div style={row}><span style={{ color:"var(--muted)" }}>CRM · UF</span><b>{crm || "—"} · {uf || "—"}</b></div>
+        <div style={{ ...row, borderBottom: 0 }}><span style={{ color:"var(--muted)" }}>Especialidade</span><b>{especialidade || "—"}</b></div>
       </div>
 
       <div style={card}>
-        <h3 style={{ fontFamily: "'Sora',sans-serif", color: "#10233F", marginBottom: 10 }}>Assinatura</h3>
-        <div style={row}><span style={{ color: "#6B7C93" }}>Plano</span><b>{planLabel}</b></div>
-        <div style={{ ...row, borderBottom: 0 }}><span style={{ color: "#6B7C93" }}>Situação</span><b>{STATUS_LABEL[status] ?? status}</b></div>
+        <h3 style={{ fontFamily: "'Sora',sans-serif", color:"var(--ink)", marginBottom: 10 }}>Assinatura</h3>
+        <div style={row}><span style={{ color:"var(--muted)" }}>Plano</span><b>{planLabel}</b></div>
+        <div style={{ ...row, borderBottom: 0 }}><span style={{ color:"var(--muted)" }}>Situação</span><b>{STATUS_LABEL[status] ?? status}</b></div>
         {err && <div className="attn" style={{ marginTop: 14 }}><div className="at-txt"><p>{err}</p></div></div>}
         <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={portal} disabled={loading}>
           {loading ? "Abrindo…" : "Gerenciar assinatura (cancelar, trocar plano, cartão)"}
         </button>
-        <p style={{ fontSize: 12.5, color: "#6B7C93", marginTop: 10 }}>Cancelamento, mudança de plano e troca de cartão são feitos no portal seguro do Stripe.</p>
+        <p style={{ fontSize: 12.5, color:"var(--muted)", marginTop: 10 }}>Cancelamento, mudança de plano e troca de cartão são feitos no portal seguro do Stripe.</p>
       </div>
 
       <div style={card}>
-        <h3 style={{ fontFamily: "'Sora',sans-serif", color: "#10233F", marginBottom: 10 }}>Conta</h3>
+        <h3 style={{ fontFamily: "'Sora',sans-serif", color:"var(--ink)", marginBottom: 10 }}>Conta</h3>
         <form action={signOut}><button className="btn btn-ghost" type="submit">Sair da conta</button></form>
-        <p style={{ fontSize: 12.5, color: "#6B7C93", marginTop: 12 }}>Troca de senha: use “Esqueci minha senha” na tela de login.</p>
+        <p style={{ fontSize: 12.5, color:"var(--muted)", marginTop: 12 }}>Troca de senha: use “Esqueci minha senha” na tela de login.</p>
       </div>
 
       <div style={card}>
-        <h3 style={{ fontFamily: "'Sora',sans-serif", color: "#10233F", marginBottom: 6 }}>Demonstração</h3>
-        <p style={{ fontSize: 13.5, color: "#6B7C93", marginBottom: 12 }}>
+        <h3 style={{ fontFamily: "'Sora',sans-serif", color:"var(--ink)", marginBottom: 6 }}>Demonstração</h3>
+        <p style={{ fontSize: 13.5, color:"var(--muted)", marginBottom: 12 }}>
           Carregue dados de exemplo (marcados com [DEMO]) para explorar a AXIA sem afetar seus dados reais. Você pode limpar a demonstração quando quiser — isso não remove nenhum dado real.
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -100,7 +100,7 @@ export default function ConfigClient({ email, nome, crm, uf, especialidade, plan
             {delErr && <div className="err">{delErr}</div>}
             <p style={{ fontSize: 13.5, marginBottom: 8 }}>Para confirmar, digite <b>EXCLUIR</b>:</p>
             <input value={confirmText} onChange={(e) => setConfirmText(e.target.value)} placeholder="EXCLUIR"
-              style={{ padding: "10px 12px", border: "1px solid #E4E9F0", borderRadius: 10, fontFamily: "'Inter',sans-serif", marginRight: 10 }} />
+              style={{ padding: "10px 12px", border: "1px solid var(--line)", borderRadius: 10, fontFamily: "'Inter',sans-serif", marginRight: 10 }} />
             <div style={{ marginTop: 12, display: "flex", gap: 10 }}>
               <button className="btn-back" onClick={() => { setDelOpen(false); setConfirmText(""); setDelErr(""); }} disabled={delLoading}>Cancelar</button>
               <button className="btn-full" style={{ width: "auto", padding: "12px 20px", background: "#C0492E" }} onClick={excluir} disabled={delLoading || confirmText !== "EXCLUIR"}>{delLoading ? "Excluindo…" : "Excluir permanentemente"}</button>

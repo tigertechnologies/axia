@@ -1,118 +1,27 @@
 /* ============================================================
-   AXIA — Correção de legibilidade no DARK MODE
-   Sobrescreve, apenas no tema escuro, as cores FIXAS inline que não
-   invertem sozinhas. Seletores no formato que o React gera:
-   style="color:#16305B" (sem espaço após ':'). Carregado no layout raiz.
+   AXIA — Ajustes finos de dark mode (complemento).
+   A raiz foi resolvida convertendo cores fixas em variáveis nos
+   componentes e CSS. Este arquivo cobre apenas os poucos estilos
+   inline remanescentes em componentes sem classe CSS própria.
    ============================================================ */
 
-/* ── Textos escuros (navy/tinta) que somem no fundo escuro ── */
-:root[data-theme="dark"] [style*="color:#16305B"],
-:root[data-theme="dark"] [style*="color:#10233F"],
-:root[data-theme="dark"] [style*="color:#28374D"],
-:root[data-theme="dark"] [style*="color:#334A66"],
-:root[data-theme="dark"] [style*="color:#3b5b86"],
-:root[data-theme="dark"] [style*="color:#22406e"],
-:root[data-theme="dark"] [style*="color:#127c74"],
-:root[data-theme="dark"] [style*="color:#0F7A70"] {
-  color: #E6EDF6 !important;
-}
-
-/* ── Texto cinza-médio: clareia para contraste ── */
-:root[data-theme="dark"] [style*="color:#6B7C93"],
-:root[data-theme="dark"] [style*="color:#67788F"],
-:root[data-theme="dark"] [style*="color:#4A5B72"],
-:root[data-theme="dark"] [style*="color:#9AA7B8"],
-:root[data-theme="dark"] [style*="color:#4A6FA5"] {
-  color: #A9B8CD !important;
-}
-
-/* ── Fundos claros fixos (superfícies) → superfície escura ── */
+/* Superfícies inline que ainda usem branco fixo → superfície escura */
 :root[data-theme="dark"] [style*="background:#fff"],
 :root[data-theme="dark"] [style*="background:#FFFFFF"],
-:root[data-theme="dark"] [style*="background:#ffffff"],
-:root[data-theme="dark"] [style*="background:#FAFBFD"],
-:root[data-theme="dark"] [style*="background:#F7F8FA"],
-:root[data-theme="dark"] [style*="background:#F0F3F7"],
-:root[data-theme="dark"] [style*="background:#EEF3F9"],
-:root[data-theme="dark"] [style*="background:#EAF3FF"],
-:root[data-theme="dark"] [style*="background:#DCEBFF"],
-:root[data-theme="dark"] [style*="background:#F2F8FF"] {
-  background: #182A40 !important;
+:root[data-theme="dark"] [style*="background:#ffffff"]{
+  background:var(--panel) !important;
 }
 
-/* ── Bordas claras fixas → borda escura ── */
+/* Bordas claras inline remanescentes */
 :root[data-theme="dark"] [style*="solid #E4E9F0"],
-:root[data-theme="dark"] [style*="solid #E6EBF2"],
-:root[data-theme="dark"] [style*="solid #F0F3F7"],
-:root[data-theme="dark"] [style*="solid #CFE0F5"],
-:root[data-theme="dark"] [style*="solid #EEF3F9"] {
-  border-color: #25384F !important;
+:root[data-theme="dark"] [style*="solid #E6EBF2"]{
+  border-color:var(--line) !important;
 }
 
-/* ── Superfícies via classes utilitárias (CSS dos módulos) ── */
-:root[data-theme="dark"] .card,
-:root[data-theme="dark"] .panel,
-:root[data-theme="dark"] .kpi,
-:root[data-theme="dark"] .box,
-:root[data-theme="dark"] .tile,
-:root[data-theme="dark"] .chip,
-:root[data-theme="dark"] .step,
-:root[data-theme="dark"] .feat,
-:root[data-theme="dark"] .plan {
-  color: var(--ink, #E6EDF6);
-}
-
-/* Ícones/SVG com traço navy fixo ficam visíveis no escuro */
-:root[data-theme="dark"] svg[stroke="#16305B"],
-:root[data-theme="dark"] svg[stroke="#10233F"] {
-  stroke: #A8C4E0 !important;
-}
-
-/* Placeholders */
+/* Placeholders legíveis */
 :root[data-theme="dark"] input::placeholder,
-:root[data-theme="dark"] textarea::placeholder {
-  color: #7C8DA6 !important;
-}
+:root[data-theme="dark"] textarea::placeholder{color:#7C8DA6 !important}
 
-/* Títulos, labels e cabeçalhos de tabela herdam claro */
-:root[data-theme="dark"] h1,
-:root[data-theme="dark"] h2,
-:root[data-theme="dark"] h3,
-:root[data-theme="dark"] h4,
-:root[data-theme="dark"] label,
-:root[data-theme="dark"] th {
-  color: #E6EDF6;
-}
-
-/* ============================================================
-   Correções específicas por componente (pontos que a camada
-   global não alcança: gradientes de texto e uso de --navy-deep
-   como COR DE TEXTO, que no dark vira escuro-sobre-escuro).
-   ============================================================ */
-
-/* LANDING — título do herói e textos que usavam navy-deep como texto */
-:root[data-theme="dark"] .hero h1{color:#E6EDF6}
-:root[data-theme="dark"] .hero .accent{
-  background:linear-gradient(120deg,#8FB3E6,#4FD1C5);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-}
-:root[data-theme="dark"] .mock-top .tt,
-:root[data-theme="dark"] .mock-body h4{color:#E6EDF6}
-:root[data-theme="dark"] .mock-body{background:#0F1B2C}
-:root[data-theme="dark"] .mock{background:#152437;border-color:#25384F}
-:root[data-theme="dark"] .mock-body .sm{color:#9DB0C7}
-/* chips de categoria no rodapé do herói */
-:root[data-theme="dark"] .prova .demo-tag{background:rgba(255,255,255,.10);color:#fff}
-
-/* DASHBOARD — ícones dos KPIs e textos que usavam navy como texto */
-:root[data-theme="dark"] .kpi .ki,
-:root[data-theme="dark"] .kpi svg{color:#A8C4E0;stroke:#A8C4E0}
-:root[data-theme="dark"] .kpi .kn{color:#E6EDF6}
-:root[data-theme="dark"] .kpi .kl{color:#9DB0C7}
-:root[data-theme="dark"] .greet h1{color:#E6EDF6}
-
-/* Cabeçalhos de tabela e rótulos genéricos que herdavam navy */
-:root[data-theme="dark"] .panel-h h3{color:#E6EDF6}
-
-/* Qualquer texto que use a variável --navy-deep como COR fica claro no dark */
-:root[data-theme="dark"] [style*="color:var(--navy-deep)"]{color:#E6EDF6 !important}
+/* Cabeçalhos de tabela e labels herdam claro */
+:root[data-theme="dark"] th,
+:root[data-theme="dark"] label{color:#C9D6E8}

@@ -18,9 +18,9 @@ export default function Modal({ open, onClose, title, subtitle, submitLabel, onS
 
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(16,35,63,.45)", zIndex: 100, display: "grid", placeItems: "center", padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 460, background: "#fff", borderRadius: 18, boxShadow: "0 24px 60px rgba(16,35,63,.2)", padding: 26 }}>
-        <h2 style={{ fontFamily: "'Sora',sans-serif", fontSize: 20, color: "#10233F", fontWeight: 600 }}>{title}</h2>
-        {subtitle && <p style={{ color: "#6B7C93", fontSize: 13.5, margin: "4px 0 18px" }}>{subtitle}</p>}
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 460, background:"var(--panel)", borderRadius: 18, boxShadow: "0 24px 60px rgba(16,35,63,.2)", padding: 26 }}>
+        <h2 style={{ fontFamily: "'Sora',sans-serif", fontSize: 20, color:"var(--ink)", fontWeight: 600 }}>{title}</h2>
+        {subtitle && <p style={{ color:"var(--muted)", fontSize: 13.5, margin: "4px 0 18px" }}>{subtitle}</p>}
         {err && <div className="err">{err}</div>}
         <div style={{ marginTop: subtitle ? 0 : 16 }}>{children}</div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 22 }}>

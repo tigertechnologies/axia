@@ -73,7 +73,7 @@ export default function PrazosClient({ prazos }: { prazos: Prazo[] }) {
           {FILTERS.map(([f, l]) => <span key={f} className={"fchip" + (filter === f ? " active" : "")} onClick={() => setFilter(f)}>{l}</span>)}
         </div>
         <div className="mini" style={{ padding: "6px 0" }}>
-          {shown.length === 0 && <div style={{ padding: "34px 22px", color: "#6B7C93", fontSize: 14, textAlign: "center" }}>Nenhum prazo nesta visão.</div>}
+          {shown.length === 0 && <div style={{ padding: "34px 22px", color:"var(--muted)", fontSize: 14, textAlign: "center" }}>Nenhum prazo nesta visão.</div>}
           {shown.map((p) => {
             const b = dm(p.due_date + "T00:00:00");
             const status = eff(p); const st = ST[status] ?? ST.a_validar;
@@ -99,7 +99,7 @@ export default function PrazosClient({ prazos }: { prazos: Prazo[] }) {
         </div>
       </section>
 
-      <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
+      <p style={{ marginTop: 14, fontSize: 12.5, color:"var(--muted)" }}>
         As datas são sugestões identificadas pela AXIA. Confirme sempre nos sistemas oficiais dos tribunais.
       </p>
 

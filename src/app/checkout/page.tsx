@@ -83,11 +83,11 @@ function Checkout() {
                 border: "2px solid " + (on ? "#1FA89E" : "#E4E9F0"),
                 background: on ? "#E4F4F2" : "#fff",
               }}>
-                <span style={{ fontFamily: "'Sora',sans-serif", fontWeight: 600, color: "#10233F", fontSize: 15 }}>
+                <span style={{ fontFamily: "'Sora',sans-serif", fontWeight: 600, color:"var(--ink)", fontSize: 15 }}>
                   AXIA {label}{c === "pro" && <span style={{ fontSize: 11, color: "#127c74", marginLeft: 8 }}>Mais escolhido</span>}
                 </span>
-                <span style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, color: "#10233F", fontSize: 15 }}>
-                  {formatBRL(pl.amount)}<span style={{ fontSize: 12, color: "#6B7C93", fontWeight: 500 }}>/{annual ? "ano" : "mês"}</span>
+                <span style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, color:"var(--ink)", fontSize: 15 }}>
+                  {formatBRL(pl.amount)}<span style={{ fontSize: 12, color:"var(--muted)", fontWeight: 500 }}>/{annual ? "ano" : "mês"}</span>
                 </span>
               </button>
             );
