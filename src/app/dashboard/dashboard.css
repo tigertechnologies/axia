@@ -1,7 +1,7 @@
   :root{
     --navy-deep:#10233F;--navy:#16305B;--blue:#4A6FA5;--blue-light:#A8C4E0;
     --teal:#1FA89E;--teal-soft:#E4F4F2;--gold:#C9A227;--gold-soft:#F7F0DA;
-    --bg:#F4F6FA;--panel:#FFFFFF;--line:#E6EBF2;--ink:#28374D;--muted:#6B7C93;
+    --bg:#F4F6FA;--panel:#FFFFFF;--panel-2:#FAFBFD;--chip-on:#E8F6F4;--line:#E6EBF2;--ink:#28374D;--muted:#6B7C93;
     --shadow-sm:0 1px 2px rgba(16,35,63,.05),0 3px 12px rgba(16,35,63,.05);
     --shadow-md:0 10px 30px rgba(16,35,63,.10);
     --disp:'Sora',system-ui,sans-serif;--body:'Inter',system-ui,sans-serif;
@@ -180,6 +180,8 @@
 :root[data-theme="dark"]{
   --bg:#0E1826;        /* fundo do conteúdo */
   --panel:#182A40;     /* cards, painéis */
+  --panel-2:#132234;   /* superfície levemente diferente */
+  --chip-on:#14312E;   /* chip ativo (teal escuro) */
   --line:#25384F;      /* bordas */
   --ink:#E6EDF6;       /* texto principal */
   --muted:#9DB0C7;     /* texto secundário */
@@ -191,6 +193,10 @@
 }
 :root[data-theme="dark"] body{background:var(--bg);color:var(--ink)}
 :root[data-theme="dark"] h1,:root[data-theme="dark"] h2,:root[data-theme="dark"] h3,:root[data-theme="dark"] h4{color:var(--ink)}
+/* Controles de formulário do painel herdam o tema no escuro */
+:root[data-theme="dark"] select,:root[data-theme="dark"] input,:root[data-theme="dark"] textarea{background:var(--panel);color:var(--ink);border-color:var(--line)}
+:root[data-theme="dark"] .panel{background:var(--panel);border-color:var(--line)}
+:root[data-theme="dark"] .kpi{background:var(--panel);border-color:var(--line)}
 
 /* Botão de tema na topbar */
 .theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s}

@@ -97,7 +97,7 @@ export default function AdminClient({
       </div>
       {erro && <div className="err">{erro}</div>}
 
-      <div style={{ display: "flex", gap: 6, marginBottom: 20, borderBottom: "1px solid #E6EBF2", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 20, borderBottom: "1px solid var(--line)", flexWrap: "wrap" }}>
         <Tab id="visao" atual={aba} set={setAba}>Visão geral</Tab>
         <Tab id="assinantes" atual={aba} set={setAba}>Assinantes</Tab>
         <Tab id="financeiro" atual={aba} set={setAba}>Financeiro</Tab>
@@ -125,20 +125,20 @@ export default function AdminClient({
           </div>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
-              <thead><tr style={{ textAlign: "left", color: "#6B7C93", borderBottom: "1px solid #E6EBF2" }}>
+              <thead><tr style={{ textAlign: "left", color: "var(--muted)", borderBottom: "1px solid var(--line)" }}>
                 <th style={{ padding: "12px 16px" }}>Assinante</th><th style={{ padding: "12px 16px" }}>Plano</th>
                 <th style={{ padding: "12px 16px" }}>Situação</th><th style={{ padding: "12px 16px" }}>Atividade</th><th style={{ padding: "12px 16px" }}>Suporte</th>
               </tr></thead>
               <tbody>
-                {shown.length === 0 && <tr><td colSpan={5} style={{ padding: "28px 16px", textAlign: "center", color: "#6B7C93" }}>Nenhum assinante.</td></tr>}
+                {shown.length === 0 && <tr><td colSpan={5} style={{ padding: "28px 16px", textAlign: "center", color: "var(--muted)" }}>Nenhum assinante.</td></tr>}
                 {shown.map((a) => (
-                  <tr key={a.org_id} style={{ borderBottom: "1px solid #F0F3F7" }}>
-                    <td style={{ padding: "12px 16px" }}><div style={{ fontWeight: 600, color: "#10233F" }}>{a.nome.trim() || "—"}</div><div style={{ color: "#6B7C93" }}>{a.email}</div></td>
+                  <tr key={a.org_id} style={{ borderBottom: "1px solid var(--line)" }}>
+                    <td style={{ padding: "12px 16px" }}><div style={{ fontWeight: 600, color: "var(--ink)" }}>{a.nome.trim() || "—"}</div><div style={{ color: "var(--muted)" }}>{a.email}</div></td>
                     <td style={{ padding: "12px 16px" }}>{planoNome(a.plan_id)}</td>
                     <td style={{ padding: "12px 16px" }}><span className={"st " + (["active","trialing"].includes(eff(a)) ? "st-ok" : eff(a) === "past_due" ? "st-val" : "st-urg")}>{STATUS_LABEL[eff(a)] ?? eff(a)}</span></td>
-                    <td style={{ padding: "12px 16px" }}><div>{a.total_comunicacoes} com.</div><div style={{ color: "#6B7C93" }}>últ. {quando(a.ultima_atividade)}</div></td>
+                    <td style={{ padding: "12px 16px" }}><div>{a.total_comunicacoes} com.</div><div style={{ color: "var(--muted)" }}>últ. {quando(a.ultima_atividade)}</div></td>
                     <td style={{ padding: "12px 16px" }}>
-                      <select value={eff(a)} onChange={(e) => startT(() => mudarStatus(a, e.target.value))} style={{ padding: "6px 8px", border: "1px solid #E4E9F0", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12.5 }}>
+                      <select value={eff(a)} onChange={(e) => startT(() => mudarStatus(a, e.target.value))} style={{ padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12.5 }}>
                         {STATUS_OPCOES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s] ?? s}</option>)}
                       </select>
                     </td>
@@ -147,7 +147,7 @@ export default function AdminClient({
               </tbody>
             </table>
           </div>
-          <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>Este painel mostra apenas metadados. O conteúdo das comunicações não é acessível por aqui, em conformidade com a LGPD.</p>
+          <p style={{ marginTop: 14, fontSize: 12.5, color: "var(--muted)" }}>Este painel mostra apenas metadados. O conteúdo das comunicações não é acessível por aqui, em conformidade com a LGPD.</p>
         </section>
       )}
 
@@ -168,17 +168,17 @@ export default function AdminClient({
           <div className="panel-h"><h3>Auditoria</h3></div>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
-              <thead><tr style={{ textAlign: "left", color: "#6B7C93", borderBottom: "1px solid #E6EBF2" }}>
+              <thead><tr style={{ textAlign: "left", color: "var(--muted)", borderBottom: "1px solid var(--line)" }}>
                 <th style={{ padding: "12px 16px" }}>Quando</th><th style={{ padding: "12px 16px" }}>Admin</th><th style={{ padding: "12px 16px" }}>Ação</th><th style={{ padding: "12px 16px" }}>Alvo</th>
               </tr></thead>
               <tbody>
-                {auditoria.length === 0 && <tr><td colSpan={4} style={{ padding: "28px 16px", textAlign: "center", color: "#6B7C93" }}>Nenhuma ação registrada ainda.</td></tr>}
+                {auditoria.length === 0 && <tr><td colSpan={4} style={{ padding: "28px 16px", textAlign: "center", color: "var(--muted)" }}>Nenhuma ação registrada ainda.</td></tr>}
                 {auditoria.map((e) => (
-                  <tr key={e.id} style={{ borderBottom: "1px solid #F0F3F7" }}>
-                    <td style={{ padding: "12px 16px", color: "#6B7C93", whiteSpace: "nowrap" }}>{quandoHora(e.created_at)}</td>
+                  <tr key={e.id} style={{ borderBottom: "1px solid var(--line)" }}>
+                    <td style={{ padding: "12px 16px", color: "var(--muted)", whiteSpace: "nowrap" }}>{quandoHora(e.created_at)}</td>
                     <td style={{ padding: "12px 16px" }}>{e.actor_email ?? "—"}</td>
-                    <td style={{ padding: "12px 16px", color: "#10233F" }}>{descreveAcao(e)}</td>
-                    <td style={{ padding: "12px 16px", color: "#6B7C93" }}>{e.target_email ?? "—"}</td>
+                    <td style={{ padding: "12px 16px", color: "var(--ink)" }}>{descreveAcao(e)}</td>
+                    <td style={{ padding: "12px 16px", color: "var(--muted)" }}>{e.target_email ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -195,7 +195,7 @@ export default function AdminClient({
 function Tab({ id, atual, set, children }: { id: Aba; atual: Aba; set: (a: Aba) => void; children: React.ReactNode }) {
   const on = atual === id;
   return (
-    <button onClick={() => set(id)} style={{ padding: "10px 16px", border: "none", background: "none", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: on ? 700 : 500, color: on ? "#16305B" : "#6B7C93", borderBottom: on ? "2px solid #1FA89E" : "2px solid transparent", marginBottom: -1 }}>{children}</button>
+    <button onClick={() => set(id)} style={{ padding: "10px 16px", border: "none", background: "none", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: on ? 700 : 500, color: on ? "var(--ink)" : "var(--muted)", borderBottom: on ? "2px solid #1FA89E" : "2px solid transparent", marginBottom: -1 }}>{children}</button>
   );
 }
 
@@ -297,39 +297,39 @@ function LeadsPanel({ leads, flash }: { leads: Lead[]; flash: (m: string) => voi
 
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
-          <thead><tr style={{ textAlign: "left", color: "#6B7C93", borderBottom: "1px solid #E6EBF2" }}>
+          <thead><tr style={{ textAlign: "left", color: "var(--muted)", borderBottom: "1px solid var(--line)" }}>
             <th style={{ padding: "12px 16px" }}>Lead</th><th style={{ padding: "12px 16px" }}>Origem</th>
             <th style={{ padding: "12px 16px" }}>Status</th><th style={{ padding: "12px 16px", minWidth: 220 }}>Nota interna</th><th style={{ padding: "12px 16px" }}>Criado</th>
           </tr></thead>
           <tbody>
-            {filtrados.length === 0 && <tr><td colSpan={5} style={{ padding: "28px 16px", textAlign: "center", color: "#6B7C93" }}>Nenhum lead {filtro !== "todos" ? "neste status" : "ainda"}.</td></tr>}
+            {filtrados.length === 0 && <tr><td colSpan={5} style={{ padding: "28px 16px", textAlign: "center", color: "var(--muted)" }}>Nenhum lead {filtro !== "todos" ? "neste status" : "ainda"}.</td></tr>}
             {filtrados.map((l) => (
-              <tr key={l.id} style={{ borderBottom: "1px solid #F0F3F7" }}>
+              <tr key={l.id} style={{ borderBottom: "1px solid var(--line)" }}>
                 <td style={{ padding: "12px 16px" }}>
-                  <div style={{ fontWeight: 600, color: "#10233F" }}>{l.nome?.trim() || "—"}</div>
-                  <div style={{ color: "#6B7C93" }}>{l.email}</div>
-                  {l.telefone && <div style={{ color: "#6B7C93" }}>{l.telefone}</div>}
+                  <div style={{ fontWeight: 600, color: "var(--ink)" }}>{l.nome?.trim() || "—"}</div>
+                  <div style={{ color: "var(--muted)" }}>{l.email}</div>
+                  {l.telefone && <div style={{ color: "var(--muted)" }}>{l.telefone}</div>}
                 </td>
-                <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 12, color: "#4A5B72" }}>{SOURCE_LABEL[l.source] ?? l.source}</span></td>
+                <td style={{ padding: "12px 16px" }}><span style={{ fontSize: 12, color: "var(--muted)" }}>{SOURCE_LABEL[l.source] ?? l.source}</span></td>
                 <td style={{ padding: "12px 16px" }}>
-                  <select value={st(l)} onChange={(e) => startT(() => mudarStatus(l, e.target.value))} style={{ padding: "6px 8px", border: "1px solid #E4E9F0", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12.5 }}>
+                  <select value={st(l)} onChange={(e) => startT(() => mudarStatus(l, e.target.value))} style={{ padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12.5 }}>
                     {LEAD_STATUS.map((s) => <option key={s} value={s}>{LEAD_LABEL[s]}</option>)}
                   </select>
                 </td>
                 <td style={{ padding: "12px 16px" }}>
                   <div style={{ display: "flex", gap: 6 }}>
                     <input defaultValue={l.notes ?? ""} onChange={(e) => setNotas((n) => ({ ...n, [l.id]: e.target.value }))} placeholder="Anotação…"
-                      style={{ flex: 1, padding: "6px 8px", border: "1px solid #E4E9F0", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12.5 }} />
+                      style={{ flex: 1, padding: "6px 8px", border: "1px solid var(--line)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12.5 }} />
                     <button onClick={() => startT(() => salvarNota(l))} style={{ ...btn, padding: "6px 10px" }} disabled={notas[l.id] === undefined}>Salvar</button>
                   </div>
                 </td>
-                <td style={{ padding: "12px 16px", color: "#6B7C93", whiteSpace: "nowrap" }}>{quando(l.created_at)}</td>
+                <td style={{ padding: "12px 16px", color: "var(--muted)", whiteSpace: "nowrap" }}>{quando(l.created_at)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
+      <p style={{ marginTop: 14, fontSize: 12.5, color: "var(--muted)" }}>
         Leads vêm do formulário do site, de cadastros que não converteram e de importação por planilha (CSV: colunas nome, email, telefone). Cadastros que assinam viram “Convertido” automaticamente.
       </p>
     </section>
@@ -337,9 +337,9 @@ function LeadsPanel({ leads, flash }: { leads: Lead[]; flash: (m: string) => voi
 }
 
 const btn: React.CSSProperties = { padding: "8px 12px", border: "1px solid #16305B", background: "#16305B", color: "#fff", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 13, fontWeight: 600 };
-const btnGhost: React.CSSProperties = { padding: "6px 12px", border: "1px solid #E4E9F0", background: "#fff", color: "#16305B", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: 600 };
+const btnGhost: React.CSSProperties = { padding: "6px 12px", border: "1px solid var(--line)", background: "var(--panel)", color: "var(--ink)", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: 600 };
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
-  return <button onClick={onClick} style={{ padding: "5px 12px", borderRadius: 999, border: "1px solid " + (on ? "#1FA89E" : "#E4E9F0"), background: on ? "#E8F6F4" : "#fff", color: on ? "#0F7A70" : "#4A5B72", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: on ? 600 : 500 }}>{children}</button>;
+  return <button onClick={onClick} style={{ padding: "5px 12px", borderRadius: 999, border: "1px solid " + (on ? "#1FA89E" : "var(--line)"), background: on ? "var(--chip-on)" : "var(--panel)", color: on ? "#0F7A70" : "var(--muted)", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 12.5, fontWeight: on ? 600 : 500 }}>{children}</button>;
 }
 
 // ── HERO DE CAMPANHA ────────────────────────────────────────
@@ -372,14 +372,14 @@ function HeroPanel({ hero, flash }: { hero: HeroCampanha; flash: (m: string) => 
     if ("url" in r && r.url) { setK("imagem_url", r.url); flash("Imagem enviada. Salve o hero para publicar."); }
   }
 
-  const corTexto = h.overlay === "claro" ? "#10233F" : "#fff";
+  const corTexto = h.overlay === "claro" ? "var(--ink)" : "#fff";
   const overlayBg = h.overlay === "nenhum" ? "transparent" : h.overlay === "claro" ? "rgba(255,255,255,0.55)" : "rgba(16,35,63,0.58)";
 
   return (
     <section className="panel" style={{ marginBottom: 18 }}>
       <div className="panel-h" style={{ gap: 12, flexWrap: "wrap" }}>
         <h3>Hero de campanha (topo da landing)</h3>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: "#10233F", cursor: "pointer" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5, color: "var(--ink)", cursor: "pointer" }}>
           <input type="checkbox" checked={h.ativo} onChange={(e) => setK("ativo", e.target.checked)} style={{ width: 16, height: 16 }} />
           Ativo no site
         </label>
@@ -418,7 +418,7 @@ function HeroPanel({ hero, flash }: { hero: HeroCampanha; flash: (m: string) => 
       <div style={{ marginTop: 16 }}>
         <button onClick={() => startT(salvar)} disabled={busy} style={btn}>{busy ? "Salvando…" : "Salvar hero"}</button>
       </div>
-      <p style={{ marginTop: 12, fontSize: 12.5, color: "#6B7C93" }}>
+      <p style={{ marginTop: 12, fontSize: 12.5, color: "var(--muted)" }}>
         O hero aparece no topo da landing (com efeito parallax) quando ativo. Imagem via bucket public-assets. Dica: use imagens largas (~1600px) e horizontais.
       </p>
     </section>
@@ -472,7 +472,7 @@ function LogoUploader({ logoUrl, flash }: { logoUrl: string; flash: (m: string) 
           {url && <button onClick={() => startT(remover)} disabled={busy} style={btnGhost}>Remover (voltar ao padrão)</button>}
         </div>
       </div>
-      <p style={{ marginTop: 12, fontSize: 12.5, color: "#6B7C93" }}>
+      <p style={{ marginTop: 12, fontSize: 12.5, color: "var(--muted)" }}>
         Aceita PNG, JPG, SVG ou WEBP (máx. 2 MB). Dica: exporte em alta resolução (largura ~200–300px) para não borrar. Sem logo enviada, o site usa o símbolo padrão. Requer o bucket <b>public-assets</b> criado e público no Supabase Storage.
       </p>
     </section>
@@ -526,7 +526,7 @@ function ConteudoPanel({ conteudo, precos, hero, flash }: { conteudo: Record<str
         {CAMPOS_CONTEUDO.map((c) => (
           <div key={c.chave}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-              <label style={{ fontSize: 12.5, color: "#4A5B72" }}>{c.rotulo}</label>
+              <label style={{ fontSize: 12.5, color: "var(--muted)" }}>{c.rotulo}</label>
               {vals[c.chave] !== c.padrao && <button onClick={() => restaurar(c.chave, c.padrao)} style={{ ...btnGhost, padding: "2px 8px", fontSize: 11.5 }}>Restaurar padrão</button>}
             </div>
             {c.multiline
@@ -549,7 +549,7 @@ function ConteudoPanel({ conteudo, precos, hero, flash }: { conteudo: Record<str
         {PLAN_ORDER.filter((id) => id in PLANS).map((id) => (
           <Campo key={id} label={`${PLANS[id].name} · ${PLANS[id].interval === "year" ? "anual" : "mensal"}`}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ color: "#6B7C93", fontSize: 13 }}>R$</span>
+              <span style={{ color: "var(--muted)", fontSize: 13 }}>R$</span>
               <input value={precoVals[id]} onChange={(e) => setPrecoVals((v) => ({ ...v, [id]: e.target.value }))} style={inp} />
             </div>
           </Campo>
@@ -558,7 +558,7 @@ function ConteudoPanel({ conteudo, precos, hero, flash }: { conteudo: Record<str
       <div style={{ marginTop: 16 }}>
         <button onClick={() => startT(salvarPrecos)} disabled={busyP} style={btn}>{busyP ? "Salvando…" : "Salvar preços"}</button>
       </div>
-      <p style={{ marginTop: 12, fontSize: 12.5, color: "#6B7C93" }}>
+      <p style={{ marginTop: 12, fontSize: 12.5, color: "var(--muted)" }}>
         O checkout passa a cobrar estes valores em novas assinaturas, e a landing exibe-os automaticamente. Os direitos/limites de cada plano continuam definidos no código.
       </p>
     </section>
@@ -608,36 +608,36 @@ function EmailBroadcast({ campanhas, flash }: { campanhas: EmailCampaign[]; flas
           </select>
         </Campo>
         <Campo label="Destinatários">
-          <div style={{ paddingTop: 8, fontSize: 14, color: "#10233F" }}>{contagem === null ? "—" : `${contagem} pessoa(s)`}</div>
+          <div style={{ paddingTop: 8, fontSize: 14, color: "var(--ink)" }}>{contagem === null ? "—" : `${contagem} pessoa(s)`}</div>
         </Campo>
       </div>
       <Campo label="Assunto"><input value={assunto} onChange={(e) => setAssunto(e.target.value)} placeholder="Novidades da AXIA" style={inp} /></Campo>
       <div style={{ marginTop: 12 }}>
-        <label style={{ display: "block", fontSize: 12.5, color: "#4A5B72", marginBottom: 4 }}>Mensagem</label>
+        <label style={{ display: "block", fontSize: 12.5, color: "var(--muted)", marginBottom: 4 }}>Mensagem</label>
         <textarea value={corpo} onChange={(e) => setCorpo(e.target.value)} rows={6} placeholder="Escreva a mensagem…" style={{ ...inp, resize: "vertical" }} />
       </div>
       <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "center" }}>
         <button onClick={() => startT(enviar)} disabled={busy} style={btn}>{busy ? "Enviando…" : "Enviar e-mail"}</button>
-        <span style={{ fontSize: 12, color: "#6B7C93" }}>Todo envio inclui link de descadastro (LGPD).</span>
+        <span style={{ fontSize: 12, color: "var(--muted)" }}>Todo envio inclui link de descadastro (LGPD).</span>
       </div>
 
       {campanhas.length > 0 && (
         <div style={{ marginTop: 18 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#4A5B72", marginBottom: 8 }}>Histórico de envios</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--muted)", marginBottom: 8 }}>Histórico de envios</div>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-              <thead><tr style={{ textAlign: "left", color: "#6B7C93", borderBottom: "1px solid #E6EBF2" }}>
+              <thead><tr style={{ textAlign: "left", color: "var(--muted)", borderBottom: "1px solid var(--line)" }}>
                 <th style={{ padding: "10px 14px" }}>Assunto</th><th style={{ padding: "10px 14px" }}>Público</th>
                 <th style={{ padding: "10px 14px" }}>Enviados</th><th style={{ padding: "10px 14px" }}>Falhas</th><th style={{ padding: "10px 14px" }}>Quando</th>
               </tr></thead>
               <tbody>
                 {campanhas.map((c) => (
-                  <tr key={c.id} style={{ borderBottom: "1px solid #F0F3F7" }}>
-                    <td style={{ padding: "10px 14px", color: "#10233F" }}>{c.assunto}</td>
+                  <tr key={c.id} style={{ borderBottom: "1px solid var(--line)" }}>
+                    <td style={{ padding: "10px 14px", color: "var(--ink)" }}>{c.assunto}</td>
                     <td style={{ padding: "10px 14px" }}>{PUBLICO_LABEL[c.publico] ?? c.publico}</td>
                     <td style={{ padding: "10px 14px" }}>{c.enviados}/{c.destinatarios}</td>
-                    <td style={{ padding: "10px 14px", color: c.falhas > 0 ? "#C0492E" : "#6B7C93" }}>{c.falhas}</td>
-                    <td style={{ padding: "10px 14px", color: "#6B7C93", whiteSpace: "nowrap" }}>{quandoHoraLocal(c.sent_at)}</td>
+                    <td style={{ padding: "10px 14px", color: c.falhas > 0 ? "#C0492E" : "var(--muted)" }}>{c.falhas}</td>
+                    <td style={{ padding: "10px 14px", color: "var(--muted)", whiteSpace: "nowrap" }}>{quandoHoraLocal(c.sent_at)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -645,7 +645,7 @@ function EmailBroadcast({ campanhas, flash }: { campanhas: EmailCampaign[]; flas
           </div>
         </div>
       )}
-      <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
+      <p style={{ marginTop: 14, fontSize: 12.5, color: "var(--muted)" }}>
         O envio real depende do Postmark de envio configurado (token, remetente verificado e stream de broadcast). Sem isso, o botão retorna um aviso claro em vez de enviar.
       </p>
     </section>
@@ -689,17 +689,17 @@ function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 18 }}>
           {/* Funil */}
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#4A5B72", marginBottom: 10 }}>Funil de leads</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--muted)", marginBottom: 10 }}>Funil de leads</div>
             {LEAD_STATUS.map((s) => {
               const v = funilMap[s] ?? 0;
               const pct = resumo.total > 0 ? Math.round((v / resumo.total) * 100) : 0;
               return (
                 <div key={s} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                  <div style={{ width: 92, fontSize: 12.5, color: "#10233F" }}>{LEAD_LABEL[s]}</div>
-                  <div style={{ flex: 1, height: 10, background: "#F0F3F7", borderRadius: 6, overflow: "hidden" }}>
+                  <div style={{ width: 92, fontSize: 12.5, color: "var(--ink)" }}>{LEAD_LABEL[s]}</div>
+                  <div style={{ flex: 1, height: 10, background: "var(--line)", borderRadius: 6, overflow: "hidden" }}>
                     <div style={{ width: `${pct}%`, height: "100%", background: s === "convertido" ? "#1FA89E" : s === "descartado" ? "#C0492E" : "#16305B", borderRadius: 6 }} />
                   </div>
-                  <div style={{ width: 54, textAlign: "right", fontSize: 12.5, color: "#6B7C93" }}>{v}</div>
+                  <div style={{ width: 54, textAlign: "right", fontSize: 12.5, color: "var(--muted)" }}>{v}</div>
                 </div>
               );
             })}
@@ -707,17 +707,17 @@ function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: 
 
           {/* Conversão por origem */}
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#4A5B72", marginBottom: 10 }}>Conversão por origem</div>
-            {origem.length === 0 && <div style={{ color: "#9AA7B8", fontSize: 13 }}>Sem leads ainda.</div>}
+            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--muted)", marginBottom: 10 }}>Conversão por origem</div>
+            {origem.length === 0 && <div style={{ color: "var(--muted)", fontSize: 13 }}>Sem leads ainda.</div>}
             {origem.map((o) => {
               const pct = o.total > 0 ? Math.round((o.convertidos / o.total) * 100) : 0;
               return (
                 <div key={o.source} style={{ marginBottom: 10 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, marginBottom: 3 }}>
-                    <span style={{ color: "#10233F" }}>{SOURCE_LABEL[o.source] ?? o.source}</span>
-                    <span style={{ color: "#6B7C93" }}>{o.convertidos}/{o.total} · {pct}%</span>
+                    <span style={{ color: "var(--ink)" }}>{SOURCE_LABEL[o.source] ?? o.source}</span>
+                    <span style={{ color: "var(--muted)" }}>{o.convertidos}/{o.total} · {pct}%</span>
                   </div>
-                  <div style={{ height: 10, background: "#F0F3F7", borderRadius: 6, overflow: "hidden" }}>
+                  <div style={{ height: 10, background: "var(--line)", borderRadius: 6, overflow: "hidden" }}>
                     <div style={{ width: `${pct}%`, height: "100%", background: "#1FA89E", borderRadius: 6 }} />
                   </div>
                 </div>
@@ -736,14 +736,14 @@ function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: 
 
       {/* Prévia ao vivo */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 12.5, color: "#6B7C93", marginBottom: 6 }}>Prévia</div>
+        <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 6 }}>Prévia</div>
         {b.mensagem.trim() ? (
           <div style={{ position: "relative", background: cor, color: "#fff", fontSize: 14, padding: "10px 40px", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, textAlign: "center" }}>
             <span>{b.mensagem}</span>
             {b.link_url && <span style={{ fontWeight: 700, textDecoration: "underline" }}>{b.link_label || "Saiba mais"}</span>}
             <span style={{ position: "absolute", right: 12, opacity: 0.8 }}>×</span>
           </div>
-        ) : <div style={{ color: "#9AA7B8", fontSize: 13.5 }}>Digite uma mensagem para ver a prévia.</div>}
+        ) : <div style={{ color: "var(--muted)", fontSize: 13.5 }}>Digite uma mensagem para ver a prévia.</div>}
         {!b.ativo && <div style={{ fontSize: 12, color: "#B8542E", marginTop: 6 }}>Banner desativado — não aparece no site enquanto “Ativo” estiver desligado.</div>}
       </div>
 
@@ -763,7 +763,7 @@ function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: 
         <Campo label="Link (opcional)"><input value={b.link_url ?? ""} onChange={(e) => setK("link_url", e.target.value)} placeholder="https://…" style={inp} /></Campo>
         <Campo label="Texto do link (opcional)"><input value={b.link_label ?? ""} onChange={(e) => setK("link_label", e.target.value)} placeholder="Saiba mais" style={inp} /></Campo>
         <Campo label="Ativo">
-          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#10233F", cursor: "pointer", paddingTop: 6 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--ink)", cursor: "pointer", paddingTop: 6 }}>
             <input type="checkbox" checked={b.ativo} onChange={(e) => setK("ativo", e.target.checked)} style={{ width: 16, height: 16 }} />
             Mostrar no site/app
           </label>
@@ -773,7 +773,7 @@ function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: 
       <div style={{ marginTop: 16 }}>
         <button onClick={() => startT(salvar)} disabled={busy} style={btn}>{busy ? "Salvando…" : "Salvar banner"}</button>
       </div>
-      <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
+      <p style={{ marginTop: 14, fontSize: 12.5, color: "var(--muted)" }}>
         O banner aparece no topo de todas as páginas (landing e app) quando ativo. Use-o para Black Friday, avisos e promoções. E-mail em massa chega no próximo lote.
       </p>
     </section>
@@ -829,7 +829,7 @@ function CampanhasPanel({ data, flash }: { data: CampanhasData; flash: (m: strin
       </div>
 
       {criando && (
-        <div style={{ border: "1px solid #E6EBF2", borderRadius: 12, padding: 16, marginBottom: 16, background: "#FAFBFD" }}>
+        <div style={{ border: "1px solid var(--line)", borderRadius: 12, padding: 16, marginBottom: 16, background: "var(--panel-2)" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 12 }}>
             <Campo label="Nome da campanha"><input value={f.nome} onChange={set("nome")} placeholder="Black Friday 2026" style={inp} /></Campo>
             <Campo label="Código promocional"><input value={f.codigo} onChange={set("codigo")} placeholder="BLACK50" style={{ ...inp, textTransform: "uppercase" }} /></Campo>
@@ -855,26 +855,26 @@ function CampanhasPanel({ data, flash }: { data: CampanhasData; flash: (m: strin
             <button onClick={() => startT(criar)} disabled={busy} style={btn}>{busy ? "Criando…" : "Criar campanha"}</button>
             <button onClick={() => { setF(vazio); setCriando(false); }} style={btnGhost}>Cancelar</button>
           </div>
-          <p style={{ marginTop: 10, fontSize: 12, color: "#6B7C93" }}>A campanha é criada como cupom + código no Stripe. O campo de código já aparece no checkout.</p>
+          <p style={{ marginTop: 10, fontSize: 12, color: "var(--muted)" }}>A campanha é criada como cupom + código no Stripe. O campo de código já aparece no checkout.</p>
         </div>
       )}
 
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
-          <thead><tr style={{ textAlign: "left", color: "#6B7C93", borderBottom: "1px solid #E6EBF2" }}>
+          <thead><tr style={{ textAlign: "left", color: "var(--muted)", borderBottom: "1px solid var(--line)" }}>
             <th style={{ padding: "12px 14px" }}>Código</th><th style={{ padding: "12px 14px" }}>Desconto</th>
             <th style={{ padding: "12px 14px" }}>Duração</th><th style={{ padding: "12px 14px" }}>Usos</th>
             <th style={{ padding: "12px 14px" }}>Expira</th><th style={{ padding: "12px 14px" }}>Estado</th><th style={{ padding: "12px 14px" }}></th>
           </tr></thead>
           <tbody>
-            {rows.length === 0 && <tr><td colSpan={7} style={{ padding: "28px 14px", textAlign: "center", color: "#6B7C93" }}>Nenhuma campanha ainda. Crie a primeira acima.</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={7} style={{ padding: "28px 14px", textAlign: "center", color: "var(--muted)" }}>Nenhuma campanha ainda. Crie a primeira acima.</td></tr>}
             {rows.map((c) => (
-              <tr key={c.promoId} style={{ borderBottom: "1px solid #F0F3F7" }}>
-                <td style={{ padding: "12px 14px", fontWeight: 700, color: "#10233F", fontFamily: "monospace" }}>{c.codigo}</td>
+              <tr key={c.promoId} style={{ borderBottom: "1px solid var(--line)" }}>
+                <td style={{ padding: "12px 14px", fontWeight: 700, color: "var(--ink)", fontFamily: "monospace" }}>{c.codigo}</td>
                 <td style={{ padding: "12px 14px" }}>{c.descontoLabel}</td>
                 <td style={{ padding: "12px 14px" }}>{c.duracaoLabel}</td>
                 <td style={{ padding: "12px 14px" }}>{c.usos}{c.maxUsos ? ` / ${c.maxUsos}` : ""}</td>
-                <td style={{ padding: "12px 14px", color: "#6B7C93" }}>{fmtDia(c.expiraEm)}</td>
+                <td style={{ padding: "12px 14px", color: "var(--muted)" }}>{fmtDia(c.expiraEm)}</td>
                 <td style={{ padding: "12px 14px" }}><span className={"st " + (c.ativo ? "st-ok" : "st-urg")}>{c.ativo ? "Ativa" : "Inativa"}</span></td>
                 <td style={{ padding: "12px 14px", textAlign: "right" }}>
                   <button onClick={() => startT(() => toggle(c))} disabled={togBusy === c.promoId} style={btnGhost}>{togBusy === c.promoId ? "…" : (c.ativo ? "Desativar" : "Ativar")}</button>
@@ -884,16 +884,16 @@ function CampanhasPanel({ data, flash }: { data: CampanhasData; flash: (m: strin
           </tbody>
         </table>
       </div>
-      <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
+      <p style={{ marginTop: 14, fontSize: 12.5, color: "var(--muted)" }}>
         Campanhas ficam registradas no Stripe (cupom + código). Percentual e valor fixo; duração à sua escolha; janela de resgate e limite de usos opcionais. Desativar não apaga o histórico.
       </p>
     </section>
   );
 }
 
-const inp: React.CSSProperties = { width: "100%", padding: "8px 10px", border: "1px solid #E4E9F0", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13.5, boxSizing: "border-box" };
+const inp: React.CSSProperties = { width: "100%", padding: "8px 10px", border: "1px solid var(--line)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13.5, boxSizing: "border-box", background: "var(--panel)", color: "var(--ink)" };
 function Campo({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label style={{ display: "block", fontSize: 12.5, color: "#4A5B72", marginBottom: 4 }}>{label}</label>{children}</div>;
+  return <div><label style={{ display: "block", fontSize: 12.5, color: "var(--muted)", marginBottom: 4 }}>{label}</label>{children}</div>;
 }
 
 // ── FINANCEIRO ──────────────────────────────────────────────
@@ -947,28 +947,28 @@ function FinanceiroPanel({ data, campanhas, flash }: { data: FinanceiroData; cam
 
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
-          <thead><tr style={{ textAlign: "left", color: "#6B7C93", borderBottom: "1px solid #E6EBF2" }}>
+          <thead><tr style={{ textAlign: "left", color: "var(--muted)", borderBottom: "1px solid var(--line)" }}>
             <th style={{ padding: "12px 14px" }}>Assinante</th><th style={{ padding: "12px 14px" }}>Plano</th>
             <th style={{ padding: "12px 14px" }}>Situação</th><th style={{ padding: "12px 14px" }}>Renovação</th>
             <th style={{ padding: "12px 14px" }}>Stripe</th><th style={{ padding: "12px 14px" }}>Ações</th>
           </tr></thead>
           <tbody>
-            {shown.length === 0 && <tr><td colSpan={6} style={{ padding: "28px 14px", textAlign: "center", color: "#6B7C93" }}>Nenhum assinante.</td></tr>}
+            {shown.length === 0 && <tr><td colSpan={6} style={{ padding: "28px 14px", textAlign: "center", color: "var(--muted)" }}>Nenhum assinante.</td></tr>}
             {shown.map((r) => {
               const real = !!r.stripe_subscription_id;
               const link = stripeLink(r);
               return (
-                <tr key={r.org_id} style={{ borderBottom: "1px solid #F0F3F7" }}>
-                  <td style={{ padding: "12px 14px" }}><div style={{ fontWeight: 600, color: "#10233F" }}>{r.nome.trim() || "—"}</div><div style={{ color: "#6B7C93" }}>{r.email}</div></td>
+                <tr key={r.org_id} style={{ borderBottom: "1px solid var(--line)" }}>
+                  <td style={{ padding: "12px 14px" }}><div style={{ fontWeight: 600, color: "var(--ink)" }}>{r.nome.trim() || "—"}</div><div style={{ color: "var(--muted)" }}>{r.email}</div></td>
                   <td style={{ padding: "12px 14px" }}>{planoNome(r.plan_id)} · {formatBRL(mrrRow(r))}/mês</td>
                   <td style={{ padding: "12px 14px" }}>
                     <span className={"st " + (["active","trialing"].includes(r.subscription_status ?? "") ? "st-ok" : "st-urg")}>{STATUS_LABEL[r.subscription_status ?? ""] ?? r.subscription_status}</span>
                     {r.cancel_at_period_end && <div style={{ color: "#C0492E", fontSize: 12, marginTop: 2 }}>cancela no fim</div>}
                   </td>
-                  <td style={{ padding: "12px 14px", color: "#6B7C93", whiteSpace: "nowrap" }}>{r.current_period_end ? quando(r.current_period_end) : "—"}</td>
+                  <td style={{ padding: "12px 14px", color: "var(--muted)", whiteSpace: "nowrap" }}>{r.current_period_end ? quando(r.current_period_end) : "—"}</td>
                   <td style={{ padding: "12px 14px" }}>
                     {real ? (link && <a href={link} target="_blank" rel="noreferrer" style={{ color: "#1FA89E", fontSize: 12.5, fontWeight: 600 }}>Abrir ↗</a>)
-                          : <span title="Conta sem assinatura no Stripe (criada manualmente)" style={{ fontSize: 12, color: "#9AA7B8" }}>manual</span>}
+                          : <span title="Conta sem assinatura no Stripe (criada manualmente)" style={{ fontSize: 12, color: "var(--muted)" }}>manual</span>}
                   </td>
                   <td style={{ padding: "12px 14px" }}>
                     <div style={{ display: "flex", gap: 6 }}>
@@ -987,7 +987,7 @@ function FinanceiroPanel({ data, campanhas, flash }: { data: FinanceiroData; cam
 
       {sel && <GerenciarAssinante row={sel} campanhas={campanhas} flash={flash} onClose={() => setSel(null)} />}
 
-      <p style={{ marginTop: 14, fontSize: 12.5, color: "#6B7C93" }}>
+      <p style={{ marginTop: 14, fontSize: 12.5, color: "var(--muted)" }}>
         Cancelar agenda o encerramento para o fim do ciclo (reversível, não corta acesso na hora). Contas “manual” não têm assinatura no Stripe. Use “Gerenciar” para trocar plano, reembolsar ou aplicar cupom.
       </p>
     </section>
@@ -1042,15 +1042,15 @@ function GerenciarAssinante({ row, campanhas, flash, onClose }: { row: Financeir
   }
 
   return (
-    <div style={{ border: "1px solid #E6EBF2", borderRadius: 12, padding: 16, marginTop: 14, background: "#FAFBFD" }}>
+    <div style={{ border: "1px solid var(--line)", borderRadius: 12, padding: 16, marginTop: 14, background: "var(--panel-2)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <strong style={{ color: "#10233F" }}>Gerenciar: {row.nome.trim() || row.email}</strong>
+        <strong style={{ color: "var(--ink)" }}>Gerenciar: {row.nome.trim() || row.email}</strong>
         <button onClick={onClose} style={btnGhost}>Fechar</button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16 }}>
         {/* Trocar plano */}
         <div>
-          <div style={{ fontSize: 12.5, fontWeight: 600, color: "#4A5B72", marginBottom: 6 }}>Trocar plano</div>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--muted)", marginBottom: 6 }}>Trocar plano</div>
           <select value={novoPlano} onChange={(e) => { setNovoPlano(e.target.value); setPrevia(""); }} style={inp}>
             <option value="">Escolher plano…</option>
             {planosAlvo.map((p) => <option key={p} value={p}>{PLANS[p].name} · {formatBRL(PLANS[p].amount)}/{PLANS[p].interval === "year" ? "ano" : "mês"}</option>)}
@@ -1064,23 +1064,23 @@ function GerenciarAssinante({ row, campanhas, flash, onClose }: { row: Financeir
 
         {/* Reembolso */}
         <div>
-          <div style={{ fontSize: 12.5, fontWeight: 600, color: "#4A5B72", marginBottom: 6 }}>Reembolso</div>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--muted)", marginBottom: 6 }}>Reembolso</div>
           <input value={valorReemb} onChange={(e) => setValorReemb(e.target.value)} placeholder="Valor em R$ (vazio = total)" style={inp} />
           <button onClick={() => startT(reembolsar)} disabled={busy === "reemb"} style={{ ...btn, marginTop: 8 }}>{busy === "reemb" ? "…" : "Reembolsar"}</button>
         </div>
 
         {/* Aplicar cupom */}
         <div>
-          <div style={{ fontSize: 12.5, fontWeight: 600, color: "#4A5B72", marginBottom: 6 }}>Aplicar cupom (cortesia)</div>
+          <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--muted)", marginBottom: 6 }}>Aplicar cupom (cortesia)</div>
           <select value={cupom} onChange={(e) => setCupom(e.target.value)} style={inp}>
             <option value="">Escolher cupom…</option>
             {cuponsAtivos.map((c) => <option key={c.promoId} value={c.couponId}>{c.codigo} · {c.descontoLabel}</option>)}
           </select>
           <button onClick={() => startT(aplicarCupom)} disabled={!cupom || busy === "cupom"} style={{ ...btn, marginTop: 8 }}>{busy === "cupom" ? "…" : "Aplicar cupom"}</button>
-          {cuponsAtivos.length === 0 && <div style={{ marginTop: 6, fontSize: 11.5, color: "#9AA7B8" }}>Crie cupons na aba Campanhas.</div>}
+          {cuponsAtivos.length === 0 && <div style={{ marginTop: 6, fontSize: 11.5, color: "var(--muted)" }}>Crie cupons na aba Campanhas.</div>}
         </div>
       </div>
-      <p style={{ marginTop: 12, fontSize: 12, color: "#6B7C93" }}>Troca de plano usa proração imediata. Reembolso age sobre a última cobrança paga. Toda ação fica na Auditoria.</p>
+      <p style={{ marginTop: 12, fontSize: 12, color: "var(--muted)" }}>Troca de plano usa proração imediata. Reembolso age sobre a última cobrança paga. Toda ação fica na Auditoria.</p>
     </div>
   );
 }
@@ -1128,12 +1128,12 @@ function SistemaPanel({ data, flash }: { data: SistemaData; flash: (m: string) =
           {Object.keys(CONFIG_LABEL).map((k) => (
             <div key={k} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13.5 }}>
               <span style={{ width: 10, height: 10, borderRadius: 999, background: config[k] ? "#1FA89E" : "#C0492E", flex: "0 0 auto" }} />
-              <span style={{ color: "#10233F" }}>{CONFIG_LABEL[k]}</span>
+              <span style={{ color: "var(--ink)" }}>{CONFIG_LABEL[k]}</span>
               <span style={{ marginLeft: "auto", color: config[k] ? "#0F7A70" : "#C0492E", fontSize: 12 }}>{config[k] ? "configurado" : "faltando"}</span>
             </div>
           ))}
         </div>
-        <p style={{ marginTop: 12, fontSize: 12.5, color: "#6B7C93" }}>Mostra apenas se cada variável está definida no ambiente — nunca o valor em si.</p>
+        <p style={{ marginTop: 12, fontSize: 12.5, color: "var(--muted)" }}>Mostra apenas se cada variável está definida no ambiente — nunca o valor em si.</p>
       </section>
 
       {/* Webhooks */}
@@ -1148,18 +1148,18 @@ function SistemaPanel({ data, flash }: { data: SistemaData; flash: (m: string) =
         </div>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead><tr style={{ textAlign: "left", color: "#6B7C93", borderBottom: "1px solid #E6EBF2" }}>
+            <thead><tr style={{ textAlign: "left", color: "var(--muted)", borderBottom: "1px solid var(--line)" }}>
               <th style={{ padding: "10px 14px" }}>Evento</th><th style={{ padding: "10px 14px" }}>Tipo</th>
               <th style={{ padding: "10px 14px" }}>Estado</th><th style={{ padding: "10px 14px" }}>Quando</th><th style={{ padding: "10px 14px" }}></th>
             </tr></thead>
             <tbody>
-              {webhooks.length === 0 && <tr><td colSpan={5} style={{ padding: "24px 14px", textAlign: "center", color: "#6B7C93" }}>Nenhum evento registrado.</td></tr>}
+              {webhooks.length === 0 && <tr><td colSpan={5} style={{ padding: "24px 14px", textAlign: "center", color: "var(--muted)" }}>Nenhum evento registrado.</td></tr>}
               {webhooks.map((w) => (
-                <tr key={w.id} style={{ borderBottom: "1px solid #F0F3F7" }}>
-                  <td style={{ padding: "10px 14px", fontFamily: "monospace", fontSize: 11.5, color: "#6B7C93" }}>{w.id.slice(0, 18)}…</td>
+                <tr key={w.id} style={{ borderBottom: "1px solid var(--line)" }}>
+                  <td style={{ padding: "10px 14px", fontFamily: "monospace", fontSize: 11.5, color: "var(--muted)" }}>{w.id.slice(0, 18)}…</td>
                   <td style={{ padding: "10px 14px" }}>{w.type}</td>
                   <td style={{ padding: "10px 14px" }}><span className={"st " + (w.processed ? "st-ok" : "st-urg")}>{w.processed ? "Processado" : "Pendente"}</span></td>
-                  <td style={{ padding: "10px 14px", color: "#6B7C93", whiteSpace: "nowrap" }}>{w.processed_at ? quandoHora(w.processed_at) : "—"}</td>
+                  <td style={{ padding: "10px 14px", color: "var(--muted)", whiteSpace: "nowrap" }}>{w.processed_at ? quandoHora(w.processed_at) : "—"}</td>
                   <td style={{ padding: "10px 14px", textAlign: "right" }}>
                     {!w.processed && <button onClick={() => startT(() => reprocessarUm(w.id))} disabled={reproc === w.id} style={{ ...btn, padding: "6px 10px" }}>{reproc === w.id ? "…" : "Reprocessar"}</button>}
                   </td>
@@ -1168,7 +1168,7 @@ function SistemaPanel({ data, flash }: { data: SistemaData; flash: (m: string) =
             </tbody>
           </table>
         </div>
-        <p style={{ marginTop: 12, fontSize: 12.5, color: "#6B7C93" }}>Reprocessar re-busca o evento no Stripe e reaplica o estado canônico (idempotente).</p>
+        <p style={{ marginTop: 12, fontSize: 12.5, color: "var(--muted)" }}>Reprocessar re-busca o evento no Stripe e reaplica o estado canônico (idempotente).</p>
       </section>
 
       {/* Erros de ingestão */}
@@ -1176,22 +1176,22 @@ function SistemaPanel({ data, flash }: { data: SistemaData; flash: (m: string) =
         <div className="panel-h"><h3>Erros de ingestão</h3></div>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead><tr style={{ textAlign: "left", color: "#6B7C93", borderBottom: "1px solid #E6EBF2" }}>
+            <thead><tr style={{ textAlign: "left", color: "var(--muted)", borderBottom: "1px solid var(--line)" }}>
               <th style={{ padding: "10px 14px" }}>Quando</th><th style={{ padding: "10px 14px" }}>Etapa</th><th style={{ padding: "10px 14px" }}>Mensagem</th>
             </tr></thead>
             <tbody>
-              {ingErros.length === 0 && <tr><td colSpan={3} style={{ padding: "24px 14px", textAlign: "center", color: "#6B7C93" }}>Nenhum erro de ingestão registrado. 👍</td></tr>}
+              {ingErros.length === 0 && <tr><td colSpan={3} style={{ padding: "24px 14px", textAlign: "center", color: "var(--muted)" }}>Nenhum erro de ingestão registrado. 👍</td></tr>}
               {ingErros.map((e) => (
-                <tr key={e.id} style={{ borderBottom: "1px solid #F0F3F7" }}>
-                  <td style={{ padding: "10px 14px", color: "#6B7C93", whiteSpace: "nowrap" }}>{quandoHora(e.created_at)}</td>
+                <tr key={e.id} style={{ borderBottom: "1px solid var(--line)" }}>
+                  <td style={{ padding: "10px 14px", color: "var(--muted)", whiteSpace: "nowrap" }}>{quandoHora(e.created_at)}</td>
                   <td style={{ padding: "10px 14px" }}>{e.stage}</td>
-                  <td style={{ padding: "10px 14px", color: "#6B7C93" }}>{e.message ?? "—"}</td>
+                  <td style={{ padding: "10px 14px", color: "var(--muted)" }}>{e.message ?? "—"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p style={{ marginTop: 12, fontSize: 12.5, color: "#6B7C93" }}>Só metadados técnicos das falhas — nunca o conteúdo dos e-mails, em conformidade com a LGPD.</p>
+        <p style={{ marginTop: 12, fontSize: 12.5, color: "var(--muted)" }}>Só metadados técnicos das falhas — nunca o conteúdo dos e-mails, em conformidade com a LGPD.</p>
       </section>
     </>
   );
@@ -1220,7 +1220,7 @@ function Visao({ total, ativosLen, receita, porPlano, webhooksPendentes, metrica
 function Mini({ n, l }: { n: number; l: string }) { return <div className="kpi"><div className="kn" style={{ fontSize: 26 }}>{n}</div><div className="kl">{l}</div></div>; }
 
 function MrrChart({ historico }: { historico: Snapshot[] }) {
-  if (historico.length < 2) return <p style={{ padding: "8px 4px", color: "#6B7C93", fontSize: 13.5 }}>Coletando histórico — o gráfico de evolução aparece a partir de amanhã, conforme os retratos diários vão sendo registrados.</p>;
+  if (historico.length < 2) return <p style={{ padding: "8px 4px", color: "var(--muted)", fontSize: 13.5 }}>Coletando histórico — o gráfico de evolução aparece a partir de amanhã, conforme os retratos diários vão sendo registrados.</p>;
   const W = 640, H = 160, pad = 28;
   const vals = historico.map((s) => s.mrr_cents);
   const max = Math.max(...vals, 1), min = Math.min(...vals, 0), range = Math.max(max - min, 1);
@@ -1234,9 +1234,9 @@ function MrrChart({ historico }: { historico: Snapshot[] }) {
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", minWidth: 480, height: "auto" }}>
         <polyline points={pts} fill="none" stroke="#1FA89E" strokeWidth={2.4} strokeLinejoin="round" strokeLinecap="round" />
         {historico.map((s, i) => <circle key={s.dia} cx={x(i)} cy={y(s.mrr_cents)} r={3} fill="#16305B" />)}
-        <text x={pad} y={H - 6} fontSize={11} fill="#6B7C93">{rotulo(historico[0].dia)}</text>
-        <text x={W - pad} y={H - 6} fontSize={11} fill="#6B7C93" textAnchor="end">{rotulo(historico[historico.length - 1].dia)}</text>
-        <text x={pad} y={16} fontSize={11} fill="#6B7C93">{formatBRL(max)}</text>
+        <text x={pad} y={H - 6} fontSize={11} fill="var(--muted)">{rotulo(historico[0].dia)}</text>
+        <text x={W - pad} y={H - 6} fontSize={11} fill="var(--muted)" textAnchor="end">{rotulo(historico[historico.length - 1].dia)}</text>
+        <text x={pad} y={16} fontSize={11} fill="var(--muted)">{formatBRL(max)}</text>
       </svg>
     </div>
   );
@@ -1249,9 +1249,9 @@ function BarPlanos({ porPlano, totalAtivos }: { porPlano: Record<string, number>
         const v = porPlano[l.k] ?? 0, pct = totalAtivos > 0 ? Math.round((v / totalAtivos) * 100) : 0;
         return (
           <div key={l.k} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 90, fontSize: 13.5, color: "#10233F" }}>{l.label}</div>
-            <div style={{ flex: 1, height: 12, background: "#F0F3F7", borderRadius: 8, overflow: "hidden" }}><div style={{ width: `${pct}%`, height: "100%", background: l.cor, borderRadius: 8 }} /></div>
-            <div style={{ width: 64, textAlign: "right", fontSize: 13, color: "#6B7C93" }}>{v} · {pct}%</div>
+            <div style={{ width: 90, fontSize: 13.5, color: "var(--ink)" }}>{l.label}</div>
+            <div style={{ flex: 1, height: 12, background: "var(--line)", borderRadius: 8, overflow: "hidden" }}><div style={{ width: `${pct}%`, height: "100%", background: l.cor, borderRadius: 8 }} /></div>
+            <div style={{ width: 64, textAlign: "right", fontSize: 13, color: "var(--muted)" }}>{v} · {pct}%</div>
           </div>
         );
       })}
