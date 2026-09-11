@@ -37,6 +37,8 @@ export default async function NomeacoesPage() {
     nomeacoes: nomeacoes.length,
     prazos: P.length,
     pericias: (pericias ?? []).length,
+    nomeacoesAlerta: C.filter((c) => c.category === "nomeacao" && !c.validated).length,
+    prazosAlerta: P.filter((p) => p.status === "urgente").length,
   };
   const bell = nomeacoes.filter((c) => !c.validated).length + P.filter((p) => p.status === "urgente").length;
 

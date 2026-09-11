@@ -45,6 +45,8 @@ export default async function AgendaPage() {
     nomeacoes: C.filter((c) => c.category === "nomeacao").length,
     prazos: P.length,
     pericias: PE.length,
+    nomeacoesAlerta: C.filter((c) => c.category === "nomeacao" && !c.validated).length,
+    prazosAlerta: P.filter((p) => p.status === "urgente").length,
   };
   const bell = C.filter((c) => c.category === "nomeacao" && !c.validated).length + P.filter((p) => p.status === "urgente").length;
 

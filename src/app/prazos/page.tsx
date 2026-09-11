@@ -36,6 +36,8 @@ export default async function PrazosPage() {
     nomeacoes: C.filter((c) => c.category === "nomeacao").length,
     prazos: P.length,
     pericias: (pericias ?? []).length,
+    nomeacoesAlerta: C.filter((c) => c.category === "nomeacao" && !c.validated).length,
+    prazosAlerta: P.filter((p) => p.status === "urgente").length,
   };
   const bell = C.filter((c) => c.category === "nomeacao" && !c.validated).length + P.filter((p) => p.status === "urgente").length;
 

@@ -7,9 +7,9 @@ import ThemeToggle from "./ThemeToggle";
 import { isCurrentUserAdmin } from "./actions/admin";
 import "./dashboard/dashboard.css";
 
-export interface Counts { inbox: number; nomeacoes: number; prazos: number; pericias: number }
+export interface Counts { inbox: number; nomeacoes: number; prazos: number; pericias: number; nomeacoesAlerta?: number; prazosAlerta?: number }
 
-interface NavItem { href: string; label: string; ico: string; ready: boolean; count?: number; gray?: boolean }
+interface NavItem { href: string; label: string; ico: string; ready: boolean; count?: number; gray?: boolean; alerta?: boolean }
 
 export default function AppShell({
   nome, planLabel, counts, bell, children,
@@ -18,7 +18,22 @@ export default function AppShell({
 }) {
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [temNovidade, setTemNovidade] = useState(false);
   const [q, setQ] = useState("");
+
+  // Novidade no sino: compara o total de pendências atual com o último "visto".
+  useEffect(() => {
+    try {
+      const visto = parseInt(localStorage.getItem("axia-notif-visto") || "0", 10);
+      setTemNovidade(bell > visto);
+    } catch { setTemNovidade(bell > 0); }
+  }, [bell]);
+
+  function abrirNotificacoes() {
+    setNotifOpen(true);
+    setTemNovidade(false);
+    try { localStorage.setItem("axia-notif-visto", String(bell)); } catch { /* ignora */ }
+  }
   const [admin, setAdmin] = useState(false);
   const [, startTransition] = useTransition();
   const path = usePathname();
@@ -32,12 +47,12 @@ export default function AppShell({
 
   const top: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", ico: "dash", ready: true },
-    { href: "/inbox", label: "Inbox", ico: "inbox", ready: true, count: counts.inbox },
+    { href: "/inbox", label: "Inbox", ico: "inbox", ready: true },
   ];
   const pericias: NavItem[] = [
-    { href: "/nomeacoes", label: "Nomeações", ico: "shield", ready: true, count: counts.nomeacoes },
-    { href: "/prazos", label: "Prazos", ico: "clock", ready: true, count: counts.prazos, gray: true },
-    { href: "/pericias", label: "Perícias", ico: "cal", ready: true, count: counts.pericias, gray: true },
+    { href: "/nomeacoes", label: "Nomeações", ico: "shield", ready: true, count: counts.nomeacoesAlerta, alerta: true },
+    { href: "/prazos", label: "Prazos", ico: "clock", ready: true, count: counts.prazosAlerta, alerta: true },
+    { href: "/pericias", label: "Perícias", ico: "cal", ready: true },
     { href: "/processos", label: "Processos", ico: "doc", ready: true },
     { href: "/honorarios", label: "Honorários", ico: "wallet", ready: true },
     { href: "/agenda", label: "Agenda", ico: "agenda", ready: true },
@@ -45,7 +60,7 @@ export default function AppShell({
 
   function item(n: NavItem) {
     const active = path === n.href || path.startsWith(n.href + "/");
-    const badge = n.count && n.count > 0 ? <span className={"count" + (n.gray ? " gray" : "")}>{n.count}</span> : null;
+    const badge = n.count && n.count > 0 ? <span className={"count" + (n.alerta ? " alerta" : n.gray ? " gray" : "")}>{n.count}</span> : null;
     const inner = <><Ico p={n.ico} />{n.label}{badge}</>;
     if (!n.ready) return <div key={n.href} className="sb-item" style={{ opacity: 0.45, cursor: "default" }} title="Em breve">{inner}</div>;
     return <Link key={n.href} href={n.href} className={"sb-item" + (active ? " active" : "")} onClick={() => setOpen(false)}>{inner}</Link>;
@@ -95,7 +110,7 @@ export default function AppShell({
           </div>
           <div className="top-right">
             <ThemeToggle />
-            <button className="ico-btn" aria-label="Alertas" onClick={() => setNotifOpen(true)}><svg width="19" height="19" fill="none" stroke="currentColor" strokeWidth={1.7}><path d="M9.5 2.5c-2.6 0-4.3 1.9-4.3 4.4 0 3.6-1.2 4.7-1.2 4.7h11s-1.2-1.1-1.2-4.7c0-2.5-1.7-4.4-4.3-4.4z" strokeLinejoin="round" /><path d="M8 15a1.6 1.6 0 003 0" strokeLinecap="round" /></svg>{bell > 0 && <span className="badge">{bell}</span>}</button>
+            <button className="ico-btn" aria-label="Notificações" onClick={abrirNotificacoes} style={{ position: "relative" }}><svg width="19" height="19" fill="none" stroke="currentColor" strokeWidth={1.7}><path d="M9.5 2.5c-2.6 0-4.3 1.9-4.3 4.4 0 3.6-1.2 4.7-1.2 4.7h11s-1.2-1.1-1.2-4.7c0-2.5-1.7-4.4-4.3-4.4z" strokeLinejoin="round" /><path d="M8 15a1.6 1.6 0 003 0" strokeLinecap="round" /></svg>{temNovidade && <span style={{ position: "absolute", top: 7, right: 7, width: 8, height: 8, borderRadius: 999, background: "#E5484D", border: "2px solid var(--panel)" }} />}</button>
           </div>
         </div>
         <div className="content">{children}</div>

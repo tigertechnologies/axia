@@ -29,7 +29,9 @@ export default async function ConfiguracoesPage() {
 
   const C = (comms ?? []) as any[];
   const P = (prazos ?? []) as any[];
-  const counts = { inbox: C.length, nomeacoes: C.filter((c) => c.category === "nomeacao").length, prazos: P.length, pericias: (pericias ?? []).length };
+  const counts = { inbox: C.length, nomeacoes: C.filter((c) => c.category === "nomeacao").length, prazos: P.length, pericias: (pericias ?? []).length,
+    nomeacoesAlerta: C.filter((c) => c.category === "nomeacao" && !c.validated).length,
+    prazosAlerta: P.filter((p) => p.status === "urgente").length, };
   const bell = C.filter((c) => c.category === "nomeacao" && !c.validated).length + P.filter((p) => p.status === "urgente").length;
 
   return (
