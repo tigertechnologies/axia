@@ -49,6 +49,41 @@ export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, 
     a.click(); URL.revokeObjectURL(url);
   }
 
+  function exportarPDF() {
+    const esc = (v: unknown) => String(v ?? "").replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]!));
+    const dataBR = (iso: string) => { try { return new Date(iso).toLocaleString("pt-BR"); } catch { return iso; } };
+    const secao = (titulo: string, linhas: string[]) =>
+      linhas.length ? `<h2>${titulo}</h2><ul>${linhas.map((l) => `<li>${l}</li>`).join("")}</ul>` : "";
+
+    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Processo ${esc(refNum)}</title>
+      <style>
+        *{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#10233F}
+        body{margin:40px;line-height:1.5}
+        h1{font-size:22px;margin:0 0 4px} .vara{color:#6B7C93;margin:0 0 20px;font-size:13px}
+        h2{font-size:15px;margin:22px 0 8px;border-bottom:1px solid #E4E9F0;padding-bottom:4px}
+        ul{margin:0;padding-left:18px} li{margin:4px 0;font-size:13px}
+        .tot{margin-top:16px;font-weight:700}
+        .foot{margin-top:32px;color:#9AA7B8;font-size:11px;border-top:1px solid #E4E9F0;padding-top:8px}
+        @media print{body{margin:20px}}
+      </style></head><body>
+      <h1>Processo ${esc(refNum)}</h1>
+      ${vara ? `<p class="vara">${esc(vara)}</p>` : ""}
+      ${secao("Comunicações", comms.map((c) => `${esc(c.subject)} — ${dataBR(c.received_at)} (${c.validated ? "validada" : "pendente"})`))}
+      ${secao("Perícias", pericias.map((p) => `${esc(p.titulo)} — ${dataBR(p.scheduled_at)}${p.local ? " · " + esc(p.local) : ""}`))}
+      ${secao("Prazos", prazos.map((p) => `${esc(p.titulo)} — ${dataBR(p.due_date)} (${esc(p.status)})`))}
+      ${secao("Honorários", honorarios.map((h) => `${esc(formatBRL(h.amount_cents))} (${esc(h.status)})`))}
+      ${honorarios.length ? `<p class="tot">Total de honorários: ${esc(formatBRL(totalHon))}</p>` : ""}
+      <p class="foot">Gerado pela AXIA em ${new Date().toLocaleString("pt-BR")}</p>
+      </body></html>`;
+
+    const w = window.open("", "_blank");
+    if (!w) { flash("Permita pop-ups para gerar o PDF."); return; }
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 300);
+  }
+
   return (
     <>
       <Link href="/processos" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#4A6FA5", fontFamily: "'Sora',sans-serif", fontWeight: 600, fontSize: 13.5, marginBottom: 14 }}>
@@ -62,6 +97,7 @@ export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, 
         </div>
         <div className="greet-actions">
           <button className="btn btn-ghost" onClick={exportarCSV}>Exportar CSV</button>
+          <button className="btn btn-primary" onClick={exportarPDF}>PDF</button>
         </div>
       </div>
 
