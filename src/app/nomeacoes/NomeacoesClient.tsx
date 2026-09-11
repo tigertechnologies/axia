@@ -34,9 +34,6 @@ export default function NomeacoesClient({ nomeacoes }: { nomeacoes: Comm[] }) {
           <h1>Nomeações</h1>
           <p className="sum"><Ico p="shield" s={15} />{nomeacoes.length} nomeação(ões){pend > 0 && <> · <b>{pend}</b> aguardando validação</>}</p>
         </div>
-        <div className="greet-actions">
-          <button className="btn btn-primary"><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Nova nomeação</button>
-        </div>
       </div>
 
       <section className="panel">
