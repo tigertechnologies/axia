@@ -17,6 +17,7 @@ export default function AppShell({
   nome: string; planLabel: string; counts: Counts; bell: number; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const [q, setQ] = useState("");
   const [admin, setAdmin] = useState(false);
   const [, startTransition] = useTransition();
@@ -94,11 +95,44 @@ export default function AppShell({
           </div>
           <div className="top-right">
             <ThemeToggle />
-            <button className="ico-btn" aria-label="Alertas"><svg width="19" height="19" fill="none" stroke="currentColor" strokeWidth={1.7}><path d="M9.5 2.5c-2.6 0-4.3 1.9-4.3 4.4 0 3.6-1.2 4.7-1.2 4.7h11s-1.2-1.1-1.2-4.7c0-2.5-1.7-4.4-4.3-4.4z" strokeLinejoin="round" /><path d="M8 15a1.6 1.6 0 003 0" strokeLinecap="round" /></svg>{bell > 0 && <span className="badge">{bell}</span>}</button>
+            <button className="ico-btn" aria-label="Alertas" onClick={() => setNotifOpen(true)}><svg width="19" height="19" fill="none" stroke="currentColor" strokeWidth={1.7}><path d="M9.5 2.5c-2.6 0-4.3 1.9-4.3 4.4 0 3.6-1.2 4.7-1.2 4.7h11s-1.2-1.1-1.2-4.7c0-2.5-1.7-4.4-4.3-4.4z" strokeLinejoin="round" /><path d="M8 15a1.6 1.6 0 003 0" strokeLinecap="round" /></svg>{bell > 0 && <span className="badge">{bell}</span>}</button>
           </div>
         </div>
         <div className="content">{children}</div>
       </div>
+
+      {/* Painel de notificações */}
+      {notifOpen && (
+        <div onClick={() => setNotifOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(16,35,63,.45)", zIndex: 200, display: "flex", justifyContent: "flex-end" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "min(360px, 92vw)", height: "100%", background: "var(--panel)", boxShadow: "-8px 0 30px rgba(0,0,0,.25)", padding: "22px 20px", overflowY: "auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+              <h3 style={{ fontFamily: "'Sora',sans-serif", fontSize: 18, color: "var(--ink)", fontWeight: 600 }}>Notificações</h3>
+              <button onClick={() => setNotifOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", fontSize: 22, color: "var(--muted)", cursor: "pointer", lineHeight: 1 }}>×</button>
+            </div>
+            {(counts.nomeacoes + counts.prazos + counts.pericias) === 0 ? (
+              <p style={{ color: "var(--muted)", fontSize: 14 }}>Nenhuma pendência no momento. 👍</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {counts.nomeacoes > 0 && (
+                  <Link href="/nomeacoes" onClick={() => setNotifOpen(false)} className="notif-item" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: "1px solid var(--line)", borderRadius: 10, color: "var(--ink)" }}>
+                    <Ico p="shield" s={18} /><span><b>{counts.nomeacoes}</b> nomeação(ões) a validar</span>
+                  </Link>
+                )}
+                {counts.prazos > 0 && (
+                  <Link href="/prazos" onClick={() => setNotifOpen(false)} className="notif-item" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: "1px solid var(--line)", borderRadius: 10, color: "var(--ink)" }}>
+                    <Ico p="clock" s={18} /><span><b>{counts.prazos}</b> prazo(s) monitorado(s)</span>
+                  </Link>
+                )}
+                {counts.pericias > 0 && (
+                  <Link href="/pericias" onClick={() => setNotifOpen(false)} className="notif-item" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: "1px solid var(--line)", borderRadius: 10, color: "var(--ink)" }}>
+                    <Ico p="cal" s={18} /><span><b>{counts.pericias}</b> perícia(s) agendada(s)</span>
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

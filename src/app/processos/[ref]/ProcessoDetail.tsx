@@ -31,6 +31,24 @@ export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, 
 
   const totalHon = honorarios.reduce((s, h) => s + h.amount_cents, 0);
 
+  function exportarCSV() {
+    const linhas: string[] = [];
+    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    linhas.push(`Processo,${esc(refNum)}`);
+    if (vara) linhas.push(`Vara,${esc(vara)}`);
+    linhas.push("");
+    linhas.push("Tipo,Descrição,Data,Status");
+    comms.forEach((c) => linhas.push(["Comunicação", esc(c.subject), esc(c.received_at), esc(c.validated ? "Validada" : "Pendente")].join(",")));
+    pericias.forEach((p) => linhas.push(["Perícia", esc(p.titulo), esc(p.scheduled_at), esc(p.local ?? "")].join(",")));
+    prazos.forEach((p) => linhas.push(["Prazo", esc(p.titulo), esc(p.due_date), esc(p.status)].join(",")));
+    honorarios.forEach((h) => linhas.push(["Honorário", esc(formatBRL(h.amount_cents)), "", esc(h.status)].join(",")));
+    const blob = new Blob(["\uFEFF" + linhas.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `processo-${refNum.replace(/[^\w.-]/g, "_")}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+
   return (
     <>
       <Link href="/processos" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#4A6FA5", fontFamily: "'Sora',sans-serif", fontWeight: 600, fontSize: 13.5, marginBottom: 14 }}>
@@ -43,8 +61,7 @@ export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, 
           <p className="sum"><Ico p="doc" s={15} />{vara ?? "Origem não identificada"}</p>
         </div>
         <div className="greet-actions">
-          <button className="btn btn-ghost">Exportar</button>
-          <button className="btn btn-primary">Abrir no tribunal</button>
+          <button className="btn btn-ghost" onClick={exportarCSV}>Exportar CSV</button>
         </div>
       </div>
 
@@ -115,7 +132,7 @@ export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, 
                 {honorarios.map((h) => (
                   <div className="hrow" key={h.id}><span className="pc">{h.status}</span><span className="am">{formatBRL(h.amount_cents)}</span></div>
                 ))}
-                <div className="hrow" style={{ borderTop: "1px solid #E6EBF2", marginTop: 4 }}><span className="pc" style={{ fontWeight: 600 }}>Total</span><span className="am">{formatBRL(totalHon)}</span></div>
+                <div className="hrow" style={{ borderTop: "1px solid var(--line)", marginTop: 4 }}><span className="pc" style={{ fontWeight: 600 }}>Total</span><span className="am">{formatBRL(totalHon)}</span></div>
               </div>
             </section>
           )}

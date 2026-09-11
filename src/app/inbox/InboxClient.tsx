@@ -77,7 +77,7 @@ export default function InboxClient({ comms }: { comms: Comm[] }) {
                   <span className="time">{ago(c.received_at)}</span>
                   {c.category === "nomeacao"
                     ? <button className="btn-act solid" onClick={() => validar(c.id)}>{isDone ? "Validado ✓" : "Validar"}</button>
-                    : (c.process_ref ? <Link className="btn-act" href={`/processos/${encodeURIComponent(c.process_ref)}`}>Ver</Link> : <button className="btn-act">Ver</button>)}
+                    : (c.process_ref ? <Link className="btn-act" href={`/processos/${encodeURIComponent(c.process_ref)}`}>Ver</Link> : <Link className="btn-act" href="/inbox">Ver</Link>)}
                   <button className="btn-act" onClick={() => arquivar(c.id)} title="Arquivar">Arquivar</button>
                 </div>
               </div>
