@@ -1,6 +1,9 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Ico } from "../AppShell";
+import Modal from "../Modal";
+import { createPericia } from "../actions/create";
 
 export interface Evento {
   kind: "pericia" | "prazo";
@@ -26,7 +29,20 @@ function fmt(iso: string) {
 }
 
 export default function AgendaClient({ eventos }: { eventos: Evento[] }) {
+  const router = useRouter();
   const [filter, setFilter] = useState("all");
+  const [novo, setNovo] = useState(false);
+  const [nf, setNf] = useState({ titulo: "", local: "", process_ref: "", scheduled_at: "" });
+
+  async function salvar() {
+    if (!nf.titulo || !nf.scheduled_at) return "Preencha o título e a data/hora.";
+    const r = await createPericia({ ...nf, scheduled_at: new Date(nf.scheduled_at).toISOString() });
+    if ("error" in r) return r.error || "Erro ao salvar.";
+    setNf({ titulo: "", local: "", process_ref: "", scheduled_at: "" });
+    router.refresh();
+    return null;
+  }
+
   const shown = eventos.filter((e) => filter === "all" || e.kind === filter);
 
   // agrupa por dia
@@ -46,7 +62,7 @@ export default function AgendaClient({ eventos }: { eventos: Evento[] }) {
           <p className="sum"><Ico p="agenda" s={15} />{eventos.length} compromisso(s) na sua linha do tempo</p>
         </div>
         <div className="greet-actions">
-          <button className="btn btn-primary"><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Novo compromisso</button>
+          <button className="btn btn-primary" onClick={() => setNovo(true)}><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Nova perícia</button>
         </div>
       </div>
 
@@ -80,6 +96,13 @@ export default function AgendaClient({ eventos }: { eventos: Evento[] }) {
           </section>
         </div>
       ))}
+
+      <Modal open={novo} onClose={() => setNovo(false)} title="Nova perícia" subtitle="Agende uma perícia manualmente." submitLabel="Salvar perícia" onSubmit={salvar}>
+        <div className="field"><label>Título</label><input value={nf.titulo} onChange={(e) => setNf({ ...nf, titulo: e.target.value })} placeholder="Ex.: Perícia médica" /></div>
+        <div className="field"><label>Data e hora</label><input type="datetime-local" value={nf.scheduled_at} onChange={(e) => setNf({ ...nf, scheduled_at: e.target.value })} /></div>
+        <div className="field"><label>Local / vara</label><input value={nf.local} onChange={(e) => setNf({ ...nf, local: e.target.value })} placeholder="Ex.: Vara do Trabalho" /></div>
+        <div className="field"><label>Processo</label><input value={nf.process_ref} onChange={(e) => setNf({ ...nf, process_ref: e.target.value })} placeholder="Nº do processo" /></div>
+      </Modal>
     </>
   );
 }
