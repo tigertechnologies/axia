@@ -656,7 +656,17 @@ function EmailBroadcast({ campanhas, flash }: { campanhas: EmailCampaign[]; flas
 // ── MARKETING ───────────────────────────────────────────────
 const BANNER_CORES: Record<string, string> = { info: "#1FA89E", promo: "#16305B", alerta: "#B8542E" };
 
+const BANNER_TEMPLATES: { nome: string; mensagem: string; variante: string; link_label: string }[] = [
+  { nome: "Black Friday", mensagem: "🔥 Black Friday AXIA: 50% OFF com o código BLACK50 — só até 30/11!", variante: "promo", link_label: "Aproveitar" },
+  { nome: "Lançamento", mensagem: "✨ Novidade na AXIA! Conheça os novos recursos que acabaram de chegar.", variante: "info", link_label: "Ver novidades" },
+  { nome: "Aviso de manutenção", mensagem: "⚠️ Manutenção programada neste domingo, das 2h às 4h. Podem ocorrer instabilidades.", variante: "alerta", link_label: "" },
+  { nome: "Cupom de boas-vindas", mensagem: "🎁 Novo por aqui? Use BEMVINDO10 e ganhe 10% no primeiro mês.", variante: "promo", link_label: "Usar cupom" },
+];
+
+type MktSub = "visao" | "banner" | "email";
+
 function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: { banner: Banner; metricas: MarketingMetricas; campanhas: Campanha[]; emailCampaigns: EmailCampaign[]; flash: (m: string) => void }) {
+  const [sub, setSub] = useState<MktSub>("visao");
   const [b, setB] = useState<Banner>(banner);
   const [busy, setBusy] = useState(false);
   const [, startT] = useTransition();
@@ -669,6 +679,11 @@ function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: 
     flash("error" in r && r.error ? r.error : "Banner salvo. Já vale no site.");
   }
 
+  function aplicarTemplate(t: typeof BANNER_TEMPLATES[number]) {
+    setB((prev) => ({ ...prev, mensagem: t.mensagem, variante: t.variante, link_label: t.link_label, ativo: true }));
+    flash(`Modelo "${t.nome}" aplicado. Ajuste e salve.`);
+  }
+
   const cor = BANNER_CORES[b.variante] ?? BANNER_CORES.info;
   const { resumo, origem, funil } = metricas;
   const convPct = resumo.total > 0 ? Math.round((resumo.convertidos / resumo.total) * 100) : 0;
@@ -677,9 +692,19 @@ function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: 
 
   return (
     <>
-      {/* Métricas de marketing */}
+      {/* Cabeçalho da aba Marketing com sub-navegação */}
+      <div className="greet" style={{ marginBottom: 16 }}>
+        <div><h1 style={{ fontSize: 22 }}>Marketing</h1><p className="sum">Central de crescimento: acompanhe o funil, publique avisos e fale com sua base.</p></div>
+      </div>
+      <div style={{ display: "flex", gap: 6, marginBottom: 18, borderBottom: "1px solid var(--line)", flexWrap: "wrap" }}>
+        <MktTab id="visao" atual={sub} set={setSub}>Visão</MktTab>
+        <MktTab id="banner" atual={sub} set={setSub}>Banner & avisos</MktTab>
+        <MktTab id="email" atual={sub} set={setSub}>E-mail</MktTab>
+      </div>
+
+      {sub === "visao" && (
       <section className="panel" style={{ marginBottom: 18 }}>
-        <div className="panel-h"><h3>Métricas de marketing</h3></div>
+        <div className="panel-h"><h3>Desempenho de marketing</h3></div>
         <div className="kpis" style={{ marginBottom: 16 }}>
           <div className="kpi"><div className="kn">{resumo.total}</div><div className="kl">Leads no total</div><div className="kt up">{resumo.novos_mes} no mês</div></div>
           <div className="kpi"><div className="kn">{resumo.convertidos}</div><div className="kl">Convertidos</div><div className="kt up">{convPct}% de conversão</div></div>
@@ -727,13 +752,25 @@ function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: 
           </div>
         </div>
       </section>
+      )}
 
       {/* E-mail em massa */}
-      <EmailBroadcast campanhas={emailCampaigns} flash={flash} />
+      {sub === "email" && <EmailBroadcast campanhas={emailCampaigns} flash={flash} />}
 
       {/* Editor de banner */}
+      {sub === "banner" && (
       <section className="panel">
       <div className="panel-h"><h3>Banner de aviso</h3></div>
+
+      {/* Templates prontos */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 8 }}>Modelos prontos — clique para preencher</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {BANNER_TEMPLATES.map((t) => (
+            <button key={t.nome} onClick={() => aplicarTemplate(t)} style={{ ...btnGhost, borderColor: BANNER_CORES[t.variante] }}>{t.nome}</button>
+          ))}
+        </div>
+      </div>
 
       {/* Prévia ao vivo */}
       <div style={{ marginBottom: 16 }}>
@@ -744,7 +781,7 @@ function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: 
             {b.link_url && <span style={{ fontWeight: 700, textDecoration: "underline" }}>{b.link_label || "Saiba mais"}</span>}
             <span style={{ position: "absolute", right: 12, opacity: 0.8 }}>×</span>
           </div>
-        ) : <div style={{ color: "var(--muted)", fontSize: 13.5 }}>Digite uma mensagem para ver a prévia.</div>}
+        ) : <div style={{ color: "var(--muted)", fontSize: 13.5 }}>Digite uma mensagem ou escolha um modelo acima.</div>}
         {!b.ativo && <div style={{ fontSize: 12, color: "#B8542E", marginTop: 6 }}>Banner desativado — não aparece no site enquanto “Ativo” estiver desligado.</div>}
       </div>
 
@@ -775,10 +812,18 @@ function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: 
         <button onClick={() => startT(salvar)} disabled={busy} style={btn}>{busy ? "Salvando…" : "Salvar banner"}</button>
       </div>
       <p style={{ marginTop: 14, fontSize: 12.5, color: "var(--muted)" }}>
-        O banner aparece no topo de todas as páginas (landing e app) quando ativo. Use-o para Black Friday, avisos e promoções. E-mail em massa chega no próximo lote.
+        O banner aparece no topo de todas as páginas (landing e app) quando ativo. Use os modelos prontos acima ou escreva o seu.
       </p>
     </section>
+      )}
     </>
+  );
+}
+
+function MktTab({ id, atual, set, children }: { id: MktSub; atual: MktSub; set: (a: MktSub) => void; children: React.ReactNode }) {
+  const on = atual === id;
+  return (
+    <button onClick={() => set(id)} style={{ padding: "8px 14px", border: "none", background: "none", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 13.5, fontWeight: on ? 700 : 500, color: on ? "var(--ink)" : "var(--muted)", borderBottom: on ? "2px solid #1FA89E" : "2px solid transparent", marginBottom: -1 }}>{children}</button>
   );
 }
 
