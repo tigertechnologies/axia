@@ -111,6 +111,7 @@ export default function AdminClient({
 
       {aba === "visao" && (
         <Visao total={assinantes.length} ativosLen={ativos.length} receita={receita}
+          setAba={setAba}
           porPlano={porPlano} webhooksPendentes={webhooksPendentes} metricas={metricas} historico={historico} />
       )}
 
@@ -1118,7 +1119,7 @@ function SistemaPanel({ data, flash }: { data: SistemaData; flash: (m: string) =
         <div className="kpi"><div className="kn">{whResumo.pendentes}</div><div className="kl">Webhooks pendentes</div><div className={"kt " + (whResumo.pendentes > 0 ? "warn" : "up")}>{whResumo.total} no total</div></div>
         <div className="kpi"><div className="kn" style={{ fontSize: 15, fontWeight: 600 }}>{whResumo.ultimo ? quandoHora(whResumo.ultimo) : "—"}</div><div className="kl">Último webhook OK</div></div>
         <div className="kpi"><div className="kn" style={{ fontSize: 15, fontWeight: 600 }}>{ingestao.ultimo_email ? quandoHora(ingestao.ultimo_email) : "—"}</div><div className="kl">Último e-mail ingerido</div><div className="kt up">{ingestao.total_mes} no mês</div></div>
-        <div className="kpi"><div className="kn">{ingErros.length}</div><div className="kl">Erros de ingestão</div><div className={"kt " + (ingErros.length > 0 ? "warn" : "up")}>{ingErros.length > 0 ? "verificar" : "ok"}</div></div>
+        <div className="kpi"><div className="kn">{ingErros.length}</div><div className="kl">Erros de ingestão</div><div className={"kt " + (ingErros.length > 0 ? "warn" : "up")}>{ingErros.length > 0 ? "ver abaixo" : "ok"}</div></div>
       </div>
 
       {/* Configuração */}
@@ -1197,14 +1198,14 @@ function SistemaPanel({ data, flash }: { data: SistemaData; flash: (m: string) =
   );
 }
 
-function Visao({ total, ativosLen, receita, porPlano, webhooksPendentes, metricas, historico }: { total: number; ativosLen: number; receita: number; porPlano: Record<string, number>; webhooksPendentes: number; metricas: Metricas | null; historico: Snapshot[] }) {
+function Visao({ total, ativosLen, receita, porPlano, webhooksPendentes, metricas, historico, setAba }: { total: number; ativosLen: number; receita: number; porPlano: Record<string, number>; webhooksPendentes: number; metricas: Metricas | null; historico: Snapshot[]; setAba: (a: Aba) => void }) {
   return (
     <>
       <div className="kpis" style={{ marginBottom: 16 }}>
         <div className="kpi"><div className="kn">{total}</div><div className="kl">Assinantes</div><div className="kt up">{ativosLen} ativos</div></div>
         <div className="kpi"><div className="kn" style={{ fontSize: 24 }}>{formatBRL(receita)}</div><div className="kl">MRR estimado</div><div className="kt up">assinaturas ativas</div></div>
         <div className="kpi"><div className="kn" style={{ fontSize: 22 }}>{porPlano.essential} · {porPlano.pro} · {porPlano.office}</div><div className="kl">Essential · Pro · Master</div></div>
-        <div className="kpi"><div className="kn">{webhooksPendentes}</div><div className="kl">Webhooks pendentes</div><div className={"kt " + (webhooksPendentes > 0 ? "warn" : "up")}>{webhooksPendentes > 0 ? "verificar" : "ok"}</div></div>
+        <div className="kpi" onClick={() => webhooksPendentes > 0 && setAba("sistema")} style={{ cursor: webhooksPendentes > 0 ? "pointer" : "default" }}><div className="kn">{webhooksPendentes}</div><div className="kl">Webhooks pendentes</div><div className={"kt " + (webhooksPendentes > 0 ? "warn" : "up")}>{webhooksPendentes > 0 ? "verificar em Sistema →" : "ok"}</div></div>
       </div>
       {metricas && (
         <div className="kpis" style={{ marginBottom: 22 }}>
