@@ -23,7 +23,7 @@ import { adminSaveConteudo } from "../actions/content";
 import { CAMPOS_CONTEUDO } from "../actions/content-fields";
 import { adminSavePrecos } from "../actions/prices";
 import { adminUploadLogo, adminRemoverLogo } from "../actions/upload";
-import { adminSaveHero, adminUploadHeroImagem, type HeroCampanha } from "../actions/hero";
+import { adminSaveHero, adminUploadHeroMidia, adminRemoverImagemCarrossel, type HeroCampanha } from "../actions/hero";
 import Toast from "../Toast";
 
 export interface SistemaData {
@@ -347,8 +347,10 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
 function HeroPanel({ hero, flash }: { hero: HeroCampanha; flash: (m: string) => void }) {
   const [h, setH] = useState<HeroCampanha>(hero);
   const [busy, setBusy] = useState(false);
-  const [upBusy, setUpBusy] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [up, setUp] = useState("");
+  const imgRef = useRef<HTMLInputElement>(null);
+  const vidRef = useRef<HTMLInputElement>(null);
+  const carRef = useRef<HTMLInputElement>(null);
   const [, startT] = useTransition();
   const setK = (k: keyof HeroCampanha, v: any) => setH((prev) => ({ ...prev, [k]: v }));
 
@@ -359,22 +361,38 @@ function HeroPanel({ hero, flash }: { hero: HeroCampanha; flash: (m: string) => 
     flash("error" in r && r.error ? r.error : "Hero salvo. Já vale no site.");
   }
 
-  async function enviarImagem(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (!file) return;
-    if (file.size > 4 * 1024 * 1024) { flash("Imagem muito grande (máx. 4 MB)."); return; }
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    setUpBusy(true);
-    const dataUrl: string = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result as string); r.onerror = () => res(""); r.readAsDataURL(file); });
-    if (!dataUrl) { setUpBusy(false); flash("Não foi possível ler a imagem."); return; }
-    const r = await adminUploadHeroImagem(dataUrl, ext);
-    setUpBusy(false);
-    if (fileRef.current) fileRef.current.value = "";
-    if ("error" in r && r.error) { flash(r.error); return; }
-    if ("url" in r && r.url) { setK("imagem_url", r.url); flash("Imagem enviada. Salve o hero para publicar."); }
+  function lerArquivo(file: File): Promise<string> {
+    return new Promise((res) => { const rd = new FileReader(); rd.onload = () => res(rd.result as string); rd.onerror = () => res(""); rd.readAsDataURL(file); });
   }
 
-  const corTexto = h.overlay === "claro" ? "var(--ink)" : "#fff";
+  async function enviar(e: React.ChangeEvent<HTMLInputElement>, alvo: "imagem" | "video" | "carrossel") {
+    const file = e.target.files?.[0]; if (!file) return;
+    const max = alvo === "video" ? 10 : 4;
+    if (file.size > max * 1024 * 1024) { flash(`Arquivo muito grande (máx. ${max} MB).`); return; }
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    setUp(alvo);
+    const dataUrl = await lerArquivo(file);
+    if (!dataUrl) { setUp(""); flash("Não foi possível ler o arquivo."); return; }
+    const r = await adminUploadHeroMidia(dataUrl, ext, alvo);
+    setUp("");
+    if (e.target) e.target.value = "";
+    if ("error" in r && r.error) { flash(r.error); return; }
+    if ("url" in r && r.url) {
+      if (alvo === "imagem") setK("imagem_url", r.url);
+      else if (alvo === "video") setK("video_url", r.url);
+      else setK("imagens", [...(h.imagens || []), r.url]);
+      flash("Mídia enviada. Salve o hero para publicar.");
+    }
+  }
+
+  async function removerImg(i: number) {
+    const r = await adminRemoverImagemCarrossel(i);
+    if (!("error" in r && r.error)) setK("imagens", (h.imagens || []).filter((_, k) => k !== i));
+  }
+
+  const corTexto = h.overlay === "claro" ? "#10233F" : "#fff";
   const overlayBg = h.overlay === "nenhum" ? "transparent" : h.overlay === "claro" ? "rgba(255,255,255,0.55)" : "rgba(16,35,63,0.58)";
+  const bgPreview = h.tipo === "imagem" ? h.imagem_url : h.tipo === "carrossel" && h.imagens?.length ? h.imagens[0] : "";
 
   return (
     <section className="panel" style={{ marginBottom: 18 }}>
@@ -386,8 +404,16 @@ function HeroPanel({ hero, flash }: { hero: HeroCampanha; flash: (m: string) => 
         </label>
       </div>
 
+      {/* Tipo de mídia */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+        {[["gradiente", "Cor/gradiente"], ["imagem", "Imagem (PNG)"], ["video", "Vídeo (MP4)"], ["carrossel", "Carrossel"]].map(([v, l]) => (
+          <button key={v} onClick={() => setK("tipo", v)} style={{ ...btnGhost, ...(h.tipo === v ? { borderColor: "#1FA89E", color: "#0F7A70", fontWeight: 700 } : {}) }}>{l}</button>
+        ))}
+      </div>
+
       {/* Prévia */}
-      <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", minHeight: 180, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", marginBottom: 16, backgroundImage: h.imagem_url ? `url(${h.imagem_url})` : "linear-gradient(135deg,#16305B,#1FA89E)", backgroundSize: "cover", backgroundPosition: "center" }}>
+      <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", marginBottom: 16, backgroundImage: bgPreview ? `url(${bgPreview})` : (h.tipo === "video" ? "none" : "linear-gradient(135deg,#16305B,#1FA89E)"), backgroundSize: "cover", backgroundPosition: "center", background: h.tipo === "video" && h.video_url ? "#000" : undefined }}>
+        {h.tipo === "video" && h.video_url && <video src={h.video_url} muted loop autoPlay playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />}
         {h.overlay !== "nenhum" && <div style={{ position: "absolute", inset: 0, background: overlayBg }} />}
         <div style={{ position: "relative", padding: 20 }}>
           <div style={{ fontFamily: "'Sora',sans-serif", fontWeight: 700, fontSize: 26, color: corTexto }}>{h.titulo || "Título da campanha"}</div>
@@ -396,31 +422,57 @@ function HeroPanel({ hero, flash }: { hero: HeroCampanha; flash: (m: string) => 
         </div>
       </div>
 
+      {/* Upload conforme o tipo */}
+      {h.tipo === "imagem" && (
+        <div style={{ marginBottom: 14 }}>
+          <input ref={imgRef} type="file" accept=".png,.jpg,.jpeg,.webp,image/*" onChange={(e) => enviar(e, "imagem")} style={{ display: "none" }} />
+          <button onClick={() => imgRef.current?.click()} disabled={up === "imagem"} style={btnGhost}>{up === "imagem" ? "Enviando…" : (h.imagem_url ? "Trocar imagem" : "Enviar imagem")}</button>
+        </div>
+      )}
+      {h.tipo === "video" && (
+        <div style={{ marginBottom: 14 }}>
+          <input ref={vidRef} type="file" accept=".mp4,.webm,video/*" onChange={(e) => enviar(e, "video")} style={{ display: "none" }} />
+          <button onClick={() => vidRef.current?.click()} disabled={up === "video"} style={btnGhost}>{up === "video" ? "Enviando…" : (h.video_url ? "Trocar vídeo" : "Enviar vídeo (MP4, máx. 10 MB)")}</button>
+        </div>
+      )}
+      {h.tipo === "carrossel" && (
+        <div style={{ marginBottom: 14 }}>
+          <input ref={carRef} type="file" accept=".png,.jpg,.jpeg,.webp,image/*" onChange={(e) => enviar(e, "carrossel")} style={{ display: "none" }} />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+            {(h.imagens || []).map((u, i) => (
+              <div key={i} style={{ position: "relative", width: 90, height: 60, borderRadius: 8, overflow: "hidden", border: "1px solid var(--line)" }}>
+                <img src={u} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <button onClick={() => startT(() => removerImg(i))} style={{ position: "absolute", top: 2, right: 2, background: "rgba(0,0,0,.6)", color: "#fff", border: "none", borderRadius: 6, width: 20, height: 20, cursor: "pointer", fontSize: 12 }}>×</button>
+              </div>
+            ))}
+          </div>
+          <button onClick={() => carRef.current?.click()} disabled={up === "carrossel"} style={btnGhost}>{up === "carrossel" ? "Enviando…" : "+ Adicionar imagem ao carrossel"}</button>
+          <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 6 }}>Até 8 imagens. Elas trocam automaticamente a cada 4,5s.</div>
+        </div>
+      )}
+
+      {/* Campos de texto e agendamento */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
         <div style={{ gridColumn: "1 / -1" }}><Campo label="Título"><input value={h.titulo} onChange={(e) => setK("titulo", e.target.value)} placeholder="Black Friday AXIA" style={inp} /></Campo></div>
         <div style={{ gridColumn: "1 / -1" }}><Campo label="Subtítulo"><input value={h.subtitulo} onChange={(e) => setK("subtitulo", e.target.value)} placeholder="50% de desconto até 30/11" style={inp} /></Campo></div>
         <Campo label="Texto do botão"><input value={h.cta_label} onChange={(e) => setK("cta_label", e.target.value)} placeholder="Aproveitar" style={inp} /></Campo>
         <Campo label="Link do botão"><input value={h.cta_url} onChange={(e) => setK("cta_url", e.target.value)} placeholder="#planos ou https://…" style={inp} /></Campo>
-        <Campo label="Sombreamento (legibilidade)">
+        <Campo label="Sombreamento">
           <select value={h.overlay} onChange={(e) => setK("overlay", e.target.value)} style={inp}>
             <option value="escuro">Escuro (texto branco)</option>
             <option value="claro">Claro (texto escuro)</option>
             <option value="nenhum">Nenhum</option>
           </select>
         </Campo>
-        <Campo label="Imagem de fundo">
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input ref={fileRef} type="file" accept=".png,.jpg,.jpeg,.webp,image/*" onChange={enviarImagem} style={{ display: "none" }} />
-            <button onClick={() => fileRef.current?.click()} disabled={upBusy} style={btnGhost}>{upBusy ? "Enviando…" : (h.imagem_url ? "Trocar imagem" : "Enviar imagem")}</button>
-          </div>
-        </Campo>
+        <Campo label="Início (agendamento, opcional)"><input type="date" value={h.inicio} onChange={(e) => setK("inicio", e.target.value)} style={inp} /></Campo>
+        <Campo label="Fim (agendamento, opcional)"><input type="date" value={h.fim} onChange={(e) => setK("fim", e.target.value)} style={inp} /></Campo>
       </div>
 
       <div style={{ marginTop: 16 }}>
         <button onClick={() => startT(salvar)} disabled={busy} style={btn}>{busy ? "Salvando…" : "Salvar hero"}</button>
       </div>
       <p style={{ marginTop: 12, fontSize: 12.5, color: "var(--muted)" }}>
-        O hero aparece no topo da landing (com efeito parallax) quando ativo. Imagem via bucket public-assets. Dica: use imagens largas (~1600px) e horizontais.
+        Imagem, vídeo ou carrossel no topo da landing. Com datas de início/fim, a campanha aparece só na janela programada. Mídia via bucket public-assets. Vídeo: MP4 curto e leve (máx. 10 MB).
       </p>
     </section>
   );
