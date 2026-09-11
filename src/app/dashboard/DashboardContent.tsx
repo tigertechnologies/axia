@@ -44,7 +44,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
 
   return (
     <>
-      {pastDue && <div className="attn" style={{ marginBottom: 20 }}><span className="at-ic"><Ico p="alert" /></span><div className="at-txt"><h4>Precisamos atualizar sua assinatura</h4><p>Seu pagamento está pendente. Atualize para manter o acesso.</p></div><div className="at-items"><span className="at-pill">Assinatura vencida <button className="btn-mini">Atualizar pagamento</button></span></div></div>}
+      {pastDue && <div className="attn" style={{ marginBottom: 20 }}><span className="at-ic"><Ico p="alert" /></span><div className="at-txt"><h4>Precisamos atualizar sua assinatura</h4><p>Seu pagamento está pendente. Atualize para manter o acesso.</p></div><div className="at-items"><span className="at-pill">Assinatura vencida <Link className="btn-mini" href="/checkout">Atualizar pagamento</Link></span></div></div>}
 
       <div className="greet">
         <div>
