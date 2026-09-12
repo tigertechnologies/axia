@@ -3,6 +3,8 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { JOURNEY_STAGES, STAGE_LABEL, type JourneyStage } from "@/modules/journey/domain/stateMachine";
 import JornadaDrawer from "./JornadaDrawer";
+import Modal from "../Modal";
+import { createPericia } from "../actions/create";
 
 export interface JornadaCard {
   id: string;
@@ -71,6 +73,17 @@ function Card({ card, onClick }: { card: JornadaCard; onClick: () => void }) {
 export default function JornadaClient({ cards }: { cards: JornadaCard[] }) {
   const router = useRouter();
   const [sel, setSel] = useState<JornadaCard | null>(null);
+  const [novo, setNovo] = useState(false);
+  const [nf, setNf] = useState({ titulo: "", local: "", process_ref: "", scheduled_at: "" });
+
+  async function salvarPericia() {
+    if (!nf.titulo || !nf.scheduled_at) return "Preencha o título e a data/hora.";
+    const r = await createPericia({ ...nf, scheduled_at: new Date(nf.scheduled_at).toISOString() });
+    if ("error" in r) return r.error || "Erro ao salvar.";
+    setNf({ titulo: "", local: "", process_ref: "", scheduled_at: "" });
+    router.refresh();
+    return null;
+  }
   const [q, setQ] = useState("");
   const [mobileStage, setMobileStage] = useState<JourneyStage>("novas_nomeacoes");
 
@@ -93,9 +106,12 @@ export default function JornadaClient({ cards }: { cards: JornadaCard[] }) {
           <h1>Jornada pericial</h1>
           <p className="sum">Acompanhe cada perícia da nomeação à entrega. A AXIA move os cards automaticamente conforme os eventos chegam.</p>
         </div>
-        <div className="search" style={{ maxWidth: 300, margin: 0 }}>
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.8}><circle cx="7" cy="7" r="5" /><path d="M14 14l-3.5-3.5" strokeLinecap="round" /></svg>
-          <input placeholder="Buscar processo, periciando…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <div className="search" style={{ maxWidth: 300, margin: 0 }}>
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.8}><circle cx="7" cy="7" r="5" /><path d="M14 14l-3.5-3.5" strokeLinecap="round" /></svg>
+            <input placeholder="Buscar processo, periciando…" value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
+          <button className="btn btn-primary" onClick={() => setNovo(true)}><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Nova perícia</button>
         </div>
       </div>
 
@@ -138,6 +154,13 @@ export default function JornadaClient({ cards }: { cards: JornadaCard[] }) {
           onMoved={() => { setSel(null); router.refresh(); }}
         />
       )}
+
+      <Modal open={novo} onClose={() => setNovo(false)} title="Nova perícia" subtitle="Agende uma perícia manualmente." submitLabel="Salvar perícia" onSubmit={salvarPericia}>
+        <div className="field"><label>Título</label><input value={nf.titulo} onChange={(e) => setNf({ ...nf, titulo: e.target.value })} placeholder="Ex.: Perícia médica" /></div>
+        <div className="field"><label>Data e hora</label><input type="datetime-local" value={nf.scheduled_at} onChange={(e) => setNf({ ...nf, scheduled_at: e.target.value })} /></div>
+        <div className="field"><label>Local / vara</label><input value={nf.local} onChange={(e) => setNf({ ...nf, local: e.target.value })} placeholder="Ex.: Vara do Trabalho" /></div>
+        <div className="field"><label>Processo</label><input value={nf.process_ref} onChange={(e) => setNf({ ...nf, process_ref: e.target.value })} placeholder="Nº do processo" /></div>
+      </Modal>
     </>
   );
 }
