@@ -3,6 +3,7 @@ import { useState, useEffect, useTransition } from "react";
 import { JOURNEY_STAGES, STAGE_LABEL, canTransition, type JourneyStage, type JourneyEvent } from "@/modules/journey/domain/stateMachine";
 import { moverPericia } from "@/app/actions/journey";
 import { carregarDetalhePericia, type PericiaDetalhe, type TimelineEvento } from "@/app/actions/journey-detail";
+import { criarPrazoNaPericia, confirmarPrazoNaPericia } from "@/app/actions/journey-prazos";
 import type { JornadaCard } from "./JornadaClient";
 
 const MES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
@@ -61,6 +62,7 @@ export default function JornadaDrawer({ card, onClose, onMoved }: { card: Jornad
   const [stage, setStage] = useState<JourneyStage>(card.stage as JourneyStage);
   const [version, setVersion] = useState<number>(card.version);
   const [msg, setMsg] = useState("");
+  const [novoPrazo, setNovoPrazo] = useState({ titulo: "", due_date: "" });
   const [, startT] = useTransition();
 
   useEffect(() => {
@@ -74,6 +76,22 @@ export default function JornadaDrawer({ card, onClose, onMoved }: { card: Jornad
   const proximos = JOURNEY_STAGES.filter((alvo) =>
     canTransition({ currentStage: stage, targetStage: alvo, eventType: ACAO_EVENTO[alvo] ?? "NOMINATION_CONFIRMED", actorType: "medico" }).allowed
   );
+
+  async function recarregar() {
+    const d = await carregarDetalhePericia(card.id); setDet(d);
+  }
+
+  async function addPrazo() {
+    if (!novoPrazo.titulo || !novoPrazo.due_date) { setMsg("Preencha o tipo e a data do prazo."); return; }
+    const r = await criarPrazoNaPericia({ periciaId: card.id, titulo: novoPrazo.titulo, due_date: novoPrazo.due_date });
+    if (r && "error" in r) { setMsg("Não foi possível criar o prazo."); return; }
+    setNovoPrazo({ titulo: "", due_date: "" }); setMsg(""); recarregar();
+  }
+
+  async function confirmarPrazo(id: string) {
+    const r = await confirmarPrazoNaPericia(id);
+    if (!(r && "error" in r)) recarregar();
+  }
 
   async function avancar(alvo: JourneyStage) {
     setMsg("");
@@ -132,13 +150,29 @@ export default function JornadaDrawer({ card, onClose, onMoved }: { card: Jornad
 
           {carregando ? <p className="jk-d-note">Carregando detalhes…</p> : (
             <>
-              {/* Prazos */}
-              {det && det.prazos.length > 0 && (
-                <div className="jd-section">
-                  <div className="jd-h">Prazos</div>
-                  {det.prazos.map((p) => <div key={p.id} className="jk-d-row"><span>{p.titulo}</span><b>{dataBR(p.due_date)} · {p.status}</b></div>)}
+              {/* Prazos — ver, confirmar e adicionar */}
+              <div className="jd-section">
+                <div className="jd-h">Prazos</div>
+                {det && det.prazos.length === 0 && <p className="jk-d-note" style={{ marginTop: 0 }}>Nenhum prazo registrado.</p>}
+                {det?.prazos.map((p) => (
+                  <div key={p.id} className="jd-prazo-row">
+                    <div>
+                      <div className="jd-prazo-tit">{p.titulo}</div>
+                      <div className="jd-prazo-sub">{dataBR(p.due_date)} · {p.status === "confirmado" ? "confirmado" : p.status === "urgente" ? "urgente" : "a validar"}</div>
+                    </div>
+                    {p.status !== "confirmado" && (
+                      <button className="jd-mini-btn" onClick={() => startT(() => confirmarPrazo(p.id))}>Confirmar</button>
+                    )}
+                  </div>
+                ))}
+                {/* Adicionar prazo */}
+                <div className="jd-add-prazo">
+                  <input placeholder="Tipo do prazo (ex.: laudo)" value={novoPrazo.titulo} onChange={(e) => setNovoPrazo({ ...novoPrazo, titulo: e.target.value })} />
+                  <input type="date" value={novoPrazo.due_date} onChange={(e) => setNovoPrazo({ ...novoPrazo, due_date: e.target.value })} />
+                  <button className="jd-mini-btn solid" onClick={() => startT(addPrazo)}>+ Prazo</button>
                 </div>
-              )}
+              </div>
+
               {/* Quesitos */}
               {det && det.quesitos.length > 0 && (
                 <div className="jd-section">

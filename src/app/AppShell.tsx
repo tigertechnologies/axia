@@ -52,7 +52,6 @@ export default function AppShell({
   const pericias: NavItem[] = [
     { href: "/jornada", label: "Jornada", ico: "dash", ready: true },
     { href: "/nomeacoes", label: "Nomeações", ico: "shield", ready: true, count: counts.nomeacoesAlerta, alerta: true },
-    { href: "/prazos", label: "Prazos", ico: "clock", ready: true, count: counts.prazosAlerta, alerta: true },
     { href: "/processos", label: "Processos", ico: "doc", ready: true },
     { href: "/honorarios", label: "Honorários", ico: "wallet", ready: true },
     { href: "/agenda", label: "Agenda", ico: "agenda", ready: true },
