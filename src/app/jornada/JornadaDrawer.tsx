@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useTransition } from "react";
+import Link from "next/link";
 import { JOURNEY_STAGES, STAGE_LABEL, canTransition, type JourneyStage, type JourneyEvent } from "@/modules/journey/domain/stateMachine";
 import { moverPericia } from "@/app/actions/journey";
 import { carregarDetalhePericia, type PericiaDetalhe, type TimelineEvento } from "@/app/actions/journey-detail";
@@ -137,6 +138,11 @@ export default function JornadaDrawer({ card, onClose, onMoved }: { card: Jornad
           {/* Próxima ação — botões que movem o card (ato do médico) */}
           <div className="jd-section">
             <div className="jd-h">Próxima ação</div>
+            {["laudo_pendente", "laudo_em_elaboracao", "protocolar_laudo"].includes(stage) && (
+              <Link href={`/laudos/${card.id}`} className="jd-btn" style={{ display: "block", textAlign: "center", textDecoration: "none", marginBottom: 8 }}>
+                📄 Elaborar laudo →
+              </Link>
+            )}
             {proximos.length === 0 && <p className="jk-d-note">Nenhuma ação disponível nesta etapa.</p>}
             <div className="jd-acoes">
               {proximos.map((alvo) => (
