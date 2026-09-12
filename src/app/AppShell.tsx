@@ -50,6 +50,7 @@ export default function AppShell({
     { href: "/inbox", label: "Inbox", ico: "inbox", ready: true },
   ];
   const pericias: NavItem[] = [
+    { href: "/jornada", label: "Jornada", ico: "dash", ready: true },
     { href: "/nomeacoes", label: "Nomeações", ico: "shield", ready: true, count: counts.nomeacoesAlerta, alerta: true },
     { href: "/prazos", label: "Prazos", ico: "clock", ready: true, count: counts.prazosAlerta, alerta: true },
     { href: "/pericias", label: "Perícias", ico: "cal", ready: true },
