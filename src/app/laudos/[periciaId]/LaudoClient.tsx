@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { criarLaudo, carregarLaudo, salvarLaudo, type ModeloItem, type LaudoItem } from "@/app/actions/laudo";
 import { validarLaudo, reabrirLaudo } from "@/app/actions/laudo-fluxo";
+import { salvarComoModelo } from "@/app/actions/laudo-modelo";
 import { auditarLaudo, type ResultadoAuditoria } from "@/modules/laudo/domain/auditor";
 import type { ConteudoLaudo } from "@/modules/laudo/domain/laudoModel";
 
@@ -91,6 +92,14 @@ export default function LaudoClient({
     if (!laudoId) return;
     const r = await reabrirLaudo(laudoId);
     if (!r.error) setStatus("rascunho");
+  }
+
+  async function salvarComoMeuModelo() {
+    if (!laudoId) return;
+    const nome = window.prompt("Nome do modelo (fica em 'Meus modelos', com os dados do caso trocados por placeholders):");
+    if (!nome) return;
+    const r = await salvarComoModelo({ laudoId, nome });
+    alert(r.error ? "Não foi possível salvar o modelo." : "Modelo salvo em 'Meus modelos'.");
   }
 
   function baixarPDF() {
@@ -223,6 +232,7 @@ export default function LaudoClient({
           <>
             <button className="laudo-btn" onClick={salvarAgora}>Salvar rascunho</button>
             <button className="laudo-btn ghost" onClick={revisar}>Revisar (Auditor)</button>
+            <button className="laudo-btn ghost" onClick={salvarComoMeuModelo}>Salvar como meu modelo</button>
             <button className="laudo-btn" onClick={validar}>Validar laudo</button>
             <button className="laudo-btn ghost" onClick={baixarPDF}>Baixar PDF</button>
           </>
