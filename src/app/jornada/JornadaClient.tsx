@@ -1,6 +1,8 @@
 "use client";
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { JOURNEY_STAGES, STAGE_LABEL, type JourneyStage } from "@/modules/journey/domain/stateMachine";
+import JornadaDrawer from "./JornadaDrawer";
 
 export interface JornadaCard {
   id: string;
@@ -67,6 +69,7 @@ function Card({ card, onClick }: { card: JornadaCard; onClick: () => void }) {
 }
 
 export default function JornadaClient({ cards }: { cards: JornadaCard[] }) {
+  const router = useRouter();
   const [sel, setSel] = useState<JornadaCard | null>(null);
   const [q, setQ] = useState("");
   const [mobileStage, setMobileStage] = useState<JourneyStage>("novas_nomeacoes");
@@ -127,26 +130,13 @@ export default function JornadaClient({ cards }: { cards: JornadaCard[] }) {
         </div>
       </div>
 
-      {/* Painel lateral (esqueleto — a Fase 4 parte 2 traz o conteúdo completo) */}
+      {/* Painel lateral completo */}
       {sel && (
-        <div className="jk-drawer-overlay" onClick={() => setSel(null)}>
-          <div className="jk-drawer" onClick={(e) => e.stopPropagation()}>
-            <div className="jk-drawer-head">
-              <strong>{sel.titulo}</strong>
-              <button onClick={() => setSel(null)} aria-label="Fechar" className="jk-x">×</button>
-            </div>
-            <div className="jk-drawer-body">
-              <div className="jk-d-row"><span>Etapa</span><b>{STAGE_LABEL[sel.stage as JourneyStage] ?? sel.stage}</b></div>
-              {sel.process_ref && <div className="jk-d-row"><span>Processo</span><b>{sel.process_ref}</b></div>}
-              {sel.tribunal && <div className="jk-d-row"><span>Tribunal</span><b>{sel.tribunal}</b></div>}
-              {sel.vara && <div className="jk-d-row"><span>Vara</span><b>{sel.vara}</b></div>}
-              {sel.scheduled_at && <div className="jk-d-row"><span>Data da perícia</span><b>{dataBR(sel.scheduled_at)}</b></div>}
-              {sel.prazo && <div className="jk-d-row"><span>Prazo</span><b>{sel.prazo.titulo} · {dataBR(sel.prazo.due_date)}</b></div>}
-              {sel.segredo && <div className="jk-d-row"><span>Sigilo</span><b>🔒 Segredo de justiça</b></div>}
-              <p className="jk-d-note">A linha do tempo auditável, os quesitos, documentos e as ações da jornada chegam no próximo lote (Fase 4, parte 2).</p>
-            </div>
-          </div>
-        </div>
+        <JornadaDrawer
+          card={sel}
+          onClose={() => setSel(null)}
+          onMoved={() => { setSel(null); router.refresh(); }}
+        />
       )}
     </>
   );
