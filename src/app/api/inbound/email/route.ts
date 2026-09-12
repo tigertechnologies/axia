@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdmin } from "@/lib/supabase/server";
 import { classifyEmail } from "@/lib/classify";
+import { autoCriarCardNomeacao } from "@/app/actions/journey-auto";
 import { analiseLimit } from "@/lib/plans";
 import { createHash } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -48,15 +49,26 @@ export async function POST(req: Request) {
   const c = await classifyEmail(`${payload.Subject ?? ""}\n${text}`);
 
   const source_hash = createHash("sha256").update(((payload.Subject ?? "") + "\n" + text).trim().toLowerCase()).digest("hex");
-  const { error: insComm } = await admin.from("communications").insert({
+  const { data: commRow, error: insComm } = await admin.from("communications").insert({
     org_id: orgId, category: c.category, sender: c.sender || fromName,
     subject: (payload.Subject || c.subject).slice(0, 200), snippet: c.snippet,
     process_ref: c.process_ref, received_at: new Date().toISOString(), validated: false, source_hash,
-  });
+  }).select("id").maybeSingle();
   if (insComm) {
     if ((insComm as any).code === "23505") return NextResponse.json({ received: true, duplicate: true });
     await logErro(admin, orgId, "insert_communication", (insComm as { message?: string }).message ?? "erro ao inserir comunicação");
     return NextResponse.json({ error: "db_error" }, { status: 500 });
+  }
+
+  // AUTOMAÇÃO DA JORNADA: nomeação → cria/atualiza card (por regras; plugável para IA).
+  // Idempotente e best-effort: nunca bloqueia a ingestão se algo falhar.
+  if (c.category === "nomeacao") {
+    try {
+      await autoCriarCardNomeacao({
+        orgId, processRef: c.process_ref, assunto: payload.Subject || c.subject,
+        communicationId: commRow?.id ?? null,
+      });
+    } catch { /* best-effort */ }
   }
 
   if (c.due_date) {  // só quando vencimento explícito e válido (A03/A04)

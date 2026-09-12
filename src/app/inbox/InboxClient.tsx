@@ -1,8 +1,10 @@
 "use client";
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { validateCommunication } from "../dashboard/actions";
 import { setArchived } from "../actions/state";
+import { criarCardDaComunicacao } from "../actions/inbox-to-journey";
 import AnalyzeEmail from "./AnalyzeEmail";
 import Toast from "../Toast";
 import { Ico } from "../AppShell";
@@ -21,15 +23,18 @@ const FILTERS = [["all", "Tudo"], ["nom", "Nomeações"], ["prz", "Prazos"], ["p
 function ago(iso: string) { const d = (Date.now() - new Date(iso).getTime()) / 3600_000; if (d < 1) return "agora"; if (d < 24) return `há ${Math.round(d)}h`; if (d < 48) return "ontem"; return `${Math.round(d / 24)} dias`; }
 
 export default function InboxClient({ comms }: { comms: Comm[] }) {
+  const router = useRouter();
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
   const [done, setDone] = useState<Set<string>>(new Set());
   const [arch, setArch] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState("");
+  const [, startT] = useTransition();
   function flash(m:string){ setToast(m); setTimeout(()=>setToast(""),3500); }
   async function arquivar(id: string){ setArch(a=>new Set(a).add(id)); const r = await setArchived(id, true); if(r && "error" in r){ setArch(a=>{ const n=new Set(a); n.delete(id); return n; }); flash("Não foi possível arquivar. Tente novamente."); } }
 
   async function validar(id: string) { setDone((d) => new Set(d).add(id)); const r = await validateCommunication(id); if(r && "error" in r){ setDone(d=>{ const n=new Set(d); n.delete(id); return n; }); flash("Não foi possível validar. Tente novamente."); } }
+  async function criarCard(id: string) { const r = await criarCardDaComunicacao(id); if (r && "error" in r) { flash("Não foi possível criar o card."); return; } flash(r.criada ? "Card criado na Jornada." : "Já existe card para este processo."); router.refresh(); }
 
   const shown = comms.filter((c) => {
     const okCat = filter === "all" || CAT[c.category]?.f === filter;
@@ -76,7 +81,8 @@ export default function InboxClient({ comms }: { comms: Comm[] }) {
                 <div className="act">
                   <span className="time">{ago(c.received_at)}</span>
                   {c.category === "nomeacao"
-                    ? <button className="btn-act solid" onClick={() => validar(c.id)}>{isDone ? "Validado ✓" : "Validar"}</button>
+                    ? <><button className="btn-act solid" onClick={() => validar(c.id)}>{isDone ? "Validado ✓" : "Validar"}</button>
+                        <button className="btn-act" onClick={() => startT(() => criarCard(c.id))} title="Criar card na Jornada">→ Jornada</button></>
                     : (c.process_ref ? <Link className="btn-act" href={`/processos/${encodeURIComponent(c.process_ref)}`}>Ver</Link> : <Link className="btn-act" href="/inbox">Ver</Link>)}
                   <button className="btn-act" onClick={() => arquivar(c.id)} title="Arquivar">Arquivar</button>
                 </div>
