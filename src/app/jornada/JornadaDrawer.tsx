@@ -1,10 +1,11 @@
 "use client";
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useRef } from "react";
 import Link from "next/link";
 import { JOURNEY_STAGES, STAGE_LABEL, canTransition, type JourneyStage, type JourneyEvent } from "@/modules/journey/domain/stateMachine";
 import { moverPericia } from "@/app/actions/journey";
 import { carregarDetalhePericia, type PericiaDetalhe, type TimelineEvento } from "@/app/actions/journey-detail";
 import { criarPrazoNaPericia, confirmarPrazoNaPericia } from "@/app/actions/journey-prazos";
+import { uploadDocumento, urlAssinadaDocumento, excluirDocumento } from "@/app/actions/documentos";
 import { formatBRL } from "@/lib/plans";
 import type { JornadaCard } from "./JornadaClient";
 
@@ -65,7 +66,34 @@ export default function JornadaDrawer({ card, onClose, onMoved }: { card: Jornad
   const [version, setVersion] = useState<number>(card.version);
   const [msg, setMsg] = useState("");
   const [novoPrazo, setNovoPrazo] = useState({ titulo: "", due_date: "" });
+  const [docBusy, setDocBusy] = useState(false);
+  const docRef = useRef<HTMLInputElement>(null);
   const [, startT] = useTransition();
+
+  async function enviarDocumento(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return;
+    if (file.size > 20 * 1024 * 1024) { setMsg("Arquivo muito grande (máx. 20 MB)."); return; }
+    setDocBusy(true);
+    const dataUrl: string = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result as string); r.onerror = () => res(""); r.readAsDataURL(file); });
+    if (!dataUrl) { setDocBusy(false); setMsg("Não foi possível ler o arquivo."); return; }
+    const r = await uploadDocumento({ periciaId: card.id, dataUrl, nomeOriginal: file.name, tipo: "documento" });
+    setDocBusy(false);
+    if (docRef.current) docRef.current.value = "";
+    if (r.error) { setMsg(r.error); return; }
+    recarregar();
+  }
+
+  async function verDocumento(id: string) {
+    const r = await urlAssinadaDocumento(id);
+    if (r.error || !r.url) { setMsg("Não foi possível abrir o documento."); return; }
+    window.open(r.url, "_blank");
+  }
+
+  async function removerDocumento(id: string) {
+    if (!confirm("Excluir este documento?")) return;
+    const r = await excluirDocumento(id);
+    if (!r.error) recarregar();
+  }
 
   useEffect(() => {
     let vivo = true;
@@ -187,13 +215,28 @@ export default function JornadaDrawer({ card, onClose, onMoved }: { card: Jornad
                   {det.quesitos.map((q) => <div key={q.id} className="jd-quesito"><span className={q.respondido?"q-ok":"q-pend"}>{q.respondido?"✓":"○"}</span> <span>{q.origem} {q.numero ?? ""}: {q.texto.slice(0,80)}</span></div>)}
                 </div>
               )}
-              {/* Documentos */}
-              {det && det.documentos.length > 0 && (
-                <div className="jd-section">
-                  <div className="jd-h">Documentos</div>
-                  {det.documentos.map((d) => <div key={d.id} className="jk-d-row"><span>{d.tipo ?? "documento"} {d.segredo_justica ? "🔒" : ""}</span><b>{dataBR(d.created_at)}</b></div>)}
-                </div>
-              )}
+              {/* Documentos — anexar, ver (URL assinada) e excluir */}
+              <div className="jd-section">
+                <div className="jd-h">Documentos</div>
+                {det && det.documentos.length === 0 && <p className="jk-d-note" style={{ marginTop: 0 }}>Nenhum documento anexado.</p>}
+                {det?.documentos.map((d) => (
+                  <div key={d.id} className="jd-doc-row">
+                    <button className="jd-doc-nome" onClick={() => verDocumento(d.id)} title="Abrir">
+                      📎 {d.nome_original ?? d.tipo ?? "documento"} {d.segredo_justica ? "🔒" : ""}
+                    </button>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <span className="jd-doc-data">{dataBR(d.created_at)}</span>
+                      <button className="jd-doc-x" onClick={() => startT(() => removerDocumento(d.id))} aria-label="Excluir">×</button>
+                    </div>
+                  </div>
+                ))}
+                <input ref={docRef} type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.doc,.xlsx" onChange={enviarDocumento} style={{ display: "none" }} />
+                <button className="jd-mini-btn solid" style={{ marginTop: 8 }} disabled={docBusy} onClick={() => docRef.current?.click()}>
+                  {docBusy ? "Enviando…" : "+ Anexar documento"}
+                </button>
+                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6 }}>PDF, imagem, DOCX ou XLSX · máx. 20 MB · armazenamento privado.</div>
+              </div>
+
 
               {/* Este processo — outras perícias e honorários (item 4: visão de processo) */}
               {det && (det.irmas.length > 0 || det.honorarios.length > 0) && (
