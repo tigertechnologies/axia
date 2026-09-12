@@ -4,6 +4,7 @@ import { JOURNEY_STAGES, STAGE_LABEL, canTransition, type JourneyStage, type Jou
 import { moverPericia } from "@/app/actions/journey";
 import { carregarDetalhePericia, type PericiaDetalhe, type TimelineEvento } from "@/app/actions/journey-detail";
 import { criarPrazoNaPericia, confirmarPrazoNaPericia } from "@/app/actions/journey-prazos";
+import { formatBRL } from "@/lib/plans";
 import type { JornadaCard } from "./JornadaClient";
 
 const MES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
@@ -185,6 +186,29 @@ export default function JornadaDrawer({ card, onClose, onMoved }: { card: Jornad
                 <div className="jd-section">
                   <div className="jd-h">Documentos</div>
                   {det.documentos.map((d) => <div key={d.id} className="jk-d-row"><span>{d.tipo ?? "documento"} {d.segredo_justica ? "🔒" : ""}</span><b>{dataBR(d.created_at)}</b></div>)}
+                </div>
+              )}
+
+              {/* Este processo — outras perícias e honorários (item 4: visão de processo) */}
+              {det && (det.irmas.length > 0 || det.honorarios.length > 0) && (
+                <div className="jd-section">
+                  <div className="jd-h">Este processo</div>
+                  {det.irmas.length > 0 && (
+                    <>
+                      <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 6 }}>Outras perícias deste processo</div>
+                      {det.irmas.map((ir) => (
+                        <div key={ir.id} className="jk-d-row"><span>{ir.titulo}</span><b>{STAGE_LABEL[ir.workflow_stage as JourneyStage] ?? "—"}</b></div>
+                      ))}
+                    </>
+                  )}
+                  {det.honorarios.length > 0 && (
+                    <>
+                      <div style={{ fontSize: 12, color: "var(--muted)", margin: "10px 0 6px" }}>Honorários</div>
+                      {det.honorarios.map((h) => (
+                        <div key={h.id} className="jk-d-row"><span>{h.status}</span><b>{formatBRL(h.amount_cents)}</b></div>
+                      ))}
+                    </>
+                  )}
                 </div>
               )}
 
