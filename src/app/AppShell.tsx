@@ -52,6 +52,7 @@ export default function AppShell({
   const pericias: NavItem[] = [
     { href: "/jornada", label: "Jornada", ico: "dash", ready: true },
     { href: "/honorarios", label: "Honorários", ico: "wallet", ready: true },
+    { href: "/calculos", label: "Cálculos", ico: "doc", ready: true },
     { href: "/agenda", label: "Agenda", ico: "agenda", ready: true },
   ];
 
