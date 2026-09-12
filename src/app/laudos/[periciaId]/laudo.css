@@ -45,3 +45,15 @@
 .laudo-btn{ padding:10px 18px; border:1px solid #16305B; background:#16305B; color:#fff; border-radius:9px; cursor:pointer; font-family:var(--body),sans-serif; font-size:13.5px; font-weight:600; }
 .laudo-btn.ghost{ background:var(--panel); color:var(--ink); border-color:var(--line); }
 .laudo-btn:disabled{ opacity:.5; cursor:default; }
+
+/* Auditor */
+.laudo-auditor{ margin-top:20px; border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+.laudo-auditor.nivel-ok{ border-color:rgba(31,168,158,.4); background:rgba(31,168,158,.06); }
+.laudo-auditor.nivel-atencao{ border-color:rgba(201,162,39,.4); background:rgba(201,162,39,.06); }
+.laudo-auditor.nivel-revisar{ border-color:rgba(192,73,46,.4); background:rgba(192,73,46,.06); }
+.laudo-auditor-h{ font-family:var(--disp),sans-serif; font-size:14px; font-weight:600; color:var(--ink); margin-bottom:10px; }
+.laudo-achado{ font-size:13px; padding:4px 0; display:flex; gap:8px; }
+.laudo-achado.sev-revisar{ color:#C0492E; }
+.laudo-achado.sev-atencao{ color:#8A5A18; }
+.laudo-achado.sev-ok{ color:#0F7A70; }
+.laudo-validado-tag{ display:inline-flex; align-items:center; padding:10px 16px; background:rgba(31,168,158,.14); color:#0F7A70; border-radius:9px; font-weight:600; font-size:13.5px; }

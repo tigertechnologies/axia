@@ -2,6 +2,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { criarLaudo, carregarLaudo, salvarLaudo, type ModeloItem, type LaudoItem } from "@/app/actions/laudo";
+import { validarLaudo, reabrirLaudo } from "@/app/actions/laudo-fluxo";
+import { auditarLaudo, type ResultadoAuditoria } from "@/modules/laudo/domain/auditor";
 import type { ConteudoLaudo } from "@/modules/laudo/domain/laudoModel";
 
 const STATUS_LABEL: Record<string, string> = { rascunho: "Rascunho", em_revisao: "Em revisão", validado: "Validado", assinado: "Assinado", protocolado: "Protocolado" };
@@ -21,6 +23,7 @@ export default function LaudoClient({
   const [salvando, setSalvando] = useState<"idle" | "salvando" | "salvo" | "erro">("idle");
   const [criando, setCriando] = useState(false);
   const [escolha, setEscolha] = useState<"modelo" | "anterior" | null>(null);
+  const [auditoria, setAuditoria] = useState<ResultadoAuditoria | null>(null);
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Carrega o laudo existente.
@@ -66,6 +69,54 @@ export default function LaudoClient({
     const r = await salvarLaudo({ laudoId, titulo, conteudo });
     setSalvando(r.error ? "erro" : "salvo");
     setTimeout(() => setSalvando("idle"), 2000);
+  }
+
+  function revisar() {
+    if (!conteudo) return;
+    setAuditoria(auditarLaudo(conteudo));
+  }
+
+  async function validar() {
+    if (!laudoId || !conteudo) return;
+    const aud = auditarLaudo(conteudo);
+    setAuditoria(aud);
+    if (aud.totalRevisar > 0) { alert("Há itens que exigem revisão antes de validar. Veja o Auditor."); return; }
+    if (!confirm("Confirmar validação do laudo? Só você, como médico, valida o conteúdo.")) return;
+    const r = await validarLaudo(laudoId);
+    if (r.error) { alert("Não foi possível validar."); return; }
+    setStatus("validado");
+  }
+
+  async function reabrir() {
+    if (!laudoId) return;
+    const r = await reabrirLaudo(laudoId);
+    if (!r.error) setStatus("rascunho");
+  }
+
+  function baixarPDF() {
+    if (!conteudo) return;
+    const esc = (s: string) => s.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]!));
+    const secoesHtml = conteudo.secoes.map((s) =>
+      `<h2>${esc(s.titulo)}</h2><div class="txt">${esc(s.texto || "").replace(/\n/g, "<br/>")}</div>`
+    ).join("");
+    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(titulo || "Laudo")}</title>
+      <style>
+        *{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#10233F}
+        body{margin:40px;line-height:1.6;max-width:760px}
+        h1{font-size:22px;margin:0 0 20px}
+        h2{font-size:15px;margin:20px 0 6px;border-bottom:1px solid #E4E9F0;padding-bottom:4px}
+        .txt{font-size:13.5px;white-space:pre-wrap}
+        .foot{margin-top:32px;color:#9AA7B8;font-size:11px;border-top:1px solid #E4E9F0;padding-top:8px}
+        @media print{body{margin:20px}}
+      </style></head><body>
+      <h1>${esc(titulo || "Laudo pericial")}</h1>
+      ${secoesHtml}
+      <p class="foot">Gerado pela AXIA em ${new Date().toLocaleString("pt-BR")}${status === "validado" ? " · laudo validado pelo médico" : " · MINUTA, pendente de validação"}</p>
+      </body></html>`;
+    const w = window.open("", "_blank");
+    if (!w) { alert("Permita pop-ups para gerar o PDF."); return; }
+    w.document.write(html); w.document.close(); w.focus();
+    setTimeout(() => w.print(), 300);
   }
 
   // ── TELA DE ESCOLHA (sem laudo ainda) ──
@@ -145,14 +196,39 @@ export default function LaudoClient({
         ))}
       </div>
 
-      {/* Botões do fluxo (item 8). Revisar/Validar/PDF/Assinar/Protocolar chegam nos próximos lotes. */}
+      {/* Painel do Auditor (após Revisar) */}
+      {auditoria && (
+        <div className={"laudo-auditor nivel-" + auditoria.nivel}>
+          <div className="laudo-auditor-h">
+            AXIA Auditor — {auditoria.nivel === "ok" ? "✓ Nenhum problema encontrado" : auditoria.nivel === "atencao" ? "⚠ Pontos de atenção" : "⚠ Itens a revisar"}
+          </div>
+          {auditoria.achados.map((a, i) => (
+            <div key={i} className={"laudo-achado sev-" + a.severidade}>
+              <span>{a.severidade === "revisar" ? "●" : a.severidade === "atencao" ? "●" : "✓"}</span> {a.mensagem}
+            </div>
+          ))}
+          <p className="laudo-nota">Conferência automática e objetiva. Não substitui a revisão médica nem afirma correção jurídica.</p>
+        </div>
+      )}
+
+      {/* Botões do fluxo (item 8) */}
       <div className="laudo-acoes">
-        <button className="laudo-btn" onClick={salvarAgora}>Salvar rascunho</button>
-        <button className="laudo-btn ghost" disabled title="Auditor chega no próximo lote">Revisar</button>
-        <button className="laudo-btn ghost" disabled title="Validação chega no próximo lote">Validar laudo</button>
-        <button className="laudo-btn ghost" disabled title="Export PDF chega no próximo lote">Baixar PDF</button>
+        {status === "validado" ? (
+          <>
+            <span className="laudo-validado-tag">✓ Laudo validado</span>
+            <button className="laudo-btn ghost" onClick={reabrir}>Reabrir para editar</button>
+            <button className="laudo-btn" onClick={baixarPDF}>Baixar PDF</button>
+          </>
+        ) : (
+          <>
+            <button className="laudo-btn" onClick={salvarAgora}>Salvar rascunho</button>
+            <button className="laudo-btn ghost" onClick={revisar}>Revisar (Auditor)</button>
+            <button className="laudo-btn" onClick={validar}>Validar laudo</button>
+            <button className="laudo-btn ghost" onClick={baixarPDF}>Baixar PDF</button>
+          </>
+        )}
       </div>
-      <p className="laudo-nota">O Auditor (conferência de placeholders e quesitos), a validação, o PDF e o protocolo chegam nos próximos lotes.</p>
+      <p className="laudo-nota">A assinatura digital (ICP-Brasil) e o protocolo no tribunal chegam depois — dependem de certificado e credenciamento.</p>
     </div>
   );
 }
