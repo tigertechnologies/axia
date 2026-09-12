@@ -32,7 +32,7 @@ export const STAGE_LABEL: Record<JourneyStage, string> = {
   agendar_pericia: "Agendar perícia",
   pericias_agendadas: "Perícias agendadas",
   laudo_pendente: "Laudo pendente",
-  laudo_em_elaboracao: "Laudo em elaboração",
+  laudo_em_elaboracao: "Elaboração do Laudo",
   protocolar_laudo: "Protocolar laudo",
   pos_laudo: "Pós-laudo",
   finalizadas: "Finalizadas",
