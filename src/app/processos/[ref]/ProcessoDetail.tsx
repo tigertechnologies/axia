@@ -5,176 +5,141 @@ import { formatBRL } from "@/lib/plans";
 import { validateCommunication } from "../../dashboard/actions";
 import { Ico } from "../../AppShell";
 import Toast from "../../Toast";
+import { STAGE_LABEL, type JourneyStage } from "@/modules/journey/domain/stateMachine";
 
 interface Comm { id: string; category: string; sender: string | null; subject: string; snippet: string | null; process_ref: string | null; received_at: string; validated: boolean }
-interface Pericia { id: string; titulo: string; local: string | null; process_ref: string | null; scheduled_at: string }
+interface Pericia { id: string; titulo: string; local: string | null; process_ref: string | null; scheduled_at: string; workflow_stage?: string | null }
 interface Prazo { id: string; titulo: string; process_ref: string | null; due_date: string; status: string }
 interface Honorario { id: string; process_ref: string | null; amount_cents: number; status: string }
 
 const CAT: Record<string, { label: string; tag: string }> = {
-  nomeacao: { label: "Nova nomeação", tag: "t-nom" }, prazo: { label: "Prazo", tag: "t-prz" },
-  intimacao: { label: "Intimação", tag: "t-int" }, honorarios: { label: "Honorários", tag: "t-hon" },
-  pericia: { label: "Perícia", tag: "t-per" }, esclarecimento: { label: "Esclarecimento", tag: "t-esc" },
+  nomeacao: { label: "Nomeação", tag: "t-nom" }, prazo: { label: "Prazo", tag: "t-prz" },
+  pericia: { label: "Perícia", tag: "t-per" }, honorarios: { label: "Honorários", tag: "t-hon" },
+  intimacao: { label: "Intimação", tag: "t-int" }, esclarecimento: { label: "Esclarecimento", tag: "t-esc" },
 };
-const MES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-function ago(iso: string) { const d = (Date.now() - new Date(iso).getTime()) / 3600_000; if (d < 1) return "agora"; if (d < 24) return `há ${Math.round(d)}h`; if (d < 48) return "ontem"; return `${Math.round(d / 24)} dias`; }
-function dm(iso: string) { const d = new Date(iso.length <= 10 ? iso + "T00:00:00" : iso); return { d: String(d.getDate()).padStart(2, "0"), m: MES[d.getMonth()] }; }
+const MES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+function dataBR(iso: string | null) { if (!iso) return "—"; const d = new Date(iso); return `${String(d.getDate()).padStart(2,"0")} ${MES[d.getMonth()]}`; }
+function dataHora(iso: string) { const d = new Date(iso); return `${String(d.getDate()).padStart(2,"0")} ${MES[d.getMonth()]} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
+
+type Aba = "visao" | "pericias" | "financeiro" | "atividades";
 
 export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, honorarios }:
   { refNum: string; vara: string | null; comms: Comm[]; prazos: Prazo[]; pericias: Pericia[]; honorarios: Honorario[] }) {
-
+  const [aba, setAba] = useState<Aba>("visao");
   const [done, setDone] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState("");
-  function flash(m: string){ setToast(m); setTimeout(()=>setToast(""),3500); }
   const [, startTransition] = useTransition();
-  async function validar(id: string) { setDone((d) => new Set(d).add(id)); const r = await validateCommunication(id); if(r && "error" in r){ setDone(d=>{ const n=new Set(d); n.delete(id); return n; }); flash("Não foi possível validar. Tente novamente."); } }
+  function flash(m: string) { setToast(m); setTimeout(() => setToast(""), 3500); }
+  async function validar(id: string) { setDone((d) => new Set(d).add(id)); const r = await validateCommunication(id); if (r && "error" in r) { setDone((d) => { const n = new Set(d); n.delete(id); return n; }); flash("Não foi possível validar."); } }
 
   const totalHon = honorarios.reduce((s, h) => s + h.amount_cents, 0);
+  const recebido = honorarios.filter((h) => h.status === "pago" || h.status === "recebido").reduce((s, h) => s + h.amount_cents, 0);
 
   function exportarCSV() {
-    const linhas: string[] = [];
-    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    linhas.push(`Processo,${esc(refNum)}`);
-    if (vara) linhas.push(`Vara,${esc(vara)}`);
-    linhas.push("");
+    const linhas: string[] = []; const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    linhas.push(`Processo,${esc(refNum)}`); if (vara) linhas.push(`Vara,${esc(vara)}`); linhas.push("");
     linhas.push("Tipo,Descrição,Data,Status");
     comms.forEach((c) => linhas.push(["Comunicação", esc(c.subject), esc(c.received_at), esc(c.validated ? "Validada" : "Pendente")].join(",")));
-    pericias.forEach((p) => linhas.push(["Perícia", esc(p.titulo), esc(p.scheduled_at), esc(p.local ?? "")].join(",")));
+    pericias.forEach((p) => linhas.push(["Perícia", esc(p.titulo), esc(p.scheduled_at), esc(p.workflow_stage ?? "")].join(",")));
     prazos.forEach((p) => linhas.push(["Prazo", esc(p.titulo), esc(p.due_date), esc(p.status)].join(",")));
     honorarios.forEach((h) => linhas.push(["Honorário", esc(formatBRL(h.amount_cents)), "", esc(h.status)].join(",")));
     const blob = new Blob(["\uFEFF" + linhas.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `processo-${refNum.replace(/[^\w.-]/g, "_")}.csv`;
-    a.click(); URL.revokeObjectURL(url);
-  }
-
-  function exportarPDF() {
-    const esc = (v: unknown) => String(v ?? "").replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]!));
-    const dataBR = (iso: string) => { try { return new Date(iso).toLocaleString("pt-BR"); } catch { return iso; } };
-    const secao = (titulo: string, linhas: string[]) =>
-      linhas.length ? `<h2>${titulo}</h2><ul>${linhas.map((l) => `<li>${l}</li>`).join("")}</ul>` : "";
-
-    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Processo ${esc(refNum)}</title>
-      <style>
-        *{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#10233F}
-        body{margin:40px;line-height:1.5}
-        h1{font-size:22px;margin:0 0 4px} .vara{color:#6B7C93;margin:0 0 20px;font-size:13px}
-        h2{font-size:15px;margin:22px 0 8px;border-bottom:1px solid #E4E9F0;padding-bottom:4px}
-        ul{margin:0;padding-left:18px} li{margin:4px 0;font-size:13px}
-        .tot{margin-top:16px;font-weight:700}
-        .foot{margin-top:32px;color:#9AA7B8;font-size:11px;border-top:1px solid #E4E9F0;padding-top:8px}
-        @media print{body{margin:20px}}
-      </style></head><body>
-      <h1>Processo ${esc(refNum)}</h1>
-      ${vara ? `<p class="vara">${esc(vara)}</p>` : ""}
-      ${secao("Comunicações", comms.map((c) => `${esc(c.subject)} — ${dataBR(c.received_at)} (${c.validated ? "validada" : "pendente"})`))}
-      ${secao("Perícias", pericias.map((p) => `${esc(p.titulo)} — ${dataBR(p.scheduled_at)}${p.local ? " · " + esc(p.local) : ""}`))}
-      ${secao("Prazos", prazos.map((p) => `${esc(p.titulo)} — ${dataBR(p.due_date)} (${esc(p.status)})`))}
-      ${secao("Honorários", honorarios.map((h) => `${esc(formatBRL(h.amount_cents))} (${esc(h.status)})`))}
-      ${honorarios.length ? `<p class="tot">Total de honorários: ${esc(formatBRL(totalHon))}</p>` : ""}
-      <p class="foot">Gerado pela AXIA em ${new Date().toLocaleString("pt-BR")}</p>
-      </body></html>`;
-
-    const w = window.open("", "_blank");
-    if (!w) { flash("Permita pop-ups para gerar o PDF."); return; }
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    setTimeout(() => w.print(), 300);
+    const url = URL.createObjectURL(blob); const a = document.createElement("a");
+    a.href = url; a.download = `processo-${refNum.replace(/[^\w.-]/g, "_")}.csv`; a.click(); URL.revokeObjectURL(url);
   }
 
   return (
     <>
-      <Link href="/processos" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#4A6FA5", fontFamily: "'Sora',sans-serif", fontWeight: 600, fontSize: 13.5, marginBottom: 14 }}>
-        <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M9 3l-5 5 5 5M4 8h9" strokeLinecap="round" strokeLinejoin="round" /></svg>Processos
-      </Link>
-
-      <div className="greet" style={{ marginBottom: 20 }}>
+      <div className="greet" style={{ marginBottom: 12 }}>
         <div>
-          <h1>Processo {refNum}</h1>
-          <p className="sum"><Ico p="doc" s={15} />{vara ?? "Origem não identificada"}</p>
+          <Link href="/jornada" style={{ color: "var(--muted)", fontSize: 13, textDecoration: "none" }}>← Jornada</Link>
+          <h1 style={{ marginTop: 4 }}>Processo {refNum}</h1>
+          <p className="sum">{vara ?? "Processo judicial"} · {pericias.length} perícia(s) · {comms.length} comunicação(ões)</p>
         </div>
         <div className="greet-actions">
           <button className="btn btn-ghost" onClick={exportarCSV}>Exportar CSV</button>
-          <button className="btn btn-primary" onClick={exportarPDF}>PDF</button>
         </div>
       </div>
 
-      {/* resumo */}
-      <div className="kpis" style={{ marginBottom: 22 }}>
-        <div className="kpi"><div className="ki ki-navy"><Ico p="inbox" s={20} /></div><div className="kn">{comms.length}</div><div className="kl">Comunicações</div></div>
-        <div className="kpi"><div className="ki ki-teal"><Ico p="clock" s={20} /></div><div className="kn">{prazos.length}</div><div className="kl">Prazos</div></div>
-        <div className="kpi"><div className="ki ki-blue"><Ico p="cal" s={20} /></div><div className="kn">{pericias.length}</div><div className="kl">Perícias</div></div>
-        <div className="kpi"><div className="ki ki-gold"><Ico p="wallet" s={20} /></div><div className="kn" style={{ fontSize: 24 }}>{formatBRL(totalHon)}</div><div className="kl">Honorários</div></div>
+      {/* Abas */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 18, borderBottom: "1px solid var(--line)", flexWrap: "wrap" }}>
+        {([["visao","Visão geral"],["pericias","Perícias"],["financeiro","Financeiro"],["atividades","Atividades"]] as [Aba,string][]).map(([id,l]) => (
+          <button key={id} onClick={() => setAba(id)} style={{ padding: "10px 16px", border: "none", background: "none", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: aba === id ? 700 : 500, color: aba === id ? "var(--ink)" : "var(--muted)", borderBottom: aba === id ? "2px solid #1FA89E" : "2px solid transparent", marginBottom: -1 }}>{l}</button>
+        ))}
       </div>
 
-      <div className="split">
-        <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-          {comms.length > 0 && (
-            <section className="panel">
-              <div className="panel-h"><h3>Comunicações</h3></div>
-              <div className="inbox">
-                {comms.map((c) => {
-                  const meta = CAT[c.category] ?? { label: c.category, tag: "t-esc" };
-                  const isDone = c.validated || done.has(c.id);
-                  return (
-                    <div className={"item" + (isDone ? " done" : "")} key={c.id}>
-                      <span className={"cat-ic " + meta.tag}><Ico p={c.category} s={18} /></span>
-                      <div className="body">
-                        <div className="r1"><span className={"tag " + meta.tag}>{meta.label}</span><span className="from">{c.sender}</span></div>
-                        <div className="subj">{c.subject}</div>
-                        {c.snippet && <div className="meta">{c.snippet}</div>}
-                      </div>
-                      <div className="act">
-                        <span className="time">{ago(c.received_at)}</span>
-                        {c.category === "nomeacao" && <button className="btn-act solid" onClick={() => validar(c.id)}>{isDone ? "Validado ✓" : "Validar"}</button>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          {pericias.length > 0 && (
-            <section className="panel">
-              <div className="panel-h"><h3>Perícias</h3></div>
-              <div className="mini">
-                {pericias.map((p) => { const b = dm(p.scheduled_at); return (
-                  <div className="row" key={p.id}><div className="date-badge"><span className="d">{b.d}</span><span className="m">{b.m}</span></div><div className="info"><div className="t">{p.titulo}</div><div className="s">{p.local}</div></div></div>
-                ); })}
-              </div>
-            </section>
-          )}
+      {aba === "visao" && (
+        <div className="kpis" style={{ marginBottom: 8 }}>
+          <div className="kpi"><div className="kn">{pericias.length}</div><div className="kl">Perícias</div></div>
+          <div className="kpi"><div className="kn">{prazos.length}</div><div className="kl">Prazos</div></div>
+          <div className="kpi"><div className="kn" style={{ fontSize: 20 }}>{formatBRL(totalHon)}</div><div className="kl">Honorários</div></div>
+          <div className="kpi"><div className="kn">{comms.filter((c) => !c.validated).length}</div><div className="kl">A validar</div></div>
         </div>
+      )}
 
-        <div className="rail">
-          {prazos.length > 0 && (
-            <section className="panel">
-              <div className="panel-h"><h3>Prazos</h3></div>
-              <div className="mini">
-                {prazos.map((p) => { const b = dm(p.due_date);
-                  const st = p.status === "urgente" ? ["st-urg", "Urgente"] : p.status === "confirmado" ? ["st-ok", "Confirmado"] : ["st-val", "A validar"];
-                  return (<div className="row" key={p.id}><div className="date-badge"><span className="d">{b.d}</span><span className="m">{b.m}</span></div><div className="info"><div className="t">{p.titulo}</div></div><span className={"st " + st[0]}>{st[1]}</span></div>); })}
+      {aba === "pericias" && (
+        <section className="panel">
+          <div className="panel-h"><h3>Perícias deste processo</h3></div>
+          {pericias.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13.5 }}>Nenhuma perícia.</p>}
+          {pericias.map((p) => (
+            <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid var(--line)", flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontWeight: 600, color: "var(--ink)" }}>{p.titulo}</div>
+                <div style={{ fontSize: 12.5, color: "var(--muted)" }}>{dataBR(p.scheduled_at)}{p.local ? " · " + p.local : ""}</div>
               </div>
-            </section>
-          )}
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {p.workflow_stage && <span className="st st-val">{STAGE_LABEL[p.workflow_stage as JourneyStage] ?? p.workflow_stage}</span>}
+                <Link className="btn-act" href={`/laudos/${p.id}`}>Laudo</Link>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
 
-          {honorarios.length > 0 && (
-            <section className="panel">
-              <div className="panel-h"><h3>Honorários</h3></div>
-              <div className="hon-list">
-                {honorarios.map((h) => (
-                  <div className="hrow" key={h.id}><span className="pc">{h.status}</span><span className="am">{formatBRL(h.amount_cents)}</span></div>
-                ))}
-                <div className="hrow" style={{ borderTop: "1px solid var(--line)", marginTop: 4 }}><span className="pc" style={{ fontWeight: 600 }}>Total</span><span className="am">{formatBRL(totalHon)}</span></div>
+      {aba === "financeiro" && (
+        <section className="panel">
+          <div className="panel-h"><h3>Financeiro do processo</h3></div>
+          <div className="kpis" style={{ marginBottom: 12 }}>
+            <div className="kpi"><div className="kn" style={{ fontSize: 20 }}>{formatBRL(totalHon)}</div><div className="kl">Total</div></div>
+            <div className="kpi"><div className="kn" style={{ fontSize: 20 }}>{formatBRL(recebido)}</div><div className="kl">Recebido</div></div>
+            <div className="kpi"><div className="kn" style={{ fontSize: 20 }}>{formatBRL(totalHon - recebido)}</div><div className="kl">A receber</div></div>
+          </div>
+          {honorarios.map((h) => (
+            <div key={h.id} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--line)", fontSize: 13.5 }}>
+              <span style={{ color: "var(--muted)" }}>{h.status}</span><b style={{ color: "var(--ink)" }}>{formatBRL(h.amount_cents)}</b>
+            </div>
+          ))}
+          {honorarios.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13.5 }}>Nenhum honorário registrado.</p>}
+        </section>
+      )}
+
+      {aba === "atividades" && (
+        <section className="panel">
+          <div className="panel-h"><h3>Comunicações e prazos</h3></div>
+          {comms.map((c) => {
+            const cat = CAT[c.category] ?? { label: c.category, tag: "t-int" };
+            const isDone = done.has(c.id) || c.validated;
+            return (
+              <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid var(--line)", flexWrap: "wrap" }}>
+                <div>
+                  <span className={"tag " + cat.tag} style={{ fontSize: 11 }}>{cat.label}</span>
+                  <div style={{ fontWeight: 600, color: "var(--ink)", marginTop: 4 }}>{c.subject}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{dataHora(c.received_at)}</div>
+                </div>
+                {c.category === "nomeacao" && <button className="btn-act solid" onClick={() => startTransition(() => validar(c.id))}>{isDone ? "Validado ✓" : "Validar"}</button>}
               </div>
-            </section>
-          )}
-        </div>
-      </div>
-          <Toast msg={toast} />
+            );
+          })}
+          {prazos.map((p) => (
+            <div key={p.id} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--line)", fontSize: 13.5 }}>
+              <span style={{ color: "var(--ink)" }}>⏳ {p.titulo}</span><b style={{ color: "var(--muted)" }}>{dataBR(p.due_date)} · {p.status}</b>
+            </div>
+          ))}
+          {comms.length === 0 && prazos.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13.5 }}>Sem atividades.</p>}
+        </section>
+      )}
+
+      <Toast msg={toast} />
     </>
   );
 }
