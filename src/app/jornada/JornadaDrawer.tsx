@@ -67,25 +67,26 @@ export default function JornadaDrawer({ card, onClose, onMoved }: { card: Jornad
   const [msg, setMsg] = useState("");
   const [novoPrazo, setNovoPrazo] = useState({ titulo: "", due_date: "" });
   const [docBusy, setDocBusy] = useState(false);
+  const [docMsg, setDocMsg] = useState("");
   const docRef = useRef<HTMLInputElement>(null);
   const [, startT] = useTransition();
 
   async function enviarDocumento(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; if (!file) return;
-    if (file.size > 20 * 1024 * 1024) { setMsg("Arquivo muito grande (máx. 20 MB)."); return; }
+    if (file.size > 20 * 1024 * 1024) { setDocMsg("Arquivo muito grande (máx. 20 MB)."); return; }
     setDocBusy(true);
     const dataUrl: string = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result as string); r.onerror = () => res(""); r.readAsDataURL(file); });
-    if (!dataUrl) { setDocBusy(false); setMsg("Não foi possível ler o arquivo."); return; }
+    if (!dataUrl) { setDocBusy(false); setDocMsg("Não foi possível ler o arquivo."); return; }
     const r = await uploadDocumento({ periciaId: card.id, dataUrl, nomeOriginal: file.name, tipo: "documento" });
     setDocBusy(false);
     if (docRef.current) docRef.current.value = "";
-    if (r.error) { setMsg(r.error); return; }
-    recarregar();
+    if (r.error) { setDocMsg(r.error); return; }
+    setDocMsg(""); recarregar();
   }
 
   async function verDocumento(id: string) {
     const r = await urlAssinadaDocumento(id);
-    if (r.error || !r.url) { setMsg("Não foi possível abrir o documento."); return; }
+    if (r.error || !r.url) { setDocMsg("Não foi possível abrir o documento."); return; }
     window.open(r.url, "_blank");
   }
 
@@ -240,6 +241,7 @@ export default function JornadaDrawer({ card, onClose, onMoved }: { card: Jornad
                 <button className="jd-mini-btn solid" style={{ marginTop: 8 }} disabled={docBusy} onClick={() => docRef.current?.click()}>
                   {docBusy ? "Enviando…" : "+ Anexar documento"}
                 </button>
+                {docMsg && <div className="jd-msg" style={{ marginTop: 8 }}>{docMsg}</div>}
                 <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6 }}>PDF, imagem, DOCX ou XLSX · máx. 20 MB · armazenamento privado.</div>
               </div>
 
