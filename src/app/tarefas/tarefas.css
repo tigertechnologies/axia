@@ -1,0 +1,26 @@
+/* AXIA — Tarefas. Variáveis de tema. */
+.tsk-add{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.tsk-input{ flex:1; min-width:200px; padding:10px 12px; border:1px solid var(--line); border-radius:9px; font-size:14px; background:var(--panel); color:var(--ink); font-family:var(--body),sans-serif; }
+.tsk-sel{ padding:10px; border:1px solid var(--line); border-radius:9px; font-size:13.5px; background:var(--panel); color:var(--ink); font-family:var(--body),sans-serif; }
+.tsk-btn{ padding:10px 16px; border:1px solid #16305B; background:#16305B; color:#fff; border-radius:9px; cursor:pointer; font-size:13.5px; font-weight:600; font-family:var(--body),sans-serif; }
+.tsk-tabs{ display:flex; gap:6px; margin-bottom:14px; }
+.tsk-tab{ padding:7px 14px; border:1px solid var(--line); background:var(--panel); color:var(--muted); border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; }
+.tsk-tab.on{ background:var(--navy); color:#fff; border-color:var(--navy); }
+.tsk-lista{ display:flex; flex-direction:column; gap:8px; }
+.tsk-vazio{ color:var(--muted); font-size:13.5px; padding:10px 0; }
+.tsk-item{ display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--line); border-radius:11px; background:var(--panel); }
+.tsk-item.done{ opacity:.6; }
+.tsk-item.done .tsk-titulo{ text-decoration:line-through; }
+.tsk-check{ width:22px; height:22px; border:2px solid var(--line); border-radius:6px; background:none; cursor:pointer; color:#1FA89E; font-weight:700; flex:0 0 auto; display:flex; align-items:center; justify-content:center; }
+.tsk-item.done .tsk-check{ background:#1FA89E; border-color:#1FA89E; color:#fff; }
+.tsk-corpo{ flex:1; }
+.tsk-titulo{ font-size:14px; color:var(--ink); }
+.tsk-meta{ display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; align-items:center; }
+.tsk-prio{ font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; }
+.p-baixa{ background:var(--line); color:var(--muted); }
+.p-normal{ background:rgba(74,111,165,.16); color:#3B5B86; }
+.p-alta{ background:rgba(201,162,39,.18); color:#8A5A18; }
+.p-urgente{ background:rgba(192,73,46,.18); color:#C0492E; }
+.tsk-due,.tsk-per{ font-size:11.5px; color:var(--muted); }
+.tsk-x{ background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; line-height:1; }
+.tsk-x:hover{ color:#C0492E; }

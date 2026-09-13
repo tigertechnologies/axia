@@ -65,6 +65,7 @@ export default function AppShell({
     { href: "/honorarios", label: "Honorários", ico: "wallet", ready: true },
     { href: "/calculos", label: "Cálculos", ico: "doc", ready: true },
     { href: "/relatorios", label: "Relatórios", ico: "dash", ready: true },
+    { href: "/tarefas", label: "Tarefas", ico: "clock", ready: true },
     { href: "/agenda", label: "Agenda", ico: "agenda", ready: true },
   ];
 
