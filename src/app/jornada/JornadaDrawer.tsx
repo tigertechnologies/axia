@@ -166,19 +166,25 @@ export default function JornadaDrawer({ card, onClose, onMoved }: { card: Jornad
           {/* Próxima ação — botões que movem o card (ato do médico) */}
           <div className="jd-section">
             <div className="jd-h">Próxima ação</div>
-            {["laudo_pendente", "laudo_em_elaboracao", "protocolar_laudo"].includes(stage) && (
-              <Link href={`/laudos/${card.id}`} className="jd-btn" style={{ display: "block", textAlign: "center", textDecoration: "none", marginBottom: 8 }}>
-                📄 Elaborar laudo →
-              </Link>
+            {["laudo_pendente", "laudo_em_elaboracao", "protocolar_laudo"].includes(stage) ? (
+              <>
+                <Link href={`/laudos/${card.id}`} className="jd-btn" style={{ display: "block", textAlign: "center", textDecoration: "none", marginBottom: 8 }}>
+                  📄 {stage === "laudo_pendente" ? "Iniciar laudo" : stage === "protocolar_laudo" ? "Abrir laudo para protocolo" : "Continuar o laudo"} →
+                </Link>
+                <p className="jk-d-note" style={{ marginTop: 0 }}>Elabore, valide e conclua o laudo no editor — um único fluxo, sem etapas soltas aqui.</p>
+              </>
+            ) : (
+              <>
+                {proximos.length === 0 && <p className="jk-d-note">Nenhuma ação disponível nesta etapa.</p>}
+                <div className="jd-acoes">
+                  {proximos.map((alvo) => (
+                    <button key={alvo} className="jd-btn" onClick={() => startT(() => avancar(alvo))}>
+                      {ACAO_LABEL[alvo] ?? STAGE_LABEL[alvo]} →
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
-            {proximos.length === 0 && <p className="jk-d-note">Nenhuma ação disponível nesta etapa.</p>}
-            <div className="jd-acoes">
-              {proximos.map((alvo) => (
-                <button key={alvo} className="jd-btn" onClick={() => startT(() => avancar(alvo))}>
-                  {ACAO_LABEL[alvo] ?? STAGE_LABEL[alvo]} →
-                </button>
-              ))}
-            </div>
             {msg && <div className="jd-msg">{msg}</div>}
             <p className="jk-d-note" style={{ marginTop: 8 }}>Atos com responsabilidade (aceitar, protocolar, encerrar) são confirmados por você. A AXIA registra cada passo.</p>
           </div>
