@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "./dashboard/actions";
 import ThemeToggle from "./ThemeToggle";
+import CommandPalette from "./CommandPalette";
 import { isCurrentUserAdmin } from "./actions/admin";
 import "./dashboard/dashboard.css";
 
@@ -113,6 +114,7 @@ export default function AppShell({
         </div>
         <div className="content">{children}</div>
       </div>
+      <CommandPalette />
 
       {/* Painel de notificações */}
       {notifOpen && (
