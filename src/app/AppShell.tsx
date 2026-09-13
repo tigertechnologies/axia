@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "./dashboard/actions";
 import ThemeToggle from "./ThemeToggle";
 import CommandPalette from "./CommandPalette";
+import { listarNotificacoes, marcarTodasLidas, type Notificacao } from "./actions/notificacoes";
 import { isCurrentUserAdmin } from "./actions/admin";
 import "./dashboard/dashboard.css";
 
@@ -19,6 +20,8 @@ export default function AppShell({
 }) {
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [notifs, setNotifs] = useState<Notificacao[]>([]);
+  const [notifLoad, setNotifLoad] = useState(false);
   const [temNovidade, setTemNovidade] = useState(false);
   const [q, setQ] = useState("");
 
@@ -34,6 +37,13 @@ export default function AppShell({
     setNotifOpen(true);
     setTemNovidade(false);
     try { localStorage.setItem("axia-notif-visto", String(bell)); } catch { /* ignora */ }
+    setNotifLoad(true);
+    listarNotificacoes().then((r) => { setNotifs(r.itens); setNotifLoad(false); });
+  }
+
+  async function lerTodas() {
+    await marcarTodasLidas();
+    setNotifs((ns) => ns.map((n) => ({ ...n, lida: true })));
   }
   const [admin, setAdmin] = useState(false);
   const [, startTransition] = useTransition();
@@ -123,27 +133,27 @@ export default function AppShell({
           <div onClick={(e) => e.stopPropagation()} style={{ width: "min(360px, 92vw)", height: "100%", background: "var(--panel)", boxShadow: "-8px 0 30px rgba(0,0,0,.25)", padding: "22px 20px", overflowY: "auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
               <h3 style={{ fontFamily: "'Sora',sans-serif", fontSize: 18, color: "var(--ink)", fontWeight: 600 }}>Notificações</h3>
-              <button onClick={() => setNotifOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", fontSize: 22, color: "var(--muted)", cursor: "pointer", lineHeight: 1 }}>×</button>
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                {notifs.some((n) => !n.lida) && <button onClick={lerTodas} style={{ background: "none", border: "none", color: "#1FA89E", cursor: "pointer", fontSize: 12.5, fontWeight: 600 }}>marcar lidas</button>}
+                <button onClick={() => setNotifOpen(false)} aria-label="Fechar" style={{ background: "none", border: "none", fontSize: 22, color: "var(--muted)", cursor: "pointer", lineHeight: 1 }}>×</button>
+              </div>
             </div>
-            {(counts.nomeacoes + counts.prazos + counts.pericias) === 0 ? (
-              <p style={{ color: "var(--muted)", fontSize: 14 }}>Nenhuma pendência no momento. 👍</p>
+            {notifLoad ? (
+              <p style={{ color: "var(--muted)", fontSize: 14 }}>Carregando…</p>
+            ) : notifs.length === 0 ? (
+              <p style={{ color: "var(--muted)", fontSize: 14 }}>Nenhuma notificação no momento. 👍</p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {counts.nomeacoes > 0 && (
-                  <Link href="/nomeacoes" onClick={() => setNotifOpen(false)} className="notif-item" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: "1px solid var(--line)", borderRadius: 10, color: "var(--ink)" }}>
-                    <Ico p="shield" s={18} /><span><b>{counts.nomeacoes}</b> nomeação(ões) a validar</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {notifs.map((n) => (
+                  <Link key={n.id} href={n.href ?? "/jornada"} onClick={() => setNotifOpen(false)} className="notif-item"
+                    style={{ display: "block", padding: "12px 14px", border: "1px solid var(--line)", borderRadius: 10, color: "var(--ink)", background: n.lida ? "transparent" : "var(--bg)", textDecoration: "none" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      {!n.lida && <span style={{ width: 7, height: 7, borderRadius: 999, background: "#1FA89E", flex: "0 0 auto" }} />}
+                      <b style={{ fontSize: 13.5 }}>{n.titulo}</b>
+                    </div>
+                    {n.descricao && <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 3 }}>{n.descricao}</div>}
                   </Link>
-                )}
-                {counts.prazos > 0 && (
-                  <Link href="/prazos" onClick={() => setNotifOpen(false)} className="notif-item" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: "1px solid var(--line)", borderRadius: 10, color: "var(--ink)" }}>
-                    <Ico p="clock" s={18} /><span><b>{counts.prazos}</b> prazo(s) monitorado(s)</span>
-                  </Link>
-                )}
-                {counts.pericias > 0 && (
-                  <Link href="/pericias" onClick={() => setNotifOpen(false)} className="notif-item" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: "1px solid var(--line)", borderRadius: 10, color: "var(--ink)" }}>
-                    <Ico p="cal" s={18} /><span><b>{counts.pericias}</b> perícia(s) agendada(s)</span>
-                  </Link>
-                )}
+                ))}
               </div>
             )}
           </div>
