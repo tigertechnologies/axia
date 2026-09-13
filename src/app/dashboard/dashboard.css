@@ -217,3 +217,15 @@
 :root[data-theme="dark"] .search{background:var(--panel)}
 :root[data-theme="dark"] .search input{color:var(--ink)}
 :root[data-theme="dark"] .ico-btn{background:var(--panel)}
+
+/* Faixa "Sua jornada hoje" (dashboard operacional) */
+.jornada-hoje{ margin-bottom:22px; }
+.jh-titulo{ font-family:var(--disp),sans-serif; font-size:14px; font-weight:700; color:var(--ink); margin-bottom:10px; }
+.jh-cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; }
+.jh-card{ display:flex; flex-direction:column; gap:2px; padding:14px; border:1px solid var(--line); border-radius:12px; background:var(--panel); text-decoration:none; transition:border-color .15s, box-shadow .15s; }
+.jh-card:hover{ border-color:var(--blue); box-shadow:var(--shadow-sm); }
+.jh-card.alr{ border-color:rgba(201,162,39,.4); }
+.jh-card.urg{ border-color:rgba(192,73,46,.5); background:rgba(192,73,46,.05); }
+.jh-n{ font-family:var(--disp),sans-serif; font-size:22px; font-weight:700; color:var(--ink); }
+.jh-card.urg .jh-n{ color:#C0492E; }
+.jh-l{ font-size:12px; color:var(--muted); }

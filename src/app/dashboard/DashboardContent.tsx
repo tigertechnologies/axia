@@ -7,7 +7,7 @@ import { Ico } from "../AppShell";
 import Toast from "../Toast";
 
 interface Comm { id: string; category: string; sender: string | null; subject: string; snippet: string | null; process_ref: string | null; received_at: string; validated: boolean }
-interface Pericia { id: string; titulo: string; local: string | null; process_ref: string | null; scheduled_at: string }
+interface Pericia { id: string; titulo: string; local: string | null; process_ref: string | null; scheduled_at: string; workflow_stage?: string | null }
 interface Prazo { id: string; titulo: string; process_ref: string | null; due_date: string; status: string }
 interface Honorario { id: string; process_ref: string | null; amount_cents: number; status: string }
 
@@ -37,6 +37,15 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
   const aguardando = nomeacoes.filter((c) => !c.validated && !done.has(c.id)).length;
   const urgentes = prazos.filter((p) => p.status === "urgente");
   const receber = honorarios.filter((h) => h.status !== "recebido").reduce((s, h) => s + h.amount_cents, 0);
+  // Métricas operacionais da jornada (seção 21).
+  const porEtapa = (st: string) => pericias.filter((p) => p.workflow_stage === st).length;
+  const novasNomeacoes = porEtapa("novas_nomeacoes");
+  const acaoNecessaria = porEtapa("acao_necessaria");
+  const laudosPendentes = porEtapa("laudo_pendente") + porEtapa("laudo_em_elaboracao");
+  const aProtocolar = porEtapa("protocolar_laudo");
+  const aguardandoJuizo = porEtapa("aguardando_judiciario");
+  const hoje = new Date(); hoje.setHours(23,59,59,999);
+  const venceHoje = prazos.filter((p) => p.due_date && new Date(p.due_date) <= hoje && p.status !== "confirmado").length;
   const somaStatus = (st: string) => honorarios.filter((h) => h.status === st).reduce((s, h) => s + h.amount_cents, 0);
 
   async function validar(id: string) { setDone((d) => new Set(d).add(id)); const r = await validateCommunication(id); if(r && "error" in r){ setDone(d=>{ const n=new Set(d); n.delete(id); return n; }); flash("Não foi possível validar. Tente novamente."); } }
@@ -54,6 +63,20 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
         <div className="greet-actions">
           <Link className="btn btn-ghost" href="/inbox">Ver análise completa</Link>
           <Link className="btn btn-primary" href="/pericias"><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Nova perícia</Link>
+        </div>
+      </div>
+
+      {/* Sua jornada hoje — painel operacional (seção 21) */}
+      <div className="jornada-hoje">
+        <div className="jh-titulo">Sua jornada hoje</div>
+        <div className="jh-cards">
+          <JHCard n={novasNomeacoes} label="Novas nomeações" href="/jornada" alerta={novasNomeacoes > 0} />
+          <JHCard n={acaoNecessaria} label="Ação necessária" href="/jornada" alerta={acaoNecessaria > 0} />
+          <JHCard n={venceHoje} label="Vencem hoje" href="/jornada" urgente={venceHoje > 0} />
+          <JHCard n={laudosPendentes} label="Laudos pendentes" href="/jornada" alerta={laudosPendentes > 0} />
+          <JHCard n={aProtocolar} label="A protocolar" href="/jornada" alerta={aProtocolar > 0} />
+          <JHCard n={aguardandoJuizo} label="Aguardando juízo" href="/jornada" />
+          <JHCard money={receber} label="A receber" href="/honorarios" />
         </div>
       </div>
 
@@ -161,5 +184,13 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
       </div>
           <Toast msg={toast} />
     </>
+  );
+}
+function JHCard({ n, money, label, href, alerta, urgente }: { n?: number; money?: number; label: string; href: string; alerta?: boolean; urgente?: boolean }) {
+  return (
+    <Link href={href} className={"jh-card" + (urgente ? " urg" : alerta ? " alr" : "")}>
+      <div className="jh-n">{money !== undefined ? formatBRL(money) : n}</div>
+      <div className="jh-l">{label}</div>
+    </Link>
   );
 }
