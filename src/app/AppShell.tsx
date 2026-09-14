@@ -66,6 +66,7 @@ export default function AppShell({
     { href: "/calculos", label: "Cálculos", ico: "doc", ready: true },
     { href: "/relatorios", label: "Relatórios", ico: "dash", ready: true },
     { href: "/tarefas", label: "Tarefas", ico: "clock", ready: true },
+    { href: "/equipe", label: "Equipe", ico: "shield", ready: true },
     { href: "/agenda", label: "Agenda", ico: "agenda", ready: true },
   ];
 
