@@ -12,6 +12,7 @@ import {
 import { adminListFinanceiro } from "../actions/finance";
 import { adminListCampanhas } from "../actions/campaigns";
 import { adminGetBanner, adminMarketingMetricas } from "../actions/marketing";
+import { getWhatsAppConfig } from "../actions/whatsapp";
 import { adminListEmailCampaigns } from "../actions/email";
 import { adminGetConteudo } from "../actions/content";
 import { getAllEffectivePrices } from "../actions/prices";
@@ -36,7 +37,7 @@ export default async function AdminPage() {
 
   const [
     { data: profile }, list, pendentes, metricas, auditoria, historico, leadsRes,
-    webhooks, whResumo, ingestao, ingErros, financeiro, campanhas, banner, mktMetricas, emailCampaigns, conteudo, precos, hero,
+    webhooks, whResumo, ingestao, ingErros, financeiro, campanhas, banner, mktMetricas, emailCampaigns, conteudo, precos, hero, waConfig,
   ] = await Promise.all([
     supabase.from("profiles").select("nome").eq("id", user.id).maybeSingle(),
     adminListAssinantes(),
@@ -57,6 +58,7 @@ export default async function AdminPage() {
     adminGetConteudo(),
     getAllEffectivePrices(),
     adminGetHero(),
+    getWhatsAppConfig(),
   ]);
   const assinantes = (list.data ?? []) as Assinante[];
   const ativos = assinantes.filter((a) => isActiveStatus(a.subscription_status));
@@ -91,6 +93,7 @@ export default async function AdminPage() {
         financeiro={{ rows: financeiro.data ?? [], erro: financeiro.error, stripeTestMode }}
         campanhas={{ rows: campanhas.data ?? [], erro: campanhas.error }}
         banner={banner}
+        waConfig={waConfig}
         mktMetricas={mktMetricas}
         emailCampaigns={emailCampaigns}
         conteudo={conteudo}

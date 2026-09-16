@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "./dashboard/actions";
 import ThemeToggle from "./ThemeToggle";
 import CommandPalette from "./CommandPalette";
+import WhatsAppButton from "./WhatsAppButton";
+import { getWhatsAppConfig } from "./actions/whatsapp";
 import { listarNotificacoes, marcarTodasLidas, type Notificacao } from "./actions/notificacoes";
 import { isCurrentUserAdmin } from "./actions/admin";
 import "./dashboard/dashboard.css";
@@ -51,6 +53,8 @@ export default function AppShell({
   const router = useRouter();
 
   useEffect(() => { isCurrentUserAdmin().then(setAdmin).catch(() => {}); }, []);
+  const [wa, setWa] = useState<{ numero: string | null; ativo: boolean }>({ numero: null, ativo: false });
+  useEffect(() => { getWhatsAppConfig().then(setWa).catch(() => {}); }, []);
 
   function submitSearch(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && q.trim()) { router.push(`/busca?q=${encodeURIComponent(q.trim())}`); setOpen(false); }
@@ -129,6 +133,7 @@ export default function AppShell({
         <div className="content">{children}</div>
       </div>
       <CommandPalette />
+      <WhatsAppButton numero={wa.numero} ativo={wa.ativo} />
 
       {/* Painel de notificações */}
       {notifOpen && (

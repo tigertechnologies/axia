@@ -18,6 +18,7 @@ import {
 } from "../actions/finance";
 import { adminCriarCampanha, adminToggleCampanha, type Campanha } from "../actions/campaigns";
 import { adminSaveBanner, type Banner, type MarketingMetricas } from "../actions/marketing";
+import { salvarWhatsAppConfig, type WhatsAppConfig } from "../actions/whatsapp";
 import { adminEnviarEmail, adminEmailContagem, type EmailCampaign } from "../actions/email";
 import { adminSaveConteudo } from "../actions/content";
 import { CAMPOS_CONTEUDO } from "../actions/content-fields";
@@ -62,11 +63,11 @@ function descreveAcao(e: AuditEvent): string {
 type Aba = "visao" | "assinantes" | "financeiro" | "campanhas" | "marketing" | "conteudo" | "leads" | "sistema" | "auditoria";
 
 export default function AdminClient({
-  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas, banner, mktMetricas, emailCampaigns, conteudo, precos, hero,
+  assinantes, webhooksPendentes, erro, metricas, auditoria, historico, leads, sistema, financeiro, campanhas, banner, mktMetricas, emailCampaigns, conteudo, precos, hero, waConfig,
 }: {
   assinantes: Assinante[]; webhooksPendentes: number; erro?: string;
   metricas: Metricas | null; auditoria: AuditEvent[]; historico: Snapshot[]; leads: Lead[];
-  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData; banner: Banner; mktMetricas: MarketingMetricas; emailCampaigns: EmailCampaign[]; conteudo: Record<string, string>; precos: Record<string, number>; hero: HeroCampanha;
+  sistema: SistemaData; financeiro: FinanceiroData; campanhas: CampanhasData; banner: Banner; mktMetricas: MarketingMetricas; emailCampaigns: EmailCampaign[]; conteudo: Record<string, string>; precos: Record<string, number>; hero: HeroCampanha; waConfig: WhatsAppConfig;
 }) {
   const [aba, setAba] = useState<Aba>("visao");
   const [q, setQ] = useState("");
@@ -158,7 +159,7 @@ export default function AdminClient({
 
       {aba === "campanhas" && <CampanhasPanel data={campanhas} flash={flash} />}
 
-      {aba === "marketing" && <MarketingPanel banner={banner} metricas={mktMetricas} campanhas={campanhas.rows} emailCampaigns={emailCampaigns} flash={flash} />}
+      {aba === "marketing" && <MarketingPanel banner={banner} metricas={mktMetricas} campanhas={campanhas.rows} emailCampaigns={emailCampaigns} waConfig={waConfig} flash={flash} />}
 
       {aba === "conteudo" && <ConteudoPanel conteudo={conteudo} precos={precos} hero={hero} flash={flash} />}
 
@@ -717,7 +718,15 @@ const BANNER_TEMPLATES: { nome: string; mensagem: string; variante: string; link
 
 type MktSub = "visao" | "banner" | "email";
 
-function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: { banner: Banner; metricas: MarketingMetricas; campanhas: Campanha[]; emailCampaigns: EmailCampaign[]; flash: (m: string) => void }) {
+function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, waConfig, flash }: { banner: Banner; metricas: MarketingMetricas; campanhas: Campanha[]; emailCampaigns: EmailCampaign[]; waConfig: WhatsAppConfig; flash: (m: string) => void }) {
+  const [wa, setWa] = useState({ numero: waConfig.numero ?? "", ativo: waConfig.ativo });
+  const [waBusy, setWaBusy] = useState(false);
+  async function salvarWa() {
+    setWaBusy(true);
+    const r = await salvarWhatsAppConfig(wa.numero, wa.ativo);
+    setWaBusy(false);
+    flash("error" in r && r.error ? "Falha ao salvar." : "WhatsApp salvo.");
+  }
   const [sub, setSub] = useState<MktSub>("visao");
   const [b, setB] = useState<Banner>(banner);
   const [busy, setBusy] = useState(false);
@@ -811,6 +820,7 @@ function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: 
 
       {/* Editor de banner */}
       {sub === "banner" && (
+      <>
       <section className="panel">
       <div className="panel-h"><h3>Banner de aviso</h3></div>
 
@@ -867,6 +877,26 @@ function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, flash }: 
         O banner aparece no topo de todas as páginas (landing e app) quando ativo. Use os modelos prontos acima ou escreva o seu.
       </p>
     </section>
+
+    <section className="panel" style={{ marginTop: 18 }}>
+      <div className="panel-h"><h3>Botão de WhatsApp (suporte)</h3></div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12 }}>
+        <Campo label="Número (DDI+DDD, só dígitos)"><input value={wa.numero} onChange={(e) => setWa({ ...wa, numero: e.target.value })} placeholder="5569999998888" style={inp} /></Campo>
+        <Campo label="Ativo">
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--ink)", cursor: "pointer", paddingTop: 6 }}>
+            <input type="checkbox" checked={wa.ativo} onChange={(e) => setWa({ ...wa, ativo: e.target.checked })} style={{ width: 16, height: 16 }} />
+            Mostrar o botão flutuante
+          </label>
+        </Campo>
+      </div>
+      <div style={{ marginTop: 14 }}>
+        <button onClick={() => startT(salvarWa)} disabled={waBusy} style={btn}>{waBusy ? "Salvando…" : "Salvar WhatsApp"}</button>
+      </div>
+      <p style={{ marginTop: 12, fontSize: 12.5, color: "var(--muted)" }}>
+        Botão flutuante de suporte no canto da tela. Abre o WhatsApp com mensagem automática e o contexto da tela. Formato: DDI+DDD+número (ex.: 55 69 99999-8888 → 5569999998888).
+      </p>
+    </section>
+      </>
       )}
     </>
   );
