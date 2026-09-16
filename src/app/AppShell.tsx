@@ -60,19 +60,21 @@ export default function AppShell({
     if (e.key === "Enter" && q.trim()) { router.push(`/busca?q=${encodeURIComponent(q.trim())}`); setOpen(false); }
   }
 
-  const top: NavItem[] = [
+  const visaoGeral: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", ico: "dash", ready: true },
-    { href: "/inbox", label: "Inbox", ico: "inbox", ready: true },
+    { href: "/inbox", label: "Inbox Inteligente", ico: "inbox", ready: true },
   ];
-  const pericias: NavItem[] = [
+  const operacao: NavItem[] = [
     { href: "/jornada", label: "Jornada", ico: "dash", ready: true },
-    { href: "/honorarios", label: "Honorários", ico: "wallet", ready: true },
+    { href: "/agenda", label: "Agenda", ico: "agenda", ready: true },
+  ];
+  const gestao: NavItem[] = [
+    { href: "/honorarios", label: "Financeiro", ico: "wallet", ready: true },
     { href: "/calculos", label: "Cálculos", ico: "doc", ready: true },
-    { href: "/relatorios", label: "Relatórios", ico: "dash", ready: true },
     { href: "/tarefas", label: "Tarefas", ico: "clock", ready: true },
     { href: "/equipe", label: "Equipe", ico: "shield", ready: true },
     { href: "/contatos", label: "Contatos", ico: "doc", ready: true },
-    { href: "/agenda", label: "Agenda", ico: "agenda", ready: true },
+    { href: "/relatorios", label: "Relatórios", ico: "dash", ready: true },
   ];
 
   function item(n: NavItem) {
@@ -102,9 +104,12 @@ export default function AppShell({
             </>
           ) : (
             <>
-              {top.map(item)}
-              <div className="sb-sec">Perícias</div>
-              {pericias.map(item)}
+              <div className="sb-sec">Visão Geral</div>
+              {visaoGeral.map(item)}
+              <div className="sb-sec">Operação Pericial</div>
+              {operacao.map(item)}
+              <div className="sb-sec">Gestão</div>
+              {gestao.map(item)}
               <div className="sb-sec">Conta</div>
               <Link href="/configuracoes" className={"sb-item" + (path.startsWith("/configuracoes") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Configurações</Link>
               <div className="sb-item" onClick={() => startTransition(() => { signOut(); })} style={{ cursor: "pointer" }}><Ico p="gear" />Sair</div>
