@@ -6,17 +6,17 @@
 /* ── BOARD (desktop) ── */
 .jk-board{ display:flex; gap:14px; overflow-x:auto; padding:4px 2px 16px; align-items:flex-start; }
 .jk-col{ flex:0 0 270px; background:var(--bg); border:1px solid var(--line); border-radius:14px; display:flex; flex-direction:column; max-height:calc(100vh - 220px); }
-.jk-col-head{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px; font-family:var(--disp),sans-serif; font-size:13px; font-weight:700; color:var(--ink); border-bottom:1px solid var(--line); position:sticky; top:0; }
+.jk-col-head{ display:flex; align-items:center; justify-content:space-between; padding:11px 14px; background:var(--panel); font-family:var(--disp),sans-serif; font-size:13px; font-weight:700; color:var(--ink); border-bottom:1px solid var(--line); position:sticky; top:0; }
 .jk-col-count{ background:var(--line); color:var(--muted); font-size:11px; font-weight:700; padding:1px 8px; border-radius:20px; }
 .jk-col-body{ padding:10px; display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
 .jk-empty{ color:var(--muted); font-size:12.5px; text-align:center; padding:14px 0; }
 
 /* ── CARD ── */
-.jk-card{ text-align:left; width:100%; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; cursor:pointer; transition:box-shadow .15s,border-color .15s,transform .05s; font-family:var(--body),sans-serif; }
+.jk-card{ text-align:left; width:100%; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px; cursor:pointer; transition:box-shadow .15s,border-color .15s,transform .05s; font-family:var(--body),sans-serif; }
 .jk-card:hover{ box-shadow:var(--shadow-sm); border-color:var(--blue); }
 .jk-card:active{ transform:scale(.995); }
 .jk-card-top{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
-.jk-card-title{ font-size:14px; font-weight:600; color:var(--ink); line-height:1.3; }
+.jk-card-title{ font-size:13px; font-weight:600; color:var(--ink); line-height:1.3; }
 .jk-card-proc{ font-family:monospace; font-size:11.5px; color:var(--muted); margin-top:3px; }
 .jk-card-meta{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
 .jk-card-meta span{ font-size:11.5px; color:var(--muted); }

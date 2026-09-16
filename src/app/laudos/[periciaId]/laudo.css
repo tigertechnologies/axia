@@ -1,5 +1,5 @@
 /* AXIA — Laudo (opções + editor). Usa variáveis de tema (dark-ready). */
-.laudo-wrap{ max-width:900px; margin:0 auto; }
+.laudo-wrap{ max-width:1200px; margin:0 auto; }
 .laudo-voltar{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; font-family:var(--body),sans-serif; margin-bottom:12px; }
 .laudo-voltar:hover{ color:var(--ink); }
 .laudo-h1{ font-family:var(--disp),sans-serif; font-size:26px; color:var(--ink); margin:0 0 4px; }
@@ -57,3 +57,15 @@
 .laudo-achado.sev-atencao{ color:#8A5A18; }
 .laudo-achado.sev-ok{ color:#0F7A70; }
 .laudo-validado-tag{ display:inline-flex; align-items:center; padding:10px 16px; background:rgba(31,168,158,.14); color:#0F7A70; border-radius:9px; font-weight:600; font-size:13.5px; }
+
+/* Layout de duas colunas (direcional seção 7 — editor como área principal) */
+.laudo-layout{ display:grid; grid-template-columns:1fr 300px; gap:20px; align-items:start; }
+.laudo-main{ min-width:0; }
+.laudo-side{ display:flex; flex-direction:column; gap:14px; position:sticky; top:16px; }
+.laudo-side-card{ border:1px solid var(--line); border-radius:12px; background:var(--panel); padding:14px; }
+.laudo-side-h{ font-family:var(--disp),sans-serif; font-size:13px; font-weight:700; color:var(--ink); margin-bottom:10px; }
+.laudo-side-nota{ font-size:12.5px; color:var(--muted); line-height:1.6; margin:0 0 10px; }
+@media (max-width:900px){
+  .laudo-layout{ grid-template-columns:1fr; }
+  .laudo-side{ position:static; }
+}

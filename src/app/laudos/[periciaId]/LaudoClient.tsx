@@ -190,55 +190,75 @@ export default function LaudoClient({
 
       {status === "rascunho" && <div className="laudo-aviso">MINUTA — pendente de revisão médica. Nenhum dado é preenchido pela AXIA como fato: confira tudo.</div>}
 
-      <div className="laudo-editor">
-        {conteudo.secoes.map((s, i) => (
-          <div key={i} className="laudo-secao">
-            <div className="laudo-secao-tit">{s.titulo}</div>
-            <textarea
-              className="laudo-secao-texto"
-              value={s.texto}
-              onChange={(e) => editarSecao(i, e.target.value)}
-              rows={Math.max(3, s.texto.split("\n").length + 1)}
-              placeholder={`Escreva a seção "${s.titulo}"…`}
-            />
+      <div className="laudo-layout">
+        {/* Coluna principal: editor (ocupa a maior parte) */}
+        <div className="laudo-main">
+          <div className="laudo-editor">
+            {conteudo.secoes.map((s, i) => (
+              <div key={i} className="laudo-secao">
+                <div className="laudo-secao-tit">{s.titulo}</div>
+                <textarea
+                  className="laudo-secao-texto"
+                  value={s.texto}
+                  onChange={(e) => editarSecao(i, e.target.value)}
+                  rows={Math.max(3, s.texto.split("\n").length + 1)}
+                  placeholder={`Escreva a seção "${s.titulo}"…`}
+                />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Painel do Auditor (após Revisar) */}
-      {auditoria && (
-        <div className={"laudo-auditor nivel-" + auditoria.nivel}>
-          <div className="laudo-auditor-h">
-            AXIA Auditor — {auditoria.nivel === "ok" ? "✓ Nenhum problema encontrado" : auditoria.nivel === "atencao" ? "⚠ Pontos de atenção" : "⚠ Itens a revisar"}
+          {/* Botões do fluxo */}
+          <div className="laudo-acoes">
+            {status === "validado" ? (
+              <>
+                <span className="laudo-validado-tag">✓ Laudo validado</span>
+                <button className="laudo-btn ghost" onClick={reabrir}>Reabrir para editar</button>
+                <button className="laudo-btn" onClick={baixarPDF}>Baixar PDF</button>
+              </>
+            ) : (
+              <>
+                <button className="laudo-btn" onClick={salvarAgora}>Salvar rascunho</button>
+                <button className="laudo-btn ghost" onClick={revisar}>Revisar (Auditor)</button>
+                <button className="laudo-btn ghost" onClick={salvarComoMeuModelo}>Salvar como meu modelo</button>
+                <button className="laudo-btn" onClick={validar}>Validar laudo</button>
+                <button className="laudo-btn ghost" onClick={baixarPDF}>Baixar PDF</button>
+              </>
+            )}
           </div>
-          {auditoria.achados.map((a, i) => (
-            <div key={i} className={"laudo-achado sev-" + a.severidade}>
-              <span>{a.severidade === "revisar" ? "●" : a.severidade === "atencao" ? "●" : "✓"}</span> {a.mensagem}
-            </div>
-          ))}
-          <p className="laudo-nota">Conferência automática e objetiva. Não substitui a revisão médica nem afirma correção jurídica.</p>
+          <p className="laudo-nota">A assinatura digital (ICP-Brasil) e o protocolo no tribunal chegam depois — dependem de certificado e credenciamento.</p>
         </div>
-      )}
 
-      {/* Botões do fluxo (item 8) */}
-      <div className="laudo-acoes">
-        {status === "validado" ? (
-          <>
-            <span className="laudo-validado-tag">✓ Laudo validado</span>
-            <button className="laudo-btn ghost" onClick={reabrir}>Reabrir para editar</button>
-            <button className="laudo-btn" onClick={baixarPDF}>Baixar PDF</button>
-          </>
-        ) : (
-          <>
-            <button className="laudo-btn" onClick={salvarAgora}>Salvar rascunho</button>
-            <button className="laudo-btn ghost" onClick={revisar}>Revisar (Auditor)</button>
-            <button className="laudo-btn ghost" onClick={salvarComoMeuModelo}>Salvar como meu modelo</button>
-            <button className="laudo-btn" onClick={validar}>Validar laudo</button>
-            <button className="laudo-btn ghost" onClick={baixarPDF}>Baixar PDF</button>
-          </>
-        )}
+        {/* Painel lateral: Auditor + apoio */}
+        <aside className="laudo-side">
+          <div className="laudo-side-card">
+            <div className="laudo-side-h">AXIA Auditor</div>
+            {!auditoria ? (
+              <>
+                <p className="laudo-side-nota">Confira placeholders, quesitos e seções antes de validar.</p>
+                <button className="laudo-btn ghost" style={{ width: "100%" }} onClick={revisar}>Revisar agora</button>
+              </>
+            ) : (
+              <div className={"laudo-auditor nivel-" + auditoria.nivel} style={{ margin: 0, border: "none", padding: 0 }}>
+                <div className="laudo-auditor-h">
+                  {auditoria.nivel === "ok" ? "✓ Nenhum problema" : auditoria.nivel === "atencao" ? "⚠ Pontos de atenção" : "⚠ Itens a revisar"}
+                </div>
+                {auditoria.achados.map((a, i) => (
+                  <div key={i} className={"laudo-achado sev-" + a.severidade}>
+                    <span>{a.severidade === "revisar" ? "●" : a.severidade === "atencao" ? "●" : "✓"}</span> {a.mensagem}
+                  </div>
+                ))}
+                {auditoria.achados.length === 0 && <p className="laudo-side-nota">Tudo certo por aqui.</p>}
+                <button className="laudo-btn ghost" style={{ width: "100%", marginTop: 10 }} onClick={revisar}>Revisar de novo</button>
+              </div>
+            )}
+          </div>
+          <div className="laudo-side-card">
+            <div className="laudo-side-h">Dica</div>
+            <p className="laudo-side-nota">Os campos marcados como <b>[preencher]</b> vieram do processo — troque pelos dados reais. Os quesitos aparecem na seção correspondente.</p>
+          </div>
+        </aside>
       </div>
-      <p className="laudo-nota">A assinatura digital (ICP-Brasil) e o protocolo no tribunal chegam depois — dependem de certificado e credenciamento.</p>
     </div>
   );
 }
