@@ -70,7 +70,8 @@ export default function AppShell({
     { href: "/agenda", label: "Agenda", ico: "agenda", ready: true },
   ];
   const gestao: NavItem[] = [
-    { href: "/honorarios", label: "Financeiro", ico: "wallet", ready: true },
+    { href: "/financeiro", label: "Financeiro", ico: "wallet", ready: true },
+    { href: "/honorarios", label: "Honorários", ico: "wallet", ready: true },
     { href: "/calculos", label: "Cálculos", ico: "doc", ready: true },
     { href: "/tarefas", label: "Tarefas", ico: "clock", ready: true },
     { href: "/equipe", label: "Equipe", ico: "shield", ready: true },

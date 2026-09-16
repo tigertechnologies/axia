@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 // Rotas do app protegidas por login + assinatura.
-const PROTECTED = ["/dashboard", "/jornada", "/laudos", "/calculos", "/relatorios", "/tarefas", "/equipe", "/contatos", "/admin", "/busca", "/inbox", "/nomeacoes", "/prazos", "/pericias", "/processos", "/honorarios", "/agenda", "/onboarding", "/configuracoes"];
+const PROTECTED = ["/dashboard", "/jornada", "/laudos", "/calculos", "/relatorios", "/tarefas", "/equipe", "/contatos", "/financeiro", "/admin", "/busca", "/inbox", "/nomeacoes", "/prazos", "/pericias", "/processos", "/honorarios", "/agenda", "/onboarding", "/configuracoes"];
 
 export async function middleware(request: NextRequest) {
   const { response, supabase, user } = await updateSession(request);
@@ -54,7 +54,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard/:path*", "/jornada/:path*", "/laudos/:path*", "/calculos/:path*", "/relatorios/:path*", "/tarefas/:path*", "/equipe/:path*", "/contatos/:path*", "/admin/:path*", "/busca/:path*", "/inbox/:path*", "/nomeacoes/:path*", "/prazos/:path*",
+    "/dashboard/:path*", "/jornada/:path*", "/laudos/:path*", "/calculos/:path*", "/relatorios/:path*", "/tarefas/:path*", "/equipe/:path*", "/contatos/:path*", "/financeiro/:path*", "/admin/:path*", "/busca/:path*", "/inbox/:path*", "/nomeacoes/:path*", "/prazos/:path*",
     "/pericias/:path*", "/processos/:path*", "/honorarios/:path*", "/agenda/:path*",
     "/onboarding/:path*", "/configuracoes/:path*",
   ],
