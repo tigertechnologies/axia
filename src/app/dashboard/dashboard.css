@@ -254,3 +254,21 @@
 .tsk-tab.on{ background:var(--navy); color:#fff; border-color:var(--navy); }
 .tsk-prio{ font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; }
 .tsk-prio.p-normal{ background:rgba(74,111,165,.16); color:#3B5B86; }
+
+/* Precisa da sua atenção (dashboard visual — direcional seção 2) */
+.atencao-box{ margin-bottom:22px; border:1px solid var(--line); border-radius:14px; background:var(--panel); overflow:hidden; }
+.atencao-titulo{ font-family:var(--disp),sans-serif; font-size:14px; font-weight:700; color:var(--ink); padding:14px 16px; border-bottom:1px solid var(--line); background:var(--bg); }
+.atencao-lista{ display:flex; flex-direction:column; }
+.atencao-item{ display:flex; align-items:center; gap:12px; padding:13px 16px; border-bottom:1px solid var(--line); }
+.atencao-item:last-child{ border-bottom:none; }
+.atencao-dot{ width:9px; height:9px; border-radius:50%; flex:0 0 auto; }
+.u-urgente .atencao-dot{ background:#C0492E; }
+.u-atencao .atencao-dot{ background:#C9A227; }
+.u-info .atencao-dot{ background:#4A6FA5; }
+.atencao-corpo{ flex:1; min-width:0; }
+.atencao-t{ font-size:14px; font-weight:600; color:var(--ink); }
+.u-urgente .atencao-t{ color:#C0492E; }
+.atencao-s{ font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.atencao-cta{ flex:0 0 auto; font-size:13px; font-weight:600; color:#fff; background:#16305B; padding:7px 14px; border-radius:8px; text-decoration:none; white-space:nowrap; }
+.atencao-cta:hover{ opacity:.9; }
+@media (max-width:640px){ .atencao-item{ flex-wrap:wrap; } .atencao-cta{ width:100%; text-align:center; margin-top:6px; } }

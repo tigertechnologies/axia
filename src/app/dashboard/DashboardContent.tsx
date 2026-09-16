@@ -48,6 +48,29 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
   const venceHoje = prazos.filter((p) => p.due_date && new Date(p.due_date) <= hoje && p.status !== "confirmado").length;
   const somaStatus = (st: string) => honorarios.filter((h) => h.status === st).reduce((s, h) => s + h.amount_cents, 0);
 
+  // "Precisa da sua atenção" — itens acionáveis específicos (seção 2 do direcional).
+  type Atencao = { id: string; urgencia: "urgente" | "atencao" | "info"; titulo: string; sub: string; cta: string; href: string };
+  const atencao: Atencao[] = [];
+  const em3 = new Date(); em3.setDate(em3.getDate() + 3);
+  prazos.filter((p) => p.due_date && new Date(p.due_date) <= em3 && p.status !== "confirmado")
+    .slice(0, 4).forEach((p) => {
+      const dias = Math.round((new Date(p.due_date).getTime() - hoje.getTime()) / 86400000);
+      atencao.push({ id: "prz-" + p.id, urgencia: dias <= 1 ? "urgente" : "atencao",
+        titulo: dias < 0 ? "Prazo vencido" : dias === 0 ? "Prazo vence hoje" : dias === 1 ? "Prazo vence amanhã" : `Prazo em ${dias} dias`,
+        sub: p.titulo + (p.process_ref ? ` · ${p.process_ref}` : ""), cta: "Ver na Jornada", href: "/jornada" });
+    });
+  pericias.filter((p) => p.workflow_stage === "laudo_pendente" || p.workflow_stage === "laudo_em_elaboracao").slice(0, 3).forEach((p) => {
+    atencao.push({ id: "lau-" + p.id, urgencia: "atencao", titulo: p.workflow_stage === "laudo_pendente" ? "Laudo pendente" : "Laudo em elaboração",
+      sub: p.titulo + (p.process_ref ? ` · ${p.process_ref}` : ""), cta: "Continuar laudo", href: `/laudos/${p.id}` });
+  });
+  pericias.filter((p) => p.workflow_stage === "protocolar_laudo").slice(0, 3).forEach((p) => {
+    atencao.push({ id: "prot-" + p.id, urgencia: "atencao", titulo: "Laudo pronto para protocolo",
+      sub: p.titulo + (p.process_ref ? ` · ${p.process_ref}` : ""), cta: "Abrir laudo", href: `/laudos/${p.id}` });
+  });
+  nomeacoes.filter((n) => !n.validated).slice(0, 3).forEach((n) => {
+    atencao.push({ id: "nom-" + n.id, urgencia: "info", titulo: "Nova nomeação a validar", sub: n.subject, cta: "Confirmar", href: "/inbox" });
+  });
+
   async function validar(id: string) { setDone((d) => new Set(d).add(id)); const r = await validateCommunication(id); if(r && "error" in r){ setDone(d=>{ const n=new Set(d); n.delete(id); return n; }); flash("Não foi possível validar. Tente novamente."); } }
   const shown = comms.filter((c) => filter === "all" || CAT[c.category]?.f === filter);
 
@@ -79,6 +102,25 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
           <JHCard money={receber} label="A receber" href="/honorarios" />
         </div>
       </div>
+
+      {/* Precisa da sua atenção — pendências acionáveis (seção 2 do direcional) */}
+      {atencao.length > 0 && (
+        <div className="atencao-box">
+          <div className="atencao-titulo">Precisa da sua atenção</div>
+          <div className="atencao-lista">
+            {atencao.map((a) => (
+              <div key={a.id} className={"atencao-item u-" + a.urgencia}>
+                <div className="atencao-dot" />
+                <div className="atencao-corpo">
+                  <div className="atencao-t">{a.titulo}</div>
+                  <div className="atencao-s">{a.sub}</div>
+                </div>
+                <Link href={a.href} className="atencao-cta">{a.cta} →</Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="kpis">
         <div className="kpi"><div className="ki ki-navy"><Ico p="shield" s={20} /></div><div className="kn">{nomeacoes.length}</div><div className="kl">Novas nomeações</div><div className="kt up">{aguardando} aguardando validação</div></div>
