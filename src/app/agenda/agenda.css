@@ -1,0 +1,64 @@
+/* AXIA — Agenda (vistas de calendário). Variáveis de tema. */
+.ag-bar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+.ag-vistas{ display:flex; gap:4px; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:3px; }
+.ag-vista{ padding:7px 14px; border:none; background:none; color:var(--muted); border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:var(--body),sans-serif; }
+.ag-vista.on{ background:var(--navy); color:#fff; }
+.ag-nav{ display:flex; align-items:center; gap:8px; }
+.ag-nav button{ width:30px; height:30px; border:1px solid var(--line); background:var(--panel); color:var(--ink); border-radius:8px; cursor:pointer; font-size:16px; }
+.ag-nav button.ag-hoje{ width:auto; padding:0 12px; font-size:12.5px; font-weight:600; }
+.ag-titulo{ font-family:var(--disp),sans-serif; font-size:15px; font-weight:700; color:var(--ink); min-width:150px; text-align:center; }
+.ag-filtros{ display:flex; gap:6px; margin-left:auto; }
+
+.ev-pericia{ --evc:#16305B; }
+.ev-prazo{ --evc:#C0492E; }
+
+/* Vista Mensal */
+.ag-mes{ border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.ag-mes-head{ display:grid; grid-template-columns:repeat(7,1fr); background:var(--bg); border-bottom:1px solid var(--line); }
+.ag-mes-head div{ padding:8px; text-align:center; font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+.ag-mes-grid{ display:grid; grid-template-columns:repeat(7,1fr); }
+.ag-cel{ min-height:96px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); padding:5px; background:var(--panel); }
+.ag-cel:nth-child(7n){ border-right:none; }
+.ag-cel.fora{ background:var(--bg); }
+.ag-cel.fora .ag-cel-num{ color:var(--muted); opacity:.5; }
+.ag-cel.hoje{ background:rgba(31,168,158,.06); }
+.ag-cel.hoje .ag-cel-num{ background:#1FA89E; color:#fff; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; }
+.ag-cel-num{ font-size:12.5px; font-weight:600; color:var(--ink); margin-bottom:3px; }
+.ag-cel-evs{ display:flex; flex-direction:column; gap:2px; }
+.ag-ev{ font-size:10.5px; padding:2px 5px; border-radius:5px; background:color-mix(in srgb, var(--evc) 14%, transparent); color:var(--evc); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-left:2px solid var(--evc); }
+.ag-ev-h{ font-weight:700; }
+.ag-ev-mais{ font-size:10px; color:var(--muted); padding-left:5px; }
+
+/* Vista Semanal */
+.ag-semana{ display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+.ag-sem-col{ border:1px solid var(--line); border-radius:10px; overflow:hidden; min-height:200px; background:var(--panel); }
+.ag-sem-col.hoje{ border-color:#1FA89E; }
+.ag-sem-head{ padding:8px; text-align:center; font-size:12px; color:var(--ink); background:var(--bg); border-bottom:1px solid var(--line); }
+.ag-sem-body{ padding:6px; display:flex; flex-direction:column; gap:5px; }
+.ag-sem-vazio{ color:var(--muted); text-align:center; font-size:12px; padding:8px 0; }
+.ag-sem-ev{ font-size:11px; padding:5px 6px; border-radius:6px; background:color-mix(in srgb, var(--evc) 12%, transparent); border-left:2px solid var(--evc); color:var(--ink); }
+.ag-sem-ev-h{ font-weight:700; color:var(--evc); font-size:10.5px; }
+.ag-sem-ev-sub{ color:var(--muted); font-size:10px; margin-top:1px; }
+
+/* Vista Lista */
+.ag-lista{ display:flex; flex-direction:column; gap:8px; }
+.ag-lista-item{ display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--line); border-radius:11px; background:var(--panel); }
+.ag-lista-data{ text-align:center; flex:0 0 auto; width:44px; }
+.ag-lista-dia{ font-family:var(--disp),sans-serif; font-size:20px; font-weight:800; color:var(--ink); line-height:1; }
+.ag-lista-mes{ font-size:11px; color:var(--muted); text-transform:uppercase; }
+.ag-lista-barra{ width:3px; align-self:stretch; border-radius:3px; background:var(--evc); }
+.ag-lista-corpo{ flex:1; min-width:0; }
+.ag-lista-tit{ font-size:14px; font-weight:600; color:var(--ink); }
+.ag-lista-sub{ font-size:12.5px; color:var(--muted); margin-top:2px; }
+.ag-lista-tag{ font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; flex:0 0 auto; }
+.ag-lista-tag.t-pericia{ background:rgba(22,48,91,.12); color:#16305B; }
+.ag-lista-tag.t-prazo{ background:rgba(192,73,46,.14); color:#C0492E; }
+
+@media (max-width:760px){
+  .ag-semana{ grid-template-columns:1fr; }
+  .ag-cel{ min-height:64px; }
+  .ag-ev{ display:none; }
+  .ag-cel-evs::after{ content:""; }
+  .ag-cel-evs:not(:empty)::before{ content:"•"; color:#1FA89E; font-size:16px; }
+  .ag-filtros{ margin-left:0; }
+}

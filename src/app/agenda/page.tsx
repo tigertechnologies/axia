@@ -5,6 +5,7 @@ import UpgradeGate from "../UpgradeGate";
 import { planAllows } from "@/lib/plans";
 import AgendaClient, { type Evento } from "./AgendaClient";
 import "../dashboard/dashboard.css";
+import "./agenda.css";
 
 export const dynamic = "force-dynamic";
 
