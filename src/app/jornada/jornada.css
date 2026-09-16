@@ -95,3 +95,6 @@
 .jd-doc-data{ font-size:11.5px; color:var(--muted); }
 .jd-doc-x{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; line-height:1; padding:0 4px; }
 .jd-doc-x:hover{ color:#C0492E; }
+
+/* Quesitos no drawer */
+.jd-ques-item{ padding:10px 0; border-bottom:1px solid var(--line); }

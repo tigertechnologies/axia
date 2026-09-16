@@ -6,6 +6,7 @@ import { moverPericia } from "@/app/actions/journey";
 import { carregarDetalhePericia, type PericiaDetalhe, type TimelineEvento } from "@/app/actions/journey-detail";
 import { criarPrazoNaPericia, confirmarPrazoNaPericia } from "@/app/actions/journey-prazos";
 import { uploadDocumento, urlAssinadaDocumento, excluirDocumento } from "@/app/actions/documentos";
+import { adicionarQuesito, responderQuesito, excluirQuesito } from "@/app/actions/quesitos";
 import { formatBRL } from "@/lib/plans";
 import type { JornadaCard } from "./JornadaClient";
 
@@ -38,6 +39,7 @@ const ACAO_EVENTO: Record<string, JourneyEvent> = {
   finalizadas: "CASE_FINISHED",
 };
 
+const QUES_ORIGEM: Record<string, string> = { juizo: "Juízo", autor: "Autor", reu: "Réu", complementar: "Complementar" };
 const EVENTO_LABEL: Record<string, string> = {
   COMMUNICATION_RECEIVED: "Comunicação recebida", NOMINATION_CONFIRMED: "Dados confirmados",
   ENGAGEMENT_ACCEPTED: "Encargo aceito", DEADLINE_CONFIRMED: "Prazo confirmado",
@@ -68,6 +70,8 @@ export default function JornadaDrawer({ card, onClose, onMoved }: { card: Jornad
   const [novoPrazo, setNovoPrazo] = useState({ titulo: "", due_date: "" });
   const [docBusy, setDocBusy] = useState(false);
   const [docMsg, setDocMsg] = useState("");
+  const [novoQuesito, setNovoQuesito] = useState({ origem: "juizo", texto: "" });
+  const [respostas, setRespostas] = useState<Record<string, string>>({});
   const docRef = useRef<HTMLInputElement>(null);
   const [, startT] = useTransition();
 
@@ -94,6 +98,20 @@ export default function JornadaDrawer({ card, onClose, onMoved }: { card: Jornad
     if (!confirm("Excluir este documento?")) return;
     const r = await excluirDocumento(id);
     if (!r.error) recarregar();
+  }
+
+  async function addQuesito() {
+    if (!novoQuesito.texto.trim()) return;
+    const r = await adicionarQuesito({ periciaId: card.id, origem: novoQuesito.origem, texto: novoQuesito.texto });
+    if (!(r && "error" in r)) { setNovoQuesito({ ...novoQuesito, texto: "" }); recarregar(); }
+  }
+  async function salvarResposta(id: string) {
+    const resp = respostas[id]; if (resp === undefined) return;
+    await responderQuesito(id, resp); recarregar();
+  }
+  async function removerQuesito(id: string) {
+    if (!confirm("Excluir este quesito?")) return;
+    await excluirQuesito(id); recarregar();
   }
 
   useEffect(() => {
@@ -215,13 +233,7 @@ export default function JornadaDrawer({ card, onClose, onMoved }: { card: Jornad
                 </div>
               </div>
 
-              {/* Quesitos */}
-              {det && det.quesitos.length > 0 && (
-                <div className="jd-section">
-                  <div className="jd-h">Quesitos ({det.quesitos.filter(q=>q.respondido).length}/{det.quesitos.length} respondidos)</div>
-                  {det.quesitos.map((q) => <div key={q.id} className="jd-quesito"><span className={q.respondido?"q-ok":"q-pend"}>{q.respondido?"✓":"○"}</span> <span>{q.origem} {q.numero ?? ""}: {q.texto.slice(0,80)}</span></div>)}
-                </div>
-              )}
+
               {/* Documentos — anexar, ver (URL assinada) e excluir */}
               <div className="jd-section">
                 <div className="jd-h">Documentos</div>
