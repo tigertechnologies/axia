@@ -111,6 +111,8 @@ export default function AppShell({
               {visaoGeral.map(item)}
               <div className="sb-sec">Operação Pericial</div>
               {operacao.map(item)}
+              <div className="sb-sec">Inteligência</div>
+              <Link href="/ia" className={"sb-item" + (path.startsWith("/ia") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="dash" />IA</Link>
               <div className="sb-sec">Gestão</div>
               {gestao.map(item)}
               <div className="sb-sec">Conta</div>
