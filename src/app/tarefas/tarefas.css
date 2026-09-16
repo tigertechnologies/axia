@@ -24,3 +24,30 @@
 .tsk-due,.tsk-per{ font-size:11.5px; color:var(--muted); }
 .tsk-x{ background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; line-height:1; }
 .tsk-x:hover{ color:#C0492E; }
+
+/* Kanban de tarefas (como o concorrente: 4 colunas) */
+.kanban{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.kb-col{ background:var(--bg); border:1px solid var(--line); border-radius:12px; display:flex; flex-direction:column; min-height:200px; }
+.kb-col-head{ display:flex; justify-content:space-between; align-items:center; padding:12px 14px; font-family:var(--disp),sans-serif; font-size:13px; font-weight:700; color:var(--ink); border-bottom:1px solid var(--line); }
+.kb-count{ background:var(--line); color:var(--muted); font-size:11px; font-weight:700; padding:1px 8px; border-radius:20px; }
+.kb-col-body{ padding:10px; display:flex; flex-direction:column; gap:8px; }
+.kb-empty{ color:var(--muted); font-size:12.5px; text-align:center; padding:14px 0; }
+.kb-card{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+.kb-card-top{ display:flex; align-items:center; gap:6px; margin-bottom:6px; min-height:18px; }
+.kb-fatal{ font-size:10px; font-weight:800; color:#C0492E; background:rgba(192,73,46,.14); padding:2px 7px; border-radius:20px; letter-spacing:.03em; }
+.kb-alta{ font-size:10px; font-weight:800; color:#8A5A18; background:rgba(201,162,39,.16); padding:2px 7px; border-radius:20px; }
+.kb-x{ margin-left:auto; background:none; border:none; color:var(--muted); font-size:16px; cursor:pointer; line-height:1; }
+.kb-x:hover{ color:#C0492E; }
+.kb-card-tit{ font-size:13.5px; color:var(--ink); font-weight:500; line-height:1.35; }
+.kb-card-meta{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+.kb-card-meta span{ font-size:11.5px; color:var(--muted); }
+.kb-card-move{ display:flex; justify-content:space-between; margin-top:10px; gap:6px; }
+.kb-card-move button{ flex:1; padding:5px; border:1px solid var(--line); background:var(--bg); color:var(--ink); border-radius:7px; cursor:pointer; font-size:12px; }
+.kb-card-move button:disabled{ opacity:.35; cursor:default; }
+.kb-card-move button:hover:not(:disabled){ border-color:var(--blue); }
+@media (max-width:860px){
+  .kanban{ grid-template-columns:1fr 1fr; }
+}
+@media (max-width:520px){
+  .kanban{ grid-template-columns:1fr; }
+}

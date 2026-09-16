@@ -68,3 +68,17 @@ export async function excluirTarefa(id: string): Promise<{ ok?: boolean }> {
   revalidatePath("/tarefas");
   return { ok: true };
 }
+
+// Move a tarefa para uma coluna do Kanban (A Fazer / Em Andamento / Revisão / Concluída).
+export async function moverTarefa(id: string, status: string): Promise<{ ok?: boolean }> {
+  const supabase = createSupabaseServer();
+  const validos = ["pendente", "em_andamento", "revisao", "concluida"];
+  const st = validos.includes(status) ? status : "pendente";
+  await supabase.from("pericia_tasks").update({
+    status: st,
+    concluida_em: st === "concluida" ? new Date().toISOString() : null,
+    updated_at: new Date().toISOString(),
+  }).eq("id", id);
+  revalidatePath("/tarefas");
+  return { ok: true };
+}
