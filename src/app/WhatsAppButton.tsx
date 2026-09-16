@@ -14,7 +14,7 @@ function nomeDaTela(path: string): string | null {
   return chave ? TELA_NOME[chave] : null;
 }
 
-export default function WhatsAppButton({ numero, ativo }: { numero: string | null; ativo: boolean }) {
+export default function WhatsAppButton({ numero, ativo, mensagem: msgCustom }: { numero: string | null; ativo: boolean; mensagem?: string | null }) {
   const pathname = usePathname();
 
   // Não renderiza se desativado no admin ou sem número configurado.
@@ -23,7 +23,7 @@ export default function WhatsAppButton({ numero, ativo }: { numero: string | nul
   if (soDigitos.length < 10) return null;
 
   const tela = nomeDaTela(pathname);
-  const base = "Olá, preciso de ajuda com a AXIA.";
+  const base = (msgCustom && msgCustom.trim()) ? msgCustom.trim() : "Olá, preciso de ajuda com a AXIA.";
   const mensagem = tela ? `${base} Estou na tela de ${tela}.` : base;
   const href = `https://wa.me/${soDigitos}?text=${encodeURIComponent(mensagem)}`;
 

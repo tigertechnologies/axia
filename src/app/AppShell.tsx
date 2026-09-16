@@ -53,7 +53,7 @@ export default function AppShell({
   const router = useRouter();
 
   useEffect(() => { isCurrentUserAdmin().then(setAdmin).catch(() => {}); }, []);
-  const [wa, setWa] = useState<{ numero: string | null; ativo: boolean }>({ numero: null, ativo: false });
+  const [wa, setWa] = useState<{ numero: string | null; ativo: boolean; mensagem?: string | null }>({ numero: null, ativo: false, mensagem: null });
   useEffect(() => { getWhatsAppConfig().then(setWa).catch(() => {}); }, []);
 
   function submitSearch(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -140,7 +140,7 @@ export default function AppShell({
         <div className="content">{children}</div>
       </div>
       <CommandPalette />
-      <WhatsAppButton numero={wa.numero} ativo={wa.ativo} />
+      <WhatsAppButton numero={wa.numero} ativo={wa.ativo} mensagem={wa.mensagem} />
 
       {/* Painel de notificações */}
       {notifOpen && (

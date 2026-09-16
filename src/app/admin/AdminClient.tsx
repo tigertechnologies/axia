@@ -719,11 +719,11 @@ const BANNER_TEMPLATES: { nome: string; mensagem: string; variante: string; link
 type MktSub = "visao" | "banner" | "email";
 
 function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, waConfig, flash }: { banner: Banner; metricas: MarketingMetricas; campanhas: Campanha[]; emailCampaigns: EmailCampaign[]; waConfig: WhatsAppConfig; flash: (m: string) => void }) {
-  const [wa, setWa] = useState({ numero: waConfig.numero ?? "", ativo: waConfig.ativo });
+  const [wa, setWa] = useState({ numero: waConfig.numero ?? "", ativo: waConfig.ativo, mensagem: waConfig.mensagem ?? "" });
   const [waBusy, setWaBusy] = useState(false);
   async function salvarWa() {
     setWaBusy(true);
-    const r = await salvarWhatsAppConfig(wa.numero, wa.ativo);
+    const r = await salvarWhatsAppConfig(wa.numero, wa.ativo, wa.mensagem);
     setWaBusy(false);
     flash("error" in r && r.error ? "Falha ao salvar." : "WhatsApp salvo.");
   }
@@ -889,12 +889,21 @@ function MarketingPanel({ banner, metricas, campanhas, emailCampaigns, waConfig,
           </label>
         </Campo>
       </div>
+      <div style={{ marginTop: 12 }}>
+        <Campo label="Mensagem inicial (opcional)"><input value={wa.mensagem} onChange={(e) => setWa({ ...wa, mensagem: e.target.value })} placeholder="Olá, preciso de ajuda com a AXIA." style={inp} /></Campo>
+      </div>
       <div style={{ marginTop: 14 }}>
         <button onClick={() => startT(salvarWa)} disabled={waBusy} style={btn}>{waBusy ? "Salvando…" : "Salvar WhatsApp"}</button>
       </div>
       <p style={{ marginTop: 12, fontSize: 12.5, color: "var(--muted)" }}>
-        Botão flutuante de suporte no canto da tela. Abre o WhatsApp com mensagem automática e o contexto da tela. Formato: DDI+DDD+número (ex.: 55 69 99999-8888 → 5569999998888).
+        Botão flutuante de suporte no canto da tela. Abre o WhatsApp com a mensagem definida acima + o contexto da tela. Formato do número: DDI+DDD (ex.: 55 69 99999-8888 → 5569999998888).
       </p>
+      <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 10 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--ink)", marginBottom: 4 }}>🤖 Bot automatizado (futuro)</div>
+        <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6 }}>
+          A arquitetura para um bot que responde sozinho (WhatsApp Business API) já está preparada no banco. Para ativar, é preciso: conta na Meta/provedor (Twilio, Z-API…), número verificado, e o token da API. Enquanto não configurado, o botão acima funciona como link direto (o cliente escreve, você responde).
+        </div>
+      </div>
     </section>
       </>
       )}
