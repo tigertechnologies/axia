@@ -1,8 +1,9 @@
 "use client";
 import { useState, useMemo } from "react";
 import { tabelaPrice, tabelaSAC, jurosSimples, jurosCompostos, fmtCents, type ResultadoTabela } from "@/modules/calculos/domain/financeiro";
+import { CalcRescisao, CalcRevisional, CalcPasep } from "./CalcTrabalhista";
 
-type Metodo = "price" | "sac" | "simples" | "compostos";
+type Metodo = "price" | "sac" | "simples" | "compostos" | "rescisao" | "revisional" | "pasep";
 
 // Converte "10.000,00" ou "10000" em centavos.
 function paraCents(s: string): number {
@@ -36,7 +37,7 @@ export default function CalculosClient() {
 
   function baixarPDF() {
     if (!calc || !resultado) return;
-    const metodoLabel = { price: "Tabela Price", sac: "Tabela SAC", simples: "Juros simples", compostos: "Juros compostos" }[calc.metodo];
+    const metodoLabel = ({ price: "Tabela Price", sac: "Tabela SAC", simples: "Juros simples", compostos: "Juros compostos", rescisao: "Rescisão", revisional: "Revisional", pasep: "PIS/PASEP" } as Record<string,string>)[calc.metodo];
     let corpo = "";
     if ("tabela" in resultado && resultado.tabela) {
       const t = resultado.tabela;
@@ -72,18 +73,25 @@ export default function CalculosClient() {
 
       {/* Método */}
       <div className="calc-tabs">
-        {([["price","Tabela Price"],["sac","Tabela SAC"],["simples","Juros simples"],["compostos","Juros compostos"]] as [Metodo,string][]).map(([m,l]) => (
+        {([["price","Tabela Price"],["sac","Tabela SAC"],["simples","Juros simples"],["compostos","Juros compostos"],["rescisao","Rescisão trabalhista"],["revisional","Revisional"],["pasep","PIS/PASEP"]] as [Metodo,string][]).map(([m,l]) => (
           <button key={m} className={"calc-tab" + (metodo === m ? " on" : "")} onClick={() => { setMetodo(m); setCalc(null); }}>{l}</button>
         ))}
       </div>
 
-      {/* Entrada */}
+      {/* Calculadoras trabalhistas (formato próprio) */}
+      {metodo === "rescisao" && <CalcRescisao />}
+      {metodo === "revisional" && <CalcRevisional />}
+      {metodo === "pasep" && <CalcPasep />}
+
+      {/* Entrada financeira (price/sac/juros) */}
+      {(metodo === "price" || metodo === "sac" || metodo === "simples" || metodo === "compostos") && (
       <div className="calc-form">
         <div className="calc-field"><label>Valor (R$)</label><input value={valor} onChange={(e) => setValor(e.target.value)} placeholder="10.000,00" inputMode="decimal" /></div>
         <div className="calc-field"><label>Taxa (% ao período)</label><input value={taxa} onChange={(e) => setTaxa(e.target.value)} placeholder="2" inputMode="decimal" /></div>
         <div className="calc-field"><label>{ehTabela ? "Nº de parcelas" : "Nº de períodos"}</label><input value={n} onChange={(e) => setN(e.target.value)} placeholder="12" inputMode="numeric" /></div>
         <button className="calc-btn" onClick={calcular}>Calcular</button>
       </div>
+      )}
 
       {/* Resultado */}
       {resultado && calc && (
@@ -115,7 +123,7 @@ export default function CalculosClient() {
           )}
           <div className="calc-mem">
             <b>Memória de cálculo</b><br/>
-            Método: {{ price: "Tabela Price (parcelas fixas)", sac: "Tabela SAC (amortização constante)", simples: "Juros simples (M = C·(1+i·n))", compostos: "Juros compostos (M = C·(1+i)ⁿ)" }[calc.metodo]}<br/>
+            Método: {({ price: "Tabela Price (parcelas fixas)", sac: "Tabela SAC (amortização constante)", simples: "Juros simples (M = C·(1+i·n))", compostos: "Juros compostos (M = C·(1+i)ⁿ)" } as Record<string,string>)[calc.metodo]}<br/>
             Valor: {fmtCents(calc.principal)} · Taxa: {(calc.taxa*100).toLocaleString("pt-BR",{maximumFractionDigits:4})}%/período · Períodos: {calc.n}
           </div>
           <button className="calc-btn ghost" onClick={baixarPDF}>Baixar PDF</button>
