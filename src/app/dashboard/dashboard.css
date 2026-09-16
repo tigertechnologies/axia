@@ -291,3 +291,27 @@
 .proc-hon{ font-size:13px; font-weight:600; color:var(--ink); }
 .proc-when{ font-size:12px; color:var(--muted); min-width:44px; text-align:right; }
 @media (max-width:600px){ .proc-card{ flex-wrap:wrap; } .proc-side{ width:100%; justify-content:space-between; } }
+
+/* ===== Passe de responsividade e polimento (direcional 8-9-10) ===== */
+/* Tabelas nunca estouram: rolam dentro do próprio container */
+.panel table{ min-width:100%; }
+@media (max-width:640px){
+  /* Áreas de toque maiores no mobile (item 10) */
+  .btn, .btn-primary, .btn-ghost{ min-height:44px; }
+  .btn-act{ padding:8px 12px; }
+  /* KPIs em coluna única */
+  .kpis{ grid-template-columns:1fr 1fr; gap:10px; }
+  .kpi .kn{ font-size:20px; }
+  /* Cabeçalho de tela empilha */
+  .greet{ flex-direction:column; align-items:flex-start; gap:12px; }
+  .greet-actions{ width:100%; display:flex; gap:8px; }
+  .greet-actions .btn{ flex:1; justify-content:center; }
+  /* Faixa "jornada hoje" com cards menores */
+  .jh-cards{ grid-template-columns:1fr 1fr; }
+  /* Busca ocupa largura total */
+  .search{ max-width:100%!important; }
+}
+@media (max-width:400px){
+  .kpis{ grid-template-columns:1fr; }
+  .jh-cards{ grid-template-columns:1fr; }
+}

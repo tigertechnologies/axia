@@ -85,7 +85,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
         </div>
         <div className="greet-actions">
           <Link className="btn btn-ghost" href="/inbox">Ver análise completa</Link>
-          <Link className="btn btn-primary" href="/pericias"><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Nova perícia</Link>
+          <Link className="btn btn-primary" href="/jornada"><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Nova perícia</Link>
         </div>
       </div>
 
@@ -134,7 +134,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
           <span className="at-ic"><Ico p="alert" /></span>
           <div className="at-txt"><h4>Precisa da sua atenção</h4><p>Itens críticos identificados pela AXIA que dependem de você.</p></div>
           <div className="at-items">
-            {urgentes.length > 0 && <span className="at-pill">Prazo vence amanhã <Link className="btn-mini" href="/prazos">Ver prazo</Link></span>}
+            {urgentes.length > 0 && <span className="at-pill">Prazo vence amanhã <Link className="btn-mini" href="/jornada">Ver prazo</Link></span>}
             {aguardando > 0 && <span className="at-pill">{aguardando} nomeação(ões) para validar <button className="btn-mini" onClick={() => setFilter("nom")}>Validar</button></span>}
           </div>
         </div>
@@ -197,7 +197,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
           </section>
 
           <section className="panel">
-            <div className="panel-h"><h3>Prazos monitorados</h3><Link href="/prazos">Ver todos</Link></div>
+            <div className="panel-h"><h3>Prazos monitorados</h3><Link href="/jornada">Ver todos</Link></div>
             <div className="mini">
               {prazos.map((p) => { const b = dm(p.due_date + "T00:00:00");
                 const st = p.status === "urgente" ? ["st-urg", "Urgente"] : p.status === "confirmado" ? ["st-ok", "Confirmado"] : ["st-val", "A validar"];
