@@ -101,6 +101,7 @@ export default function AppShell({
               <div className="sb-sec">Administração</div>
               <Link href="/admin" className={"sb-item" + (path.startsWith("/admin") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="dash" />Painel</Link>
               <div className="sb-sec">Conta</div>
+              <Link href="/ajuda" className={"sb-item" + (path.startsWith("/ajuda") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="inbox" />Ajuda</Link>
               <Link href="/configuracoes" className={"sb-item" + (path.startsWith("/configuracoes") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Configurações</Link>
               <div className="sb-item" onClick={() => startTransition(() => { signOut(); })} style={{ cursor: "pointer" }}><Ico p="gear" />Sair</div>
             </>
@@ -113,6 +114,7 @@ export default function AppShell({
               <div className="sb-sec">Gestão</div>
               {gestao.map(item)}
               <div className="sb-sec">Conta</div>
+              <Link href="/ajuda" className={"sb-item" + (path.startsWith("/ajuda") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="inbox" />Ajuda</Link>
               <Link href="/configuracoes" className={"sb-item" + (path.startsWith("/configuracoes") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Configurações</Link>
               <div className="sb-item" onClick={() => startTransition(() => { signOut(); })} style={{ cursor: "pointer" }}><Ico p="gear" />Sair</div>
             </>
