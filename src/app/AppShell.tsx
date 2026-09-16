@@ -66,6 +66,7 @@ export default function AppShell({
   ];
   const operacao: NavItem[] = [
     { href: "/jornada", label: "Jornada", ico: "dash", ready: true },
+    { href: "/processos", label: "Processos", ico: "doc", ready: true },
     { href: "/agenda", label: "Agenda", ico: "agenda", ready: true },
   ];
   const gestao: NavItem[] = [

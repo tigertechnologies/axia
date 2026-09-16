@@ -41,15 +41,15 @@ export default async function ProcessosPage() {
   const map = new Map<string, Processo>();
   const get = (ref: string | null): Processo | null => {
     if (!ref) return null;
-    if (!map.has(ref)) map.set(ref, { ref, comunicacoes: 0, prazos: 0, pericias: 0, honorarios_cents: 0, vara: null, lastActivity: null });
+    if (!map.has(ref)) map.set(ref, { ref, comunicacoes: 0, prazos: 0, pericias: 0, honorarios_cents: 0, vara: null, lastActivity: null, stage: null, periciado: null, prazoUrgente: false });
     return map.get(ref)!;
   };
   const touch = (p: Processo, when: string | null) => {
     if (when && (!p.lastActivity || when > p.lastActivity)) p.lastActivity = when;
   };
   C.forEach((c) => { const p = get(c.process_ref); if (p) { p.comunicacoes++; if (!p.vara && c.sender) p.vara = c.sender; touch(p, c.received_at); } });
-  P.forEach((x) => { const p = get(x.process_ref); if (p) { p.prazos++; touch(p, x.due_date); } });
-  PE.forEach((x) => { const p = get(x.process_ref); if (p) { p.pericias++; if (!p.vara && x.local) p.vara = x.local; touch(p, x.scheduled_at); } });
+  P.forEach((x) => { const p = get(x.process_ref); if (p) { p.prazos++; if (x.status === "urgente") p.prazoUrgente = true; touch(p, x.due_date); } });
+  PE.forEach((x) => { const p = get(x.process_ref); if (p) { p.pericias++; if (!p.vara && x.local) p.vara = x.local; if (!p.periciado && x.titulo) p.periciado = x.titulo; if (x.workflow_stage) p.stage = x.workflow_stage; touch(p, x.scheduled_at); } });
   H.forEach((x) => { const p = get(x.process_ref); if (p) { p.honorarios_cents += x.amount_cents; } });
 
   const processos = Array.from(map.values()).sort((a, b) => (b.lastActivity ?? "").localeCompare(a.lastActivity ?? ""));

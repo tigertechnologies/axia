@@ -272,3 +272,22 @@
 .atencao-cta{ flex:0 0 auto; font-size:13px; font-weight:600; color:#fff; background:#16305B; padding:7px 14px; border-radius:8px; text-decoration:none; white-space:nowrap; }
 .atencao-cta:hover{ opacity:.9; }
 @media (max-width:640px){ .atencao-item{ flex-wrap:wrap; } .atencao-cta{ width:100%; text-align:center; margin-top:6px; } }
+
+/* Listagem de Processos (direcional seções 4-5) */
+.proc-lista{ display:flex; flex-direction:column; gap:8px; }
+.proc-card{ display:flex; justify-content:space-between; align-items:center; gap:14px; padding:14px 16px; border:1px solid var(--line); border-radius:12px; background:var(--panel); text-decoration:none; transition:border-color .15s, box-shadow .15s; }
+.proc-card:hover{ border-color:var(--blue); box-shadow:var(--shadow-sm); }
+.proc-main{ min-width:0; flex:1; }
+.proc-ref{ font-family:monospace; font-size:14px; font-weight:600; color:var(--ink); }
+.proc-meta{ display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
+.proc-meta span{ font-size:12px; color:var(--muted); }
+.proc-side{ display:flex; align-items:center; gap:12px; flex:0 0 auto; }
+.proc-badge{ font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; }
+.proc-badge.b-urg{ background:rgba(192,73,46,.16); color:#C0492E; }
+.proc-badge.b-and{ background:rgba(74,111,165,.16); color:#3B5B86; }
+.proc-badge.b-wait{ background:rgba(201,162,39,.16); color:#8A5A18; }
+.proc-badge.b-fim{ background:rgba(31,168,158,.16); color:#0F7A70; }
+.proc-badge.b-neu{ background:var(--line); color:var(--muted); }
+.proc-hon{ font-size:13px; font-weight:600; color:var(--ink); }
+.proc-when{ font-size:12px; color:var(--muted); min-width:44px; text-align:right; }
+@media (max-width:600px){ .proc-card{ flex-wrap:wrap; } .proc-side{ width:100%; justify-content:space-between; } }
