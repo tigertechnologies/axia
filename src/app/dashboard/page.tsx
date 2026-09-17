@@ -3,7 +3,10 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import { isCurrentUserAdmin } from "../actions/admin";
 import AppShell from "../AppShell";
 import DashboardContent from "./DashboardContent";
+import ConvitesPendentes from "../ConvitesPendentes";
+import { meusConvites } from "../actions/convites";
 import "./dashboard.css";
+
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +48,7 @@ export default async function DashboardPage() {
   };
   const aguardando = C.filter((c) => c.category === "nomeacao" && !c.validated).length;
   const urgentes = P.filter((p) => p.status === "urgente").length;
+  const convites = await meusConvites();
 
   return (
     <AppShell
@@ -53,6 +57,7 @@ export default async function DashboardPage() {
       counts={counts}
       bell={aguardando + urgentes}
     >
+      <ConvitesPendentes convites={convites} />
       <DashboardContent
         nome={profile?.nome ?? "Doutor(a)"}
         pastDue={org?.subscription_status === "past_due"}
