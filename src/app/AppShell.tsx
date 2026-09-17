@@ -103,6 +103,8 @@ export default function AppShell({
               <div className="sb-sec">Conta</div>
               <Link href="/ajuda" className={"sb-item" + (path.startsWith("/ajuda") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="inbox" />Ajuda</Link>
               <Link href="/configuracoes" className={"sb-item" + (path.startsWith("/configuracoes") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Configurações</Link>
+              <Link href="/seguranca" className={"sb-item" + (path.startsWith("/seguranca") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="shield" />Segurança</Link>
+              <Link href="/plano" className={"sb-item" + (path.startsWith("/plano") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="wallet" />Plano</Link>
               <div className="sb-item" onClick={() => startTransition(() => { signOut(); })} style={{ cursor: "pointer" }}><Ico p="gear" />Sair</div>
             </>
           ) : (
@@ -120,6 +122,8 @@ export default function AppShell({
               <div className="sb-sec">Conta</div>
               <Link href="/ajuda" className={"sb-item" + (path.startsWith("/ajuda") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="inbox" />Ajuda</Link>
               <Link href="/configuracoes" className={"sb-item" + (path.startsWith("/configuracoes") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Configurações</Link>
+              <Link href="/seguranca" className={"sb-item" + (path.startsWith("/seguranca") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="shield" />Segurança</Link>
+              <Link href="/plano" className={"sb-item" + (path.startsWith("/plano") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="wallet" />Plano</Link>
               <div className="sb-item" onClick={() => startTransition(() => { signOut(); })} style={{ cursor: "pointer" }}><Ico p="gear" />Sair</div>
             </>
           )}
