@@ -102,6 +102,52 @@ export default function LaudoClient({
     alert(r.error ? "Não foi possível salvar o modelo." : "Modelo salvo em 'Meus modelos'.");
   }
 
+  async function baixarDOCX() {
+    if (!conteudo) return;
+    // Import dinâmico (só carrega a lib quando o usuário baixa).
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import("docx");
+    const filhos: any[] = [];
+    // Título centralizado (padrão ABNT: caixa alta, negrito)
+    filhos.push(new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 400 },
+      children: [new TextRun({ text: (titulo || "LAUDO PERICIAL").toUpperCase(), bold: true, size: 28, font: "Times New Roman" })],
+    }));
+    // Seções: título em negrito + corpo justificado
+    conteudo.secoes.forEach((s) => {
+      filhos.push(new Paragraph({
+        spacing: { before: 240, after: 120 },
+        children: [new TextRun({ text: s.titulo.toUpperCase(), bold: true, size: 24, font: "Times New Roman" })],
+      }));
+      const linhas = (s.texto || "").split("\n");
+      linhas.forEach((linha) => {
+        filhos.push(new Paragraph({
+          alignment: AlignmentType.JUSTIFIED,
+          spacing: { after: 120, line: 360 },  // entrelinhas 1,5
+          children: [new TextRun({ text: linha, size: 24, font: "Times New Roman" })],
+        }));
+      });
+    });
+    // Rodapé
+    filhos.push(new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 480 },
+      children: [new TextRun({ text: `Gerado pela AXIA em ${new Date().toLocaleString("pt-BR")}${status === "validado" ? " — laudo validado" : " — MINUTA"}`, size: 16, italics: true, color: "888888", font: "Times New Roman" })],
+    }));
+
+    const doc = new Document({
+      sections: [{
+        properties: { page: { margin: { top: 1134, bottom: 1134, left: 1701, right: 1134 } } }, // margens ABNT (3cm esq, 2cm demais)
+        children: filhos,
+      }],
+    });
+    const blob = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${(titulo || "laudo").replace(/[^\w.-]/g, "_")}.docx`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function baixarPDF() {
     if (!conteudo) return;
     const esc = (s: string) => s.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]!));
@@ -215,6 +261,7 @@ export default function LaudoClient({
                 <span className="laudo-validado-tag">✓ Laudo validado</span>
                 <button className="laudo-btn ghost" onClick={reabrir}>Reabrir para editar</button>
                 <button className="laudo-btn" onClick={baixarPDF}>Baixar PDF</button>
+                <button className="laudo-btn ghost" onClick={baixarDOCX}>Baixar Word (ABNT)</button>
               </>
             ) : (
               <>
@@ -224,6 +271,7 @@ export default function LaudoClient({
                   <button className="laudo-btn ghost" onClick={revisar}>Revisar (Auditor)</button>
                   <button className="laudo-btn ghost" onClick={salvarComoMeuModelo}>Salvar como modelo</button>
                   <button className="laudo-btn ghost" onClick={baixarPDF}>Baixar PDF</button>
+                  <button className="laudo-btn ghost" onClick={baixarDOCX}>Baixar Word (ABNT)</button>
                 </div>
               </>
             )}
