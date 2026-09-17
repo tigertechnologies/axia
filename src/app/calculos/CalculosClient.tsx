@@ -1,6 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import { tabelaPrice, tabelaSAC, jurosSimples, jurosCompostos, fmtCents, type ResultadoTabela } from "@/modules/calculos/domain/financeiro";
+import { salvarCalculoNoProcesso } from "@/app/actions/calculos-salvos";
 import { CalcRescisao, CalcRevisional, CalcPasep } from "./CalcTrabalhista";
 
 type Metodo = "price" | "sac" | "simples" | "compostos" | "rescisao" | "revisional" | "pasep";
@@ -34,6 +35,20 @@ export default function CalculosClient() {
     if (calc.metodo === "simples") return { juros: jurosSimples(calc.principal, calc.taxa, calc.n) };
     return { juros: jurosCompostos(calc.principal, calc.taxa, calc.n) };
   }, [calc]);
+
+  async function salvarNoProcesso() {
+    if (!calc || !resultado) return;
+    const ref = window.prompt("Número do processo para salvar este cálculo:");
+    if (!ref) return;
+    const metodoLabel = ({ price: "Tabela Price", sac: "Tabela SAC", simples: "Juros simples", compostos: "Juros compostos" } as Record<string,string>)[calc.metodo] ?? calc.metodo;
+    const r = await salvarCalculoNoProcesso({
+      processRef: ref, tipo: calc.metodo, titulo: `${metodoLabel} — ${fmtCents(calc.principal)}`,
+      entrada: { principal: calc.principal, taxa: calc.taxa, n: calc.n },
+      resultado: (resultado as any),
+      resumoTexto: `${metodoLabel}: ${fmtCents(calc.principal)}, ${(calc.taxa*100).toFixed(2)}%/período, ${calc.n} períodos`,
+    });
+    alert(r.error ? "Não foi possível salvar." : "Cálculo salvo no processo " + ref + ". Veja na tela do processo.");
+  }
 
   function baixarPDF() {
     if (!calc || !resultado) return;
@@ -127,6 +142,7 @@ export default function CalculosClient() {
             Valor: {fmtCents(calc.principal)} · Taxa: {(calc.taxa*100).toLocaleString("pt-BR",{maximumFractionDigits:4})}%/período · Períodos: {calc.n}
           </div>
           <button className="calc-btn ghost" onClick={baixarPDF}>Baixar PDF</button>
+          <button className="calc-btn ghost" onClick={salvarNoProcesso} style={{ marginLeft: 8 }}>Salvar no processo</button>
         </div>
       )}
     </div>

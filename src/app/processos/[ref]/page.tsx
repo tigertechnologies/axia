@@ -50,6 +50,8 @@ export default async function ProcessoPage({ params }: { params: { ref: string }
   const DOCS = (docs ?? []) as any[];
   const QUES = (quesitos ?? []) as any[];
   const EVS = (eventos ?? []) as any[];
+  const { data: calcs } = await supabase.from("calculos_salvos").select("id, tipo, titulo, resumo_texto, created_at").eq("process_ref", ref).order("created_at", { ascending: false });
+  const CALCS = (calcs ?? []) as any[];
 
   // contadores globais para a sidebar (consulta leve)
   const [{ data: allComms }, { data: allPrazos }, { count: perCount }] = await Promise.all([
@@ -78,7 +80,7 @@ export default async function ProcessoPage({ params }: { params: { ref: string }
 
   return (
     <AppShell nome={profile?.nome ?? "Doutor(a)"} planLabel={planLabelFrom(org?.plan_id ?? null)} counts={counts} bell={bell}>
-      <ProcessoDetail refNum={ref} vara={vara} comms={C as any} prazos={P as any} pericias={PE as any} honorarios={H as any} documentos={DOCS as any} quesitos={QUES as any} eventos={EVS as any} />
+      <ProcessoDetail refNum={ref} vara={vara} comms={C as any} prazos={P as any} pericias={PE as any} honorarios={H as any} documentos={DOCS as any} quesitos={QUES as any} eventos={EVS as any} calculos={CALCS as any} />
     </AppShell>
   );
 }

@@ -14,6 +14,7 @@ interface Honorario { id: string; process_ref: string | null; amount_cents: numb
 interface Documento { id: string; tipo: string | null; nome_original: string | null; created_at: string; segredo_justica: boolean; pericia_id: string }
 interface Quesito { id: string; origem: string; numero: number | null; texto: string; respondido: boolean; pericia_id: string }
 interface Evento { id: string; event_type: string; origem: string | null; ator: string | null; event_at: string; human_confirmed: boolean; pericia_id: string }
+interface CalculoS { id: string; tipo: string; titulo: string; resumo_texto: string | null; created_at: string }
 
 const CAT: Record<string, { label: string; tag: string }> = {
   nomeacao: { label: "Nomeação", tag: "t-nom" }, prazo: { label: "Prazo", tag: "t-prz" },
@@ -36,8 +37,8 @@ const EVENTO_LABEL: Record<string, string> = {
 };
 const QUES_ORIGEM: Record<string, string> = { juizo: "Juízo", autor: "Autor", reu: "Réu", complementar: "Complementar" };
 
-export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, honorarios, documentos, quesitos, eventos }:
-  { refNum: string; vara: string | null; comms: Comm[]; prazos: Prazo[]; pericias: Pericia[]; honorarios: Honorario[]; documentos: Documento[]; quesitos: Quesito[]; eventos: Evento[] }) {
+export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, honorarios, documentos, quesitos, eventos, calculos }:
+  { refNum: string; vara: string | null; comms: Comm[]; prazos: Prazo[]; pericias: Pericia[]; honorarios: Honorario[]; documentos: Documento[]; quesitos: Quesito[]; eventos: Evento[]; calculos: CalculoS[] }) {
   const [aba, setAba] = useState<Aba>("visao");
   const [done, setDone] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState("");
@@ -184,6 +185,15 @@ export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, 
             </div>
           ))}
           {honorarios.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13.5 }}>Nenhum honorário registrado.</p>}
+
+          <div className="panel-h" style={{ marginTop: 18 }}><h3>Cálculos salvos</h3></div>
+          {calculos.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13.5 }}>Nenhum cálculo salvo. Faça um cálculo em Cálculos e clique em "Salvar no processo".</p>}
+          {calculos.map((c) => (
+            <div key={c.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
+              <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink)" }}>🧮 {c.titulo}</div>
+              {c.resumo_texto && <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 2 }}>{c.resumo_texto}</div>}
+            </div>
+          ))}
         </section>
       )}
 
