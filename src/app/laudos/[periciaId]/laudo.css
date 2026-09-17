@@ -69,3 +69,10 @@
   .laudo-layout{ grid-template-columns:1fr; }
   .laudo-side{ position:static; }
 }
+
+/* Hierarquia de botões (direcional seção 3: ação principal destacada) */
+.laudo-acoes{ flex-direction:column; align-items:stretch; gap:12px; }
+.laudo-btn-primary{ background:#0F7A70; border-color:#0F7A70; font-size:15px; padding:13px 20px; }
+.laudo-btn-primary:hover{ opacity:.92; }
+.laudo-btn-sec{ display:flex; gap:8px; flex-wrap:wrap; }
+.laudo-btn-sec .laudo-btn{ font-size:13px; padding:8px 14px; }

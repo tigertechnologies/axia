@@ -218,11 +218,13 @@ export default function LaudoClient({
               </>
             ) : (
               <>
-                <button className="laudo-btn" onClick={salvarAgora}>Salvar rascunho</button>
-                <button className="laudo-btn ghost" onClick={revisar}>Revisar (Auditor)</button>
-                <button className="laudo-btn ghost" onClick={salvarComoMeuModelo}>Salvar como meu modelo</button>
-                <button className="laudo-btn" onClick={validar}>Validar laudo</button>
-                <button className="laudo-btn ghost" onClick={baixarPDF}>Baixar PDF</button>
+                <button className="laudo-btn laudo-btn-primary" onClick={validar}>✓ Validar laudo</button>
+                <div className="laudo-btn-sec">
+                  <button className="laudo-btn ghost" onClick={salvarAgora}>Salvar rascunho</button>
+                  <button className="laudo-btn ghost" onClick={revisar}>Revisar (Auditor)</button>
+                  <button className="laudo-btn ghost" onClick={salvarComoMeuModelo}>Salvar como modelo</button>
+                  <button className="laudo-btn ghost" onClick={baixarPDF}>Baixar PDF</button>
+                </div>
               </>
             )}
           </div>
