@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { openBillingPortal, deleteAccount } from "./actions";
+import { exportarMeusDados } from "../actions/lgpd";
 import { loadDemoData, clearDemoData } from "../actions/demo";
 import { signOut } from "../dashboard/actions";
 
@@ -21,6 +22,18 @@ export default function ConfigClient({ email, nome, crm, uf, especialidade, plan
   const [delErr, setDelErr] = useState("");
   const router = useRouter();
   const [demoLoading, setDemoLoading] = useState("");
+  const [exportando, setExportando] = useState(false);
+  async function exportarDados() {
+    setExportando(true);
+    const r = await exportarMeusDados();
+    setExportando(false);
+    if (r.error || !r.dados) { alert("Não foi possível exportar seus dados."); return; }
+    const blob = new Blob([JSON.stringify(r.dados, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `axia-meus-dados-${new Date().toISOString().slice(0,10)}.json`; a.click();
+    URL.revokeObjectURL(url);
+  }
   async function demoLoad() { setDemoLoading("load"); await loadDemoData(); setDemoLoading(""); router.refresh(); }
   async function demoClear() { setDemoLoading("clear"); await clearDemoData(); setDemoLoading(""); router.refresh(); }
 
@@ -88,9 +101,16 @@ export default function ConfigClient({ email, nome, crm, uf, especialidade, plan
         </div>
       </div>
 
+      <div style={card}>
+        <h3 style={{ fontFamily: "'Sora',sans-serif", marginBottom: 6 }}>Meus dados (LGPD)</h3>
+        <p style={{ fontSize: 13.5, color: "var(--muted)", lineHeight: 1.6, marginBottom: 12 }}>
+          Você tem o direito de portabilidade dos seus dados. Baixe um arquivo com todos os dados da sua conta (perícias, processos, laudos, financeiro, contatos e mais).
+        </p>
+        <button className="btn btn-ghost" onClick={exportarDados} disabled={exportando}>{exportando ? "Preparando…" : "Exportar meus dados"}</button>
+      </div>
+
       <div style={{ ...card, borderColor: "#F3D9CE", background: "#FFF9F7" }}>
-        <h3 style={{ fontFamily: "'Sora',sans-serif", color: "#8f3b25", marginBottom: 6 }}>Excluir conta</h3>
-        <p style={{ fontSize: 13.5, color: "#a05a44", marginBottom: 12 }}>
+        <h3 style={{ fontFamily: "'Sora',sans-serif", color: "#8f3b25", marginBottom: 6 }}>Excluir conta</h3>        <p style={{ fontSize: 13.5, color: "#a05a44", marginBottom: 12 }}>
           A exclusão é permanente e remove seus dados da AXIA. Sua assinatura ativa será cancelada no provedor de pagamento. Períodos já pagos seguem as condições do plano.
         </p>
         {!delOpen ? (
