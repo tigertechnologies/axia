@@ -3,8 +3,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { buscaGlobal, type ResultadoBusca } from "./actions/busca-global";
 
-const TIPO_ICON: Record<string, string> = { pericia: "🩺", processo: "⚖️", laudo: "📄" };
-const TIPO_LABEL: Record<string, string> = { pericia: "Perícia", processo: "Processo", laudo: "Laudo" };
+const TIPO_ICON: Record<string, string> = { pericia: "🩺", processo: "⚖️", laudo: "📄", documento: "📎", tarefa: "✅", contato: "👤", comunicacao: "📨", honorario: "💰" };
+const TIPO_LABEL: Record<string, string> = { pericia: "Perícia", processo: "Processo", laudo: "Laudo", documento: "Documento", tarefa: "Tarefa", contato: "Contato", comunicacao: "Comunicação", honorario: "Honorário" };
 
 // Atalhos fixos (navegação rápida) mostrados quando não há busca.
 const ATALHOS: { titulo: string; href: string; icon: string }[] = [
