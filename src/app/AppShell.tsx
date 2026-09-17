@@ -115,6 +115,8 @@ export default function AppShell({
               <Link href="/ia" className={"sb-item" + (path.startsWith("/ia") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="dash" />IA</Link>
               <div className="sb-sec">Gestão</div>
               {gestao.map(item)}
+              <div className="sb-sec">Rede</div>
+              <Link href="/marketplace" className={"sb-item" + (path.startsWith("/marketplace") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="shield" />Marketplace</Link>
               <div className="sb-sec">Conta</div>
               <Link href="/ajuda" className={"sb-item" + (path.startsWith("/ajuda") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="inbox" />Ajuda</Link>
               <Link href="/configuracoes" className={"sb-item" + (path.startsWith("/configuracoes") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Configurações</Link>
