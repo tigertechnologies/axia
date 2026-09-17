@@ -11,6 +11,9 @@ interface Comm { id: string; category: string; sender: string | null; subject: s
 interface Pericia { id: string; titulo: string; local: string | null; process_ref: string | null; scheduled_at: string; workflow_stage?: string | null }
 interface Prazo { id: string; titulo: string; process_ref: string | null; due_date: string; status: string }
 interface Honorario { id: string; process_ref: string | null; amount_cents: number; status: string }
+interface Documento { id: string; tipo: string | null; nome_original: string | null; created_at: string; segredo_justica: boolean; pericia_id: string }
+interface Quesito { id: string; origem: string; numero: number | null; texto: string; respondido: boolean; pericia_id: string }
+interface Evento { id: string; event_type: string; origem: string | null; ator: string | null; event_at: string; human_confirmed: boolean; pericia_id: string }
 
 const CAT: Record<string, { label: string; tag: string }> = {
   nomeacao: { label: "Nomeação", tag: "t-nom" }, prazo: { label: "Prazo", tag: "t-prz" },
@@ -21,10 +24,20 @@ const MES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","
 function dataBR(iso: string | null) { if (!iso) return "—"; const d = new Date(iso); return `${String(d.getDate()).padStart(2,"0")} ${MES[d.getMonth()]}`; }
 function dataHora(iso: string) { const d = new Date(iso); return `${String(d.getDate()).padStart(2,"0")} ${MES[d.getMonth()]} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
 
-type Aba = "visao" | "pericias" | "financeiro" | "atividades";
+type Aba = "visao" | "timeline" | "documentos" | "quesitos" | "pericias" | "laudo" | "financeiro" | "atividades";
 
-export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, honorarios }:
-  { refNum: string; vara: string | null; comms: Comm[]; prazos: Prazo[]; pericias: Pericia[]; honorarios: Honorario[] }) {
+const EVENTO_LABEL: Record<string, string> = {
+  COMMUNICATION_RECEIVED: "Comunicação recebida", NOMINATION_CONFIRMED: "Dados confirmados",
+  ENGAGEMENT_ACCEPTED: "Encargo aceito", DEADLINE_CONFIRMED: "Prazo confirmado", DEADLINE_EXTRACTED: "Prazo detectado",
+  APPOINTMENT_SCHEDULED: "Perícia agendada", EXAM_COMPLETED: "Perícia realizada",
+  REPORT_STARTED: "Laudo iniciado", REPORT_VALIDATED: "Laudo validado",
+  PROTOCOL_CONFIRMED: "Protocolo confirmado", CLARIFICATION_REQUESTED: "Esclarecimentos",
+  CASE_FINISHED: "Encerrada", CASE_REOPENED: "Reaberta",
+};
+const QUES_ORIGEM: Record<string, string> = { juizo: "Juízo", autor: "Autor", reu: "Réu", complementar: "Complementar" };
+
+export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, honorarios, documentos, quesitos, eventos }:
+  { refNum: string; vara: string | null; comms: Comm[]; prazos: Prazo[]; pericias: Pericia[]; honorarios: Honorario[]; documentos: Documento[]; quesitos: Quesito[]; eventos: Evento[] }) {
   const [aba, setAba] = useState<Aba>("visao");
   const [done, setDone] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState("");
@@ -63,7 +76,7 @@ export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, 
 
       {/* Abas */}
       <div style={{ display: "flex", gap: 6, marginBottom: 18, borderBottom: "1px solid var(--line)", flexWrap: "wrap" }}>
-        {([["visao","Visão geral"],["pericias","Perícias"],["financeiro","Financeiro"],["atividades","Atividades"]] as [Aba,string][]).map(([id,l]) => (
+        {([["visao","Visão geral"],["timeline","Timeline"],["documentos","Documentos"],["quesitos","Quesitos"],["pericias","Perícia"],["laudo","Laudo"],["financeiro","Financeiro"],["atividades","Atividades"]] as [Aba,string][]).map(([id,l]) => (
           <button key={id} onClick={() => setAba(id)} style={{ padding: "10px 16px", border: "none", background: "none", cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: aba === id ? 700 : 500, color: aba === id ? "var(--ink)" : "var(--muted)", borderBottom: aba === id ? "2px solid #1FA89E" : "2px solid transparent", marginBottom: -1 }}>{l}</button>
         ))}
       </div>
@@ -75,6 +88,51 @@ export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, 
           <div className="kpi"><div className="kn" style={{ fontSize: 20 }}>{formatBRL(totalHon)}</div><div className="kl">Honorários</div></div>
           <div className="kpi"><div className="kn">{comms.filter((c) => !c.validated).length}</div><div className="kl">A validar</div></div>
         </div>
+      )}
+
+
+      {aba === "timeline" && (
+        <section className="panel">
+          <div className="panel-h"><h3>Linha do tempo do processo</h3></div>
+          {eventos.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13.5 }}>Nenhum evento registrado ainda.</p>}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {eventos.map((e) => (
+              <div key={e.id} style={{ display: "flex", gap: 12, paddingBottom: 14 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 999, background: "#1FA89E", marginTop: 4, flex: "0 0 auto" }} />
+                <div>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink)" }}>{EVENTO_LABEL[e.event_type] ?? e.event_type}</div>
+                  <div style={{ fontSize: 12, color: "var(--muted)" }}>{dataHora(e.event_at)} · {e.origem ?? "manual"}{e.human_confirmed ? " · confirmado" : " · pela AXIA"}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {aba === "documentos" && (
+        <section className="panel">
+          <div className="panel-h"><h3>Documentos do processo</h3></div>
+          {documentos.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13.5 }}>Nenhum documento anexado. Anexe no painel da perícia (na Jornada).</p>}
+          {documentos.map((d) => (
+            <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--line)", fontSize: 13.5 }}>
+              <span style={{ color: "var(--ink)" }}>📎 {d.nome_original ?? d.tipo ?? "documento"} {d.segredo_justica ? "🔒" : ""}</span>
+              <span style={{ color: "var(--muted)" }}>{dataBR(d.created_at)}</span>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {aba === "quesitos" && (
+        <section className="panel">
+          <div className="panel-h"><h3>Quesitos ({quesitos.filter(q=>q.respondido).length}/{quesitos.length} respondidos)</h3></div>
+          {quesitos.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13.5 }}>Nenhum quesito cadastrado. Cadastre no painel da perícia (na Jornada).</p>}
+          {quesitos.map((q) => (
+            <div key={q.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid var(--line)", fontSize: 13 }}>
+              <span style={{ color: q.respondido ? "#0F7A70" : "var(--muted)", fontWeight: 700 }}>{q.respondido ? "✓" : "○"}</span>
+              <span style={{ color: "var(--ink)" }}><b>{QUES_ORIGEM[q.origem] ?? q.origem} {q.numero ?? ""}</b>: {q.texto}</span>
+            </div>
+          ))}
+        </section>
       )}
 
       {aba === "pericias" && (
@@ -91,6 +149,22 @@ export default function ProcessoDetail({ refNum, vara, comms, prazos, pericias, 
                 {p.workflow_stage && <span className="st st-val">{STAGE_LABEL[p.workflow_stage as JourneyStage] ?? p.workflow_stage}</span>}
                 <Link className="btn-act" href={`/laudos/${p.id}`}>Laudo</Link>
               </div>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {aba === "laudo" && (
+        <section className="panel">
+          <div className="panel-h"><h3>Laudos</h3></div>
+          {pericias.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13.5 }}>Sem perícias para elaborar laudo.</p>}
+          {pericias.map((p) => (
+            <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid var(--line)" }}>
+              <div>
+                <div style={{ fontWeight: 600, color: "var(--ink)" }}>{p.titulo}</div>
+                <div style={{ fontSize: 12.5, color: "var(--muted)" }}>{p.workflow_stage ? (STAGE_LABEL[p.workflow_stage as JourneyStage] ?? p.workflow_stage) : "—"}</div>
+              </div>
+              <Link className="btn-act solid" href={`/laudos/${p.id}`}>Abrir laudo</Link>
             </div>
           ))}
         </section>

@@ -40,6 +40,17 @@ export default async function ProcessoPage({ params }: { params: { ref: string }
 
   if (C.length + P.length + PE.length + H.length === 0) notFound();
 
+  // Ids das perícias deste processo, para buscar documentos/quesitos/eventos.
+  const periciaIds = PE.map((p) => p.id).filter(Boolean);
+  const [{ data: docs }, { data: quesitos }, { data: eventos }] = await Promise.all([
+    periciaIds.length ? supabase.from("pericia_documents").select("id, tipo, nome_original, created_at, segredo_justica, pericia_id").in("pericia_id", periciaIds).order("created_at", { ascending: false }) : Promise.resolve({ data: [] as any[] }),
+    periciaIds.length ? supabase.from("pericia_quesitos").select("id, origem, numero, texto, respondido, pericia_id").in("pericia_id", periciaIds).order("origem", { ascending: true }) : Promise.resolve({ data: [] as any[] }),
+    periciaIds.length ? supabase.from("pericia_events").select("id, event_type, origem, ator, event_at, human_confirmed, pericia_id").in("pericia_id", periciaIds).order("event_at", { ascending: false }).limit(50) : Promise.resolve({ data: [] as any[] }),
+  ]);
+  const DOCS = (docs ?? []) as any[];
+  const QUES = (quesitos ?? []) as any[];
+  const EVS = (eventos ?? []) as any[];
+
   // contadores globais para a sidebar (consulta leve)
   const [{ data: allComms }, { data: allPrazos }, { count: perCount }] = await Promise.all([
     supabase.from("communications").select("category, validated"),
@@ -67,7 +78,7 @@ export default async function ProcessoPage({ params }: { params: { ref: string }
 
   return (
     <AppShell nome={profile?.nome ?? "Doutor(a)"} planLabel={planLabelFrom(org?.plan_id ?? null)} counts={counts} bell={bell}>
-      <ProcessoDetail refNum={ref} vara={vara} comms={C as any} prazos={P as any} pericias={PE as any} honorarios={H as any} />
+      <ProcessoDetail refNum={ref} vara={vara} comms={C as any} prazos={P as any} pericias={PE as any} honorarios={H as any} documentos={DOCS as any} quesitos={QUES as any} eventos={EVS as any} />
     </AppShell>
   );
 }
