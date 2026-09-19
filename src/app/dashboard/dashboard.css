@@ -324,3 +324,25 @@
 .ia-card-status{ font-size:11.5px; font-weight:700; margin-top:6px; }
 .ia-card-status.on{ color:#0F7A70; }
 .ia-card-status.off{ color:var(--muted); }
+
+/* ===== HUB de acesso rápido (navegação reformulada) ===== */
+.hub{ margin-bottom:26px; }
+.hub-hint{ font-size:12.5px; color:var(--muted); margin-bottom:16px; }
+.hub-hint kbd{ background:var(--panel); border:1px solid var(--line); border-radius:5px; padding:1px 6px; font-family:monospace; font-size:11px; color:var(--ink); }
+.hub-grupo{ margin-bottom:18px; }
+.hub-grupo-tit{ font-family:var(--disp),sans-serif; font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+.hub-cards{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.hub-card{ display:flex; flex-direction:column; gap:4px; padding:16px; border:1px solid var(--line); border-radius:14px; background:var(--panel); text-decoration:none; transition:transform .12s, box-shadow .15s, border-color .15s; }
+.hub-card:hover{ transform:translateY(-2px); box-shadow:0 8px 24px rgba(16,35,63,.12); border-color:var(--blue); }
+.hub-card-ico{ width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:6px; }
+.hub-card-nome{ font-family:var(--disp),sans-serif; font-size:15px; font-weight:700; color:var(--ink); }
+.hub-card-desc{ font-size:12px; color:var(--muted); line-height:1.4; }
+@media (max-width:900px){ .hub-cards{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:480px){ .hub-cards{ grid-template-columns:1fr 1fr; } .hub-card{ padding:12px; } .hub-card-ico{ width:38px; height:38px; font-size:19px; } }
+
+/* Menu enxuto — botão "Mais" e subitens */
+.sb-mais{ display:flex; align-items:center; gap:12px; width:100%; padding:11px 12px; border:none; background:none; color:rgba(255,255,255,.72); font-size:14.5px; font-weight:500; cursor:pointer; border-radius:10px; font-family:var(--body),sans-serif; margin-top:12px; }
+.sb-mais:hover{ background:rgba(255,255,255,.06); }
+.sb-mais-bloco{ display:flex; flex-direction:column; padding:4px 0 4px 8px; margin-left:12px; border-left:1px solid rgba(255,255,255,.1); }
+.sb-item.sb-sub{ font-size:13.5px; padding:8px 12px; color:rgba(255,255,255,.6); }
+.sb-item.sb-sub.active{ color:#fff; }

@@ -21,6 +21,7 @@ export default function AppShell({
   nome: string; planLabel: string; counts: Counts; bell: number; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [mostrarMais, setMostrarMais] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifs, setNotifs] = useState<Notificacao[]>([]);
   const [notifLoad, setNotifLoad] = useState(false);
@@ -109,22 +110,24 @@ export default function AppShell({
             </>
           ) : (
             <>
-              <div className="sb-sec">Visão Geral</div>
-              {visaoGeral.map(item)}
-              <div className="sb-sec">Operação Pericial</div>
-              {operacao.map(item)}
-              <div className="sb-sec">Inteligência</div>
+              <div className="sb-sec">Início</div>
+              <Link href="/dashboard" className={"sb-item" + (path === "/dashboard" ? " active" : "")} onClick={() => setOpen(false)}><Ico p="dash" />Início</Link>
+              <Link href="/jornada" className={"sb-item" + (path.startsWith("/jornada") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="dash" />Jornada</Link>
+              <Link href="/inbox" className={"sb-item" + (path.startsWith("/inbox") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="inbox" />Inbox</Link>
               <Link href="/ia" className={"sb-item" + (path.startsWith("/ia") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="dash" />IA</Link>
-              <div className="sb-sec">Gestão</div>
-              {gestao.map(item)}
-              <div className="sb-sec">Rede</div>
-              <Link href="/marketplace" className={"sb-item" + (path.startsWith("/marketplace") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="shield" />Marketplace</Link>
-              <div className="sb-sec">Conta</div>
-              <Link href="/ajuda" className={"sb-item" + (path.startsWith("/ajuda") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="inbox" />Ajuda</Link>
-              <Link href="/configuracoes" className={"sb-item" + (path.startsWith("/configuracoes") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="gear" />Configurações</Link>
-              <Link href="/seguranca" className={"sb-item" + (path.startsWith("/seguranca") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="shield" />Segurança</Link>
-              <Link href="/plano" className={"sb-item" + (path.startsWith("/plano") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="wallet" />Plano</Link>
-              <div className="sb-item" onClick={() => startTransition(() => { signOut(); })} style={{ cursor: "pointer" }}><Ico p="gear" />Sair</div>
+              <Link href="/financeiro" className={"sb-item" + (path.startsWith("/financeiro") ? " active" : "")} onClick={() => setOpen(false)}><Ico p="wallet" />Financeiro</Link>
+
+              <button className="sb-mais" onClick={() => setMostrarMais((v) => !v)}>
+                <Ico p="gear" />Mais <span style={{ marginLeft: "auto", transform: mostrarMais ? "rotate(180deg)" : "none", transition: "transform .15s" }}>⌄</span>
+              </button>
+              {mostrarMais && (
+                <div className="sb-mais-bloco">
+                  {[["/processos","Processos"],["/agenda","Agenda"],["/calculos","Cálculos"],["/tarefas","Tarefas"],["/honorarios","Honorários"],["/relatorios","Relatórios"],["/equipe","Equipe"],["/contatos","Contatos"],["/marketplace","Marketplace"],["/ajuda","Ajuda"],["/configuracoes","Configurações"],["/seguranca","Segurança"],["/plano","Plano"]].map(([href,label]) => (
+                    <Link key={href} href={href} className={"sb-item sb-sub" + (path.startsWith(href) ? " active" : "")} onClick={() => setOpen(false)}>{label}</Link>
+                  ))}
+                </div>
+              )}
+              <div className="sb-item" onClick={() => startTransition(() => { signOut(); })} style={{ cursor: "pointer", marginTop: 8 }}><Ico p="gear" />Sair</div>
             </>
           )}
         </nav>

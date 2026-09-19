@@ -4,7 +4,9 @@ import Link from "next/link";
 import { formatBRL } from "@/lib/plans";
 import { validateCommunication } from "./actions";
 import { Ico } from "../AppShell";
+import HubAcessos from "../HubAcessos";
 import Toast from "../Toast";
+
 
 interface Comm { id: string; category: string; sender: string | null; subject: string; snippet: string | null; process_ref: string | null; received_at: string; validated: boolean }
 interface Pericia { id: string; titulo: string; local: string | null; process_ref: string | null; scheduled_at: string; workflow_stage?: string | null }
@@ -121,6 +123,8 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
           </div>
         </div>
       )}
+
+      <HubAcessos />
 
       <div className="kpis">
         <div className="kpi"><div className="ki ki-navy"><Ico p="shield" s={20} /></div><div className="kn">{nomeacoes.length}</div><div className="kl">Novas nomeações</div><div className="kt up">{aguardando} aguardando validação</div></div>
