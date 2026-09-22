@@ -1,56 +1,105 @@
 "use client";
 import Link from "next/link";
+import { AxiaIcon } from "./AxiaIcon";
 
-// Hub de acesso rápido — substitui a navegação "botão por botão" por
-// grandes cartões agrupados por contexto. O menu vira secundário.
-const GRUPOS: { titulo: string; itens: { icon: string; nome: string; desc: string; href: string; cor: string }[] }[] = [
-  {
-    titulo: "Operação",
-    itens: [
-      { icon: "🗂️", nome: "Jornada", desc: "Suas perícias, da nomeação à entrega", href: "/jornada", cor: "#16305B" },
-      { icon: "⚖️", nome: "Processos", desc: "Todos os processos e seus detalhes", href: "/processos", cor: "#16305B" },
-      { icon: "📥", nome: "Inbox", desc: "E-mails classificados pela AXIA", href: "/inbox", cor: "#16305B" },
-      { icon: "📅", nome: "Agenda", desc: "Perícias, prazos e compromissos", href: "/agenda", cor: "#16305B" },
-    ],
-  },
-  {
-    titulo: "Produção",
-    itens: [
-      { icon: "📄", nome: "Laudos", desc: "Elabore pela Jornada", href: "/jornada", cor: "#0F7A70" },
-      { icon: "🧮", nome: "Cálculos", desc: "Price, SAC, rescisão, revisional", href: "/calculos", cor: "#0F7A70" },
-      { icon: "🤖", nome: "IA", desc: "Gerar laudo, quesitos, análise", href: "/ia", cor: "#0F7A70" },
-      { icon: "✅", nome: "Tarefas", desc: "Kanban de afazeres", href: "/tarefas", cor: "#0F7A70" },
-    ],
-  },
-  {
-    titulo: "Gestão",
-    itens: [
-      { icon: "💰", nome: "Financeiro", desc: "Receitas, despesas, saldo", href: "/financeiro", cor: "#8A5A18" },
-      { icon: "📊", nome: "Relatórios", desc: "Produtividade e resultados", href: "/relatorios", cor: "#8A5A18" },
-      { icon: "👥", nome: "Equipe", desc: "Convide e gerencie acessos", href: "/equipe", cor: "#8A5A18" },
-      { icon: "📇", nome: "Contatos", desc: "Advogados, partes, escritórios", href: "/contatos", cor: "#8A5A18" },
-    ],
-  },
+interface Tile { icon: string; nome: string; desc: string; href: string; metric?: string; metricCls?: string }
+
+const OPERACAO: Tile[] = [
+  { icon: "journey", nome: "Jornada", desc: "Suas perícias em movimento", href: "/jornada", metric: "", metricCls: "ax-m-teal" },
+  { icon: "clock", nome: "Prazos", desc: "Nunca perca um fatal", href: "/jornada", metric: "", metricCls: "ax-m-red" },
+  { icon: "inbox", nome: "Inbox", desc: "E-mails já interpretados", href: "/inbox", metric: "", metricCls: "ax-m-gold" },
+  { icon: "ia", nome: "IA", desc: "Gerar, resumir, analisar", href: "/ia" },
+];
+const GESTAO: Tile[] = [
+  { icon: "money", nome: "Financeiro", desc: "Receitas, despesas, saldo", href: "/financeiro" },
+  { icon: "calc", nome: "Cálculos", desc: "Periciais e financeiros", href: "/calculos" },
+  { icon: "cal", nome: "Agenda", desc: "Perícias e compromissos", href: "/agenda" },
+  { icon: "chart", nome: "Relatórios", desc: "Visão do escritório", href: "/relatorios" },
+];
+const MAIS: Tile[] = [
+  { icon: "scale", nome: "Processos", desc: "Todos os processos", href: "/processos" },
+  { icon: "doc", nome: "Tarefas", desc: "Kanban de afazeres", href: "/tarefas" },
+  { icon: "users", nome: "Equipe", desc: "Acessos e convites", href: "/equipe" },
+  { icon: "contact", nome: "Contatos", desc: "Advogados e partes", href: "/contatos" },
 ];
 
-export default function HubAcessos() {
+// counts: métricas dinâmicas para os tiles de operação.
+export default function HubAcessos({ counts, foco }: {
+  counts?: { jornada?: number; prazos?: number; inbox?: number };
+  foco?: { titulo: string; sub: string; href: string } | null;
+}) {
+  const op = OPERACAO.map((t) => {
+    let m = t.metric;
+    if (t.nome === "Jornada" && counts?.jornada) m = `${counts.jornada} ativas`;
+    if (t.nome === "Prazos" && counts?.prazos) m = `${counts.prazos} urgente${counts.prazos > 1 ? "s" : ""}`;
+    if (t.nome === "Inbox" && counts?.inbox) m = `${counts.inbox} novas`;
+    return { ...t, metric: m };
+  });
+
+  function move(e: React.MouseEvent<HTMLElement>) {
+    const el = e.currentTarget; const r = el.getBoundingClientRect();
+    el.style.setProperty("--mx", (e.clientX - r.left) + "px");
+    el.style.setProperty("--my", (e.clientY - r.top) + "px");
+  }
+
   return (
-    <div className="hub">
-      <div className="hub-hint">Acesso rápido — ou aperte <kbd>Ctrl</kbd>+<kbd>K</kbd> para buscar qualquer coisa</div>
-      {GRUPOS.map((g) => (
-        <div key={g.titulo} className="hub-grupo">
-          <div className="hub-grupo-tit">{g.titulo}</div>
-          <div className="hub-cards">
-            {g.itens.map((it) => (
-              <Link key={it.nome} href={it.href} className="hub-card">
-                <span className="hub-card-ico" style={{ background: it.cor + "18", color: it.cor }}>{it.icon}</span>
-                <span className="hub-card-nome">{it.nome}</span>
-                <span className="hub-card-desc">{it.desc}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      ))}
+    <div style={{ marginBottom: 26 }}>
+      {/* Botão de comando proeminente */}
+      <button className="ax-cmd" onMouseMove={move} onClick={() => window.dispatchEvent(new CustomEvent("axia-open-cmdk"))}>
+        <span className="ax-cmd-ic"><AxiaIcon name="spark" size={22} /></span>
+        <span className="ax-cmd-txt">
+          <span className="ax-cmd-t1">Faça qualquer coisa na AXIA</span>
+          <span className="ax-cmd-t2">Gere um laudo, calcule verbas, encontre um processo — é só digitar</span>
+        </span>
+        <span className="ax-cmd-keys"><kbd>Ctrl</kbd><kbd>K</kbd></span>
+      </button>
+
+      {/* Foco de agora — a AXIA prioriza */}
+      {foco && (
+        <Link href={foco.href} className="ax-focus">
+          <div className="ax-focus-tag"><span className="dot" /> Foco de agora</div>
+          <h2>{foco.titulo}</h2>
+          <p>{foco.sub}</p>
+          <span className="ax-focus-cta">Retomar de onde parei →</span>
+        </Link>
+      )}
+
+      {/* Operação */}
+      <div className="ax-sec">Operação</div>
+      <div className="ax-grid">
+        {op.map((t) => (
+          <Link key={t.nome} href={t.href} className="ax-tile" onMouseMove={move}>
+            {t.metric && <span className={"ax-tile-metric " + (t.metricCls ?? "ax-m-teal")}>{t.metric}</span>}
+            <span className="ax-tile-ico"><AxiaIcon name={t.icon} size={24} /></span>
+            <span className="ax-tile-nome">{t.nome}</span>
+            <span className="ax-tile-desc">{t.desc}</span>
+          </Link>
+        ))}
+      </div>
+
+      {/* Gestão */}
+      <div className="ax-sec">Gestão</div>
+      <div className="ax-grid">
+        {GESTAO.map((t) => (
+          <Link key={t.nome} href={t.href} className="ax-tile" onMouseMove={move}>
+            <span className="ax-tile-ico"><AxiaIcon name={t.icon} size={24} /></span>
+            <span className="ax-tile-nome">{t.nome}</span>
+            <span className="ax-tile-desc">{t.desc}</span>
+          </Link>
+        ))}
+      </div>
+
+      {/* Mais */}
+      <div className="ax-sec">Mais</div>
+      <div className="ax-grid">
+        {MAIS.map((t) => (
+          <Link key={t.nome} href={t.href} className="ax-tile" onMouseMove={move}>
+            <span className="ax-tile-ico"><AxiaIcon name={t.icon} size={24} /></span>
+            <span className="ax-tile-nome">{t.nome}</span>
+            <span className="ax-tile-desc">{t.desc}</span>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

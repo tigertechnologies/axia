@@ -76,41 +76,33 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
   async function validar(id: string) { setDone((d) => new Set(d).add(id)); const r = await validateCommunication(id); if(r && "error" in r){ setDone(d=>{ const n=new Set(d); n.delete(id); return n; }); flash("Não foi possível validar. Tente novamente."); } }
   const shown = comms.filter((c) => filter === "all" || CAT[c.category]?.f === filter);
 
+  const foco = atencao.length > 0 ? {
+    titulo: (atencao[0].titulo.includes("Laudo")) ? "Continuar laudo" : atencao[0].titulo,
+    sub: atencao[0].sub,
+    href: atencao[0].href,
+  } : null;
+
   return (
     <>
+      <div className="ax-aurora"><span /><span /><span /></div>
+      <div className="ax-scope">
       {pastDue && <div className="attn" style={{ marginBottom: 20 }}><span className="at-ic"><Ico p="alert" /></span><div className="at-txt"><h4>Precisamos atualizar sua assinatura</h4><p>Seu pagamento está pendente. Atualize para manter o acesso.</p></div><div className="at-items"><span className="at-pill">Assinatura vencida <Link className="btn-mini" href="/checkout">Atualizar pagamento</Link></span></div></div>}
 
-      <div className="greet">
-        <div>
-          <h1>Bom dia, Dr. {nome}.</h1>
-          <p className="sum"><svg width="15" height="15" fill="none" stroke="#1FA89E" strokeWidth={2}><path d="M2 7.5l3.5 3.5L13 3" strokeLinecap="round" strokeLinejoin="round" /></svg>A AXIA analisou <b>{comms.length} comunicações</b> — <b>{aguardando + urgentes.length}</b> exigem sua atenção.</p>
-        </div>
-        <div className="greet-actions">
-          <Link className="btn btn-ghost" href="/inbox">Ver análise completa</Link>
-          <Link className="btn btn-primary" href="/jornada"><svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2}><path d="M8 2.5v11M2.5 8h11" strokeLinecap="round" /></svg>Nova perícia</Link>
-        </div>
+      <div style={{ marginBottom: 20 }}>
+        <h1 className="ax-hi">Bom dia, <span>Dr. {nome}</span></h1>
+        <p className="ax-hi-sub">A AXIA analisou {comms.length} comunicações — {aguardando + urgentes.length} exigem sua atenção</p>
       </div>
 
-      {/* Sua jornada hoje — painel operacional (seção 21) */}
-      <div className="jornada-hoje">
-        <div className="jh-titulo">Sua jornada hoje</div>
-        <div className="jh-cards">
-          <JHCard n={novasNomeacoes} label="Novas nomeações" href="/jornada" alerta={novasNomeacoes > 0} />
-          <JHCard n={acaoNecessaria} label="Ação necessária" href="/jornada" alerta={acaoNecessaria > 0} />
-          <JHCard n={venceHoje} label="Vencem hoje" href="/jornada" urgente={venceHoje > 0} />
-          <JHCard n={laudosPendentes} label="Laudos pendentes" href="/jornada" alerta={laudosPendentes > 0} />
-          <JHCard n={aProtocolar} label="A protocolar" href="/jornada" alerta={aProtocolar > 0} />
-          <JHCard n={aguardandoJuizo} label="Aguardando juízo" href="/jornada" />
-          <JHCard money={receber} label="A receber" href="/honorarios" />
-        </div>
-      </div>
+      <HubAcessos
+        counts={{ jornada: pericias.length, prazos: urgentes.length, inbox: comms.filter((c) => !c.validated).length }}
+        foco={foco}
+      />
 
-      {/* Precisa da sua atenção — pendências acionáveis (seção 2 do direcional) */}
-      {atencao.length > 0 && (
+      {atencao.length > 1 && (
         <div className="atencao-box">
           <div className="atencao-titulo">Precisa da sua atenção</div>
           <div className="atencao-lista">
-            {atencao.map((a) => (
+            {atencao.slice(1).map((a) => (
               <div key={a.id} className={"atencao-item u-" + a.urgencia}>
                 <div className="atencao-dot" />
                 <div className="atencao-corpo">
@@ -124,7 +116,6 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
         </div>
       )}
 
-      <HubAcessos />
 
       <div className="kpis">
         <div className="kpi"><div className="ki ki-navy"><Ico p="shield" s={20} /></div><div className="kn">{nomeacoes.length}</div><div className="kl">Novas nomeações</div><div className="kt up">{aguardando} aguardando validação</div></div>
@@ -229,6 +220,7 @@ export default function DashboardContent({ nome, pastDue, comms, pericias, prazo
         </div>
       </div>
           <Toast msg={toast} />
+      </div>
     </>
   );
 }

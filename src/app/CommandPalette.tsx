@@ -32,8 +32,10 @@ export default function CommandPalette() {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); setAberto((v) => !v); }
       if (e.key === "Escape") setAberto(false);
     }
+    function onOpen() { setAberto(true); }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("axia-open-cmdk", onOpen);
+    return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("axia-open-cmdk", onOpen); };
   }, []);
 
   useEffect(() => { if (aberto) { setTimeout(() => inputRef.current?.focus(), 40); setSel(0); } else { setQ(""); setResultados([]); } }, [aberto]);

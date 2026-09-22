@@ -1,0 +1,115 @@
+/* ============================================================
+   AXIA — Design System Premium (claro + escuro)
+   Redefine as variáveis para o padrão premium e traz os
+   componentes do novo cockpit. Usa [data-theme="dark"] já
+   existente. Importar DEPOIS do dashboard.css.
+   ============================================================ */
+
+/* ---- TEMA CLARO premium (padrão) ---- */
+:root{
+  --ax-bg:#F6F8FC;
+  --ax-panel:#FFFFFF;
+  --ax-panel2:#FBFCFE;
+  --ax-line:#E7ECF4;
+  --ax-line2:#DCE3EE;
+  --ax-ink:#16233A;
+  --ax-muted:#5F708A;
+  --ax-faint:#9AA8BE;
+  --ax-teal:#0FA595;
+  --ax-teal-neon:#12B8A6;
+  --ax-blue:#3E6FD6;
+  --ax-gold:#B7841E;
+  --ax-red:#D2503A;
+  --ax-green:#0F8C63;
+  --ax-aurora1:rgba(31,168,158,.14);
+  --ax-aurora2:rgba(62,111,214,.10);
+  --ax-aurora3:rgba(22,48,91,.06);
+  --ax-tile-glow:rgba(15,165,149,.10);
+  --ax-shadow:0 8px 30px rgba(22,35,58,.08);
+  --ax-shadow-hover:0 14px 44px rgba(22,35,58,.14);
+}
+
+/* ---- TEMA ESCURO premium ---- */
+:root[data-theme="dark"]{
+  --ax-bg:#080B12;
+  --ax-panel:#111826;
+  --ax-panel2:#151E2E;
+  --ax-line:rgba(255,255,255,.07);
+  --ax-line2:rgba(255,255,255,.12);
+  --ax-ink:#EAF0F8;
+  --ax-muted:#7C8BA3;
+  --ax-faint:#4A566B;
+  --ax-teal:#2DD4BF;
+  --ax-teal-neon:#2DD4BF;
+  --ax-blue:#5B8DEF;
+  --ax-gold:#F0B857;
+  --ax-red:#F87171;
+  --ax-green:#34D399;
+  --ax-aurora1:rgba(31,168,158,.30);
+  --ax-aurora2:rgba(91,141,239,.18);
+  --ax-aurora3:rgba(22,48,91,.40);
+  --ax-tile-glow:rgba(45,212,191,.10);
+  --ax-shadow:0 8px 30px rgba(0,0,0,.3);
+  --ax-shadow-hover:0 14px 44px rgba(45,212,191,.15);
+}
+
+.axia-ic{ display:block; }
+
+/* ---- AURORA de fundo (viva, sutil) ---- */
+.ax-aurora{ position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+.ax-aurora span{ position:absolute; border-radius:50%; filter:blur(90px); animation:ax-float 20s ease-in-out infinite; }
+.ax-aurora span:nth-child(1){ width:520px; height:520px; background:radial-gradient(circle,var(--ax-aurora1),transparent 70%); top:-160px; left:-120px; }
+.ax-aurora span:nth-child(2){ width:620px; height:620px; background:radial-gradient(circle,var(--ax-aurora3),transparent 70%); bottom:-220px; right:-160px; animation-delay:-7s; }
+.ax-aurora span:nth-child(3){ width:420px; height:420px; background:radial-gradient(circle,var(--ax-aurora2),transparent 70%); top:38%; left:52%; animation-delay:-13s; }
+@keyframes ax-float{ 0%,100%{ transform:translate(0,0) scale(1); } 33%{ transform:translate(44px,-32px) scale(1.1); } 66%{ transform:translate(-32px,44px) scale(.95); } }
+
+/* garante que o conteúdo fica acima da aurora */
+.ax-scope{ position:relative; z-index:1; }
+
+/* ---- BOTÃO DE COMANDO proeminente ---- */
+.ax-cmd{ width:100%; display:flex; align-items:center; gap:16px; background:linear-gradient(120deg,var(--ax-aurora1),var(--ax-aurora2)); border:1.5px solid color-mix(in srgb,var(--ax-teal) 35%,transparent); border-radius:16px; padding:16px 20px; cursor:pointer; transition:all .25s cubic-bezier(.2,.9,.2,1); position:relative; overflow:hidden; margin-bottom:20px; }
+.ax-cmd::after{ content:""; position:absolute; inset:0; background:radial-gradient(400px circle at var(--mx,50%) var(--my,50%),var(--ax-tile-glow),transparent 60%); opacity:0; transition:opacity .3s; }
+.ax-cmd:hover{ border-color:color-mix(in srgb,var(--ax-teal) 60%,transparent); transform:translateY(-2px); box-shadow:var(--ax-shadow-hover); }
+.ax-cmd:hover::after{ opacity:1; }
+.ax-cmd-ic{ width:44px; height:44px; border-radius:12px; background:color-mix(in srgb,var(--ax-teal) 15%,transparent); color:var(--ax-teal); display:flex; align-items:center; justify-content:center; flex:none; }
+.ax-cmd-txt{ flex:1; text-align:left; }
+.ax-cmd-t1{ font-size:15.5px; font-weight:600; color:var(--ax-ink); }
+.ax-cmd-t2{ font-size:12.5px; color:var(--ax-muted); margin-top:1px; }
+.ax-cmd-keys{ display:flex; gap:6px; flex:none; }
+.ax-cmd-keys kbd{ background:color-mix(in srgb,var(--ax-ink) 8%,transparent); border:1px solid var(--ax-line2); border-radius:8px; padding:6px 11px; font-size:13px; font-family:inherit; font-weight:600; color:var(--ax-ink); }
+
+/* ---- FOCO DE AGORA ---- */
+.ax-focus{ background:linear-gradient(135deg,var(--ax-aurora1),var(--ax-aurora3)); border:1px solid color-mix(in srgb,var(--ax-teal) 25%,transparent); border-radius:22px; padding:24px 26px; margin-bottom:22px; position:relative; overflow:hidden; cursor:pointer; transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s; text-decoration:none; display:block; }
+.ax-focus:hover{ transform:translateY(-3px); box-shadow:var(--ax-shadow-hover); }
+.ax-focus::after{ content:""; position:absolute; right:-40px; top:-40px; width:180px; height:180px; background:radial-gradient(circle,var(--ax-tile-glow),transparent 70%); }
+.ax-focus-tag{ display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ax-teal); margin-bottom:10px; }
+.ax-focus-tag .dot{ width:6px; height:6px; border-radius:50%; background:var(--ax-teal); box-shadow:0 0 10px var(--ax-teal); animation:ax-pulse 2s infinite; }
+@keyframes ax-pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+.ax-focus h2{ font-size:20px; font-weight:700; margin-bottom:6px; color:var(--ax-ink); }
+.ax-focus p{ color:var(--ax-muted); font-size:13.5px; max-width:62%; }
+.ax-focus-cta{ margin-top:16px; display:inline-flex; align-items:center; gap:8px; background:var(--ax-teal); color:#04211D; font-weight:700; font-size:13.5px; padding:11px 20px; border-radius:12px; }
+:root[data-theme="dark"] .ax-focus-cta{ color:#04211D; }
+
+/* ---- GRADE DE TILES ---- */
+.ax-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.ax-tile{ background:var(--ax-panel); border:1px solid var(--ax-line); border-radius:18px; padding:20px; cursor:pointer; position:relative; overflow:hidden; transition:transform .25s cubic-bezier(.2,.8,.2,1), border-color .25s, box-shadow .25s; text-decoration:none; display:block; }
+.ax-tile::before{ content:""; position:absolute; inset:0; background:radial-gradient(120px circle at var(--mx,50%) var(--my,50%),var(--ax-tile-glow),transparent 60%); opacity:0; transition:opacity .3s; }
+.ax-tile:hover{ transform:translateY(-4px); border-color:color-mix(in srgb,var(--ax-blue) 40%,transparent); box-shadow:var(--ax-shadow); }
+.ax-tile:hover::before{ opacity:1; }
+.ax-tile:hover .ax-tile-ico{ color:var(--ax-teal); border-color:color-mix(in srgb,var(--ax-teal) 35%,transparent); }
+.ax-tile-ico{ width:46px; height:46px; border-radius:13px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; background:color-mix(in srgb,var(--ax-ink) 4%,transparent); border:1px solid var(--ax-line); color:var(--ax-muted); transition:all .25s; }
+.ax-tile-nome{ font-size:15px; font-weight:600; color:var(--ax-ink); }
+.ax-tile-desc{ font-size:12px; color:var(--ax-muted); margin-top:3px; line-height:1.4; }
+.ax-tile-metric{ position:absolute; top:18px; right:18px; font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px; }
+.ax-m-red{ background:color-mix(in srgb,var(--ax-red) 16%,transparent); color:var(--ax-red); }
+.ax-m-gold{ background:color-mix(in srgb,var(--ax-gold) 16%,transparent); color:var(--ax-gold); }
+.ax-m-teal{ background:color-mix(in srgb,var(--ax-teal) 16%,transparent); color:var(--ax-teal); }
+
+.ax-sec{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--ax-faint); margin:26px 0 12px; }
+
+.ax-hi{ font-size:26px; font-weight:700; letter-spacing:-.5px; color:var(--ax-ink); }
+.ax-hi span{ background:linear-gradient(120deg,var(--ax-teal),var(--ax-blue)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.ax-hi-sub{ color:var(--ax-muted); font-size:14px; margin-top:4px; }
+
+@media(max-width:900px){ .ax-grid{ grid-template-columns:1fr 1fr; } .ax-focus p{ max-width:100%; } }
+@media(max-width:480px){ .ax-cmd-t2{ display:none; } .ax-hi{ font-size:22px; } }

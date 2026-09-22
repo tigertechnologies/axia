@@ -6,6 +6,7 @@ import DashboardContent from "./DashboardContent";
 import ConvitesPendentes from "../ConvitesPendentes";
 import { meusConvites } from "../actions/convites";
 import "./dashboard.css";
+import "../premium.css";
 
 
 export const dynamic = "force-dynamic";
